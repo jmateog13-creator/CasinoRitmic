@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Batalla de Viena</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+        :root {
+            --velvet: #800020;
+            --gold: #d4af37;
+            --cream: #f5f5dc;
+            --dark: #1a0505;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--dark);
+            color: var(--cream);
+            font-family: 'Playfair Display', serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* Background Pattern */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 50% 30%, rgba(128, 0, 32, 0.4), rgba(0, 0, 0, 0.9));
+            z-index: -1;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            font-size: 2rem;
+            filter: drop-shadow(0 0 5px var(--gold));
+        }
+
+        /* Game Area */
+        #game-container {
+            width: 1000px;
+            height: 700px;
+            border: 10px double var(--gold);
+            border-radius: 20px;
+            background: linear-gradient(to bottom, #4a0404, #2b0000);
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.2);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px;
+            margin-top: 60px;
+        }
+
+        /* Chandelier Decoration */
+        .chandelier {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4rem;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(255, 255, 200, 0.8);
+            z-index: 10;
+        }
+
+        /* Opponent */
+        #opponent-area {
+            text-align: center;
+        }
+
+        #strauss-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid var(--gold);
+            background: #000;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            overflow: hidden;
+        }
+
+        #strauss-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Cards */
+        .card-slot {
+            width: 140px;
+            height: 200px;
+            border: 2px dashed rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .card {
+            width: 140px;
+            height: 200px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #000;
+            position: absolute;
+            transition: transform 0.5s, opacity 0.5s;
+            backface-visibility: hidden;
+        }
+
+        .card img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        .card-val {
+            font-size: 1.5rem;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .card-back {
+            background: repeating-linear-gradient(45deg,
+                    #800020,
+                    #800020 10px,
+                    #a00030 10px,
+                    #a00030 20px);
+            border: 4px solid #fff;
+        }
+
+        /* Battle Area */
+        #battle-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 50px;
+            height: 300px;
+        }
+
+        .vs-text {
+            font-size: 3rem;
+            color: var(--gold);
+            font-style: italic;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        /* Player Area */
+        #player-area {
+            text-align: center;
+        }
+
+        /* Controls */
+        #controls {
+            margin-top: 20px;
+        }
+
+        .btn-action {
+            background: linear-gradient(to bottom, var(--gold), #b8860b);
+            border: 2px solid #fff;
+            color: #2b0000;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-family: 'Playfair Display', serif;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s;
+        }
+
+        .btn-action:hover {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+        }
+
+        .btn-action:disabled {
+            filter: grayscale(1);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Stats */
+        #stats-bar {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            text-align: right;
+            font-size: 1.2rem;
+            color: var(--gold);
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .modal-content {
+            background: #2b0000;
+            padding: 50px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: var(--cream);
+            box-shadow: 0 0 50px var(--gold);
+        }
+
+        .war-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .war-btn {
+            background: transparent;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            padding: 15px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .war-btn:hover {
+            background: var(--gold);
+            color: #2b0000;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <a href="menu.html" class="btn-menu">🏠</a>
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+    </div>
+
+    <div id="game-container">
+        <div class="chandelier">🕯️</div>
+
+        <!-- Opponent -->
+        <div id="opponent-area">
+            <div id="strauss-avatar">🤴</div>
+            <h2 style="color:var(--gold); margin:10px 0;">Johann Strauss II</h2>
+            <div class="card-slot" id="slot-cpu"></div>
+        </div>
+
+        <!-- Battle Center -->
+        <div id="battle-area">
+            <div class="vs-text">VS</div>
+        </div>
+
+        <!-- Player -->
+        <div id="player-area">
+            <div class="card-slot" id="slot-player"></div>
+            <div id="controls">
+                <button id="btn-deal" class="btn-action" onclick="playRound()">JUGAR (50 Fitxes)</button>
+            </div>
+            <h2 style="color:var(--gold); margin:10px 0;">Tu</h2>
+        </div>
+
+        <div id="stats-bar">
+            <div>FITXES: <span id="chips">500</span></div>
+            <div>GUERRES GUANYADES: <span id="wars-won">0</span>/3</div>
+        </div>
+    </div>
+
+    <!-- War Modal -->
+    <div id="war-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color:red; font-size:3rem;">⚔️ GUERRA! ⚔️</h2>
+            <p>Empat de valors! Resol aquest duel de valsos:</p>
+            <h3 id="war-question" style="color:var(--gold);">Pregunta...</h3>
+            <div class="war-options" id="war-options">
+                <!-- Options JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">EL REI DEL VALS!</h2>
+            <div class="relic-icon">🎻</div>
+            <p style="font-size: 1.5rem; font-weight:bold;">"EL VIOLÍ DE JOHANN STRAUSS II"</p>
+            <p>Amb aquest violí, Strauss dirigia la seva orquestra mentre tocava els valsos més famosos del món, com 'El
+                Danubi Blau'.</p>
+            <button class="btn-action" onclick="location.reload()">TORNAR A JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Lose Modal -->
+    <div id="lose-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: red;">SENSE FITXES</h2>
+            <p>Strauss t'ha deixat sense blanca.</p>
+            <button class="btn-action" onclick="location.reload()">REINTENTAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_batalla.mp3" loop></audio>
+
+    <script>
+        // Audio
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        const bgMusic = document.getElementById('bg-music');
+
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        function playSound(type) {
+            const vol = document.getElementById('volume').value;
+            if (vol <= 0) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'flip') {
+                // Short swoosh
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(400, now + 0.1);
+                gain.gain.setValueAtTime(vol * 0.5, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start();
+                osc.stop(now + 0.1);
+            } else if (type === 'clash') {
+                // Metallic noise
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(1000, now + 0.1);
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start();
+                osc.stop(now + 0.3);
+            } else if (type === 'win') {
+                // Fanfare
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(523, now);
+                osc.frequency.setValueAtTime(659, now + 0.1);
+                osc.frequency.setValueAtTime(784, now + 0.2);
+                gain.gain.setValueAtTime(vol * 0.5, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            }
+        }
+
+        // Game Logic
+        const CARDS = [
+            { name: 'RODONA', val: 4, img: 'images/rodona.jpg' },
+            { name: 'BLANCA', val: 2, img: 'images/blanca.jpg' },
+            { name: 'NEGRA', val: 1, img: 'images/negra.jpg' },
+            { name: 'CORXERA', val: 0.5, img: 'images/corxera.jpg' },
+            { name: 'SEMICORXERA', val: 0.25, img: 'images/semicorxera.jpg' }
+        ];
+
+        let chips = 500;
+        let warsWon = 0;
+        let bet = 50;
+        let isProcessing = false;
+
+        function getRandomCard() {
+            return CARDS[Math.floor(Math.random() * CARDS.length)];
+        }
+
+        function renderCard(card, slotId, faceUp = true) {
+            const slot = document.getElementById(slotId);
+            slot.innerHTML = '';
+            const el = document.createElement('div');
+            el.className = 'card';
+            if (!faceUp) {
+                el.classList.add('card-back');
+            } else {
+                el.innerHTML = `<img src="${card.img}"><div class="card-val">${card.val}</div>`;
+            }
+            slot.appendChild(el);
+            // Animation
+            el.style.transform = 'scale(0)';
+            setTimeout(() => el.style.transform = 'scale(1)', 10);
+        }
+
+        function playRound() {
+            if (isProcessing) return;
+            if (chips < bet) {
+                alert("No tens prous fitxes!");
+                return;
+            }
+
+            isProcessing = true;
+            chips -= bet;
+            updateUI();
+            playSound('flip');
+
+            // Deal
+            const playerCard = getRandomCard();
+            const cpuCard = getRandomCard();
+
+            renderCard(playerCard, 'slot-player');
+            renderCard(cpuCard, 'slot-cpu');
+
+            setTimeout(() => {
+                resolveRound(playerCard, cpuCard);
+            }, 1000);
+        }
+
+        function resolveRound(pCard, cCard) {
+            if (pCard.val > cCard.val) {
+                // Win
+                chips += bet * 2;
+                playSound('win');
+                endRound("Victòria!");
+            } else if (pCard.val < cCard.val) {
+                // Lose
+                endRound("Derrota...");
+            } else {
+                // War
+                playSound('clash');
+                setTimeout(() => startWar(), 500);
+            }
+        }
+
+        function startWar() {
+            // 50% Chance: Question vs Card Duel
+            if (Math.random() < 0.5) {
+                startWarQuestion();
+            } else {
+                startWarCards();
+            }
+        }
+
+        function startWarQuestion() {
+            const q = generateWarQuestion();
+            document.getElementById('war-question').textContent = q.text;
+
+            const optsDiv = document.getElementById('war-options');
+            optsDiv.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'war-btn';
+                btn.textContent = opt.label;
+                btn.onclick = () => resolveWar(idx === q.correctIdx);
+                optsDiv.appendChild(btn);
+            });
+
+            document.getElementById('war-modal').style.display = 'flex';
+        }
+
+        function startWarCards() {
+            // Card Duel: Burn 3, Flip 1
+            // Visual representation via Alert for simplicity or reuse modal?
+            // Let's use a simple confirm/alert flow for now to keep it in one file without massive UI changes.
+            // Or better, reuse the modal but with "GIRAR CARTA" button.
+
+            document.getElementById('war-question').textContent = "DUEL DE CARTES! (Carta més alta guanya)";
+            const optsDiv = document.getElementById('war-options');
+            optsDiv.innerHTML = '';
+
+            const btn = document.createElement('button');
+            btn.className = 'war-btn';
+            btn.textContent = "GIRAR CARTA DE DESEMPAT";
+            btn.onclick = () => {
+                const p = getRandomCard();
+                const c = getRandomCard();
+                let win = false;
+                let msg = `Tu: ${p.name} (${p.val}) vs Strauss: ${c.name} (${c.val}). `;
+
+                if (p.val > c.val) {
+                    win = true;
+                    msg += "GUANYES!";
+                } else {
+                    msg += "PERDS!";
+                }
+                alert(msg);
+                resolveWar(win);
+            };
+            optsDiv.appendChild(btn);
+
+            document.getElementById('war-modal').style.display = 'flex';
+        }
+
+        function generateWarQuestion() {
+            // Simple generator
+            // Create 2 options with different values
+            const opts = [];
+            for (let i = 0; i < 2; i++) {
+                // Generate a random combination
+                // e.g. "2 Negres" (2), "1 Blanca" (2) -> Avoid equal
+                let val = 0;
+                let label = "";
+
+                const type = Math.floor(Math.random() * 3); // 0: Negra, 1: Blanca, 2: Corxera
+                if (type === 0) {
+                    const n = 1 + Math.floor(Math.random() * 3); // 1-3 Negres
+                    val = n;
+                    label = `${n} Negres`;
+                } else if (type === 1) {
+                    const n = 1 + Math.floor(Math.random() * 2); // 1-2 Blanques
+                    val = n * 2;
+                    label = `${n} Blanques`;
+                } else {
+                    const n = 2 + Math.floor(Math.random() * 4); // 2-5 Corxeres
+                    val = n * 0.5;
+                    label = `${n} Corxeres`;
+                }
+                opts.push({ label, val });
+            }
+
+            // Ensure not equal
+            if (opts[0].val === opts[1].val) {
+                opts[0].val += 1;
+                opts[0].label += " + 1 Negra";
+            }
+
+            const correctIdx = opts[0].val > opts[1].val ? 0 : 1;
+
+            return {
+                text: `Què val més? (${opts[0].label} vs ${opts[1].label})`,
+                options: opts,
+                correctIdx: correctIdx
+            };
+        }
+
+        function resolveWar(win) {
+            document.getElementById('war-modal').style.display = 'none';
+            if (win) {
+                chips += bet * 3;
+                warsWon++;
+                playSound('win');
+                alert("GUERRA GUANYADA! (x3)");
+                checkGameWin();
+            } else {
+                alert("Has perdut la guerra...");
+            }
+            endRound();
+        }
+
+        function endRound(msg) {
+            if (msg) {
+                // Show message briefly?
+                // document.title = msg;
+            }
+            updateUI();
+            isProcessing = false;
+
+            if (chips <= 0) {
+                document.getElementById('lose-modal').style.display = 'flex';
+            } else {
+                checkGameWin();
+            }
+        }
+
+        function checkGameWin() {
+            if (warsWon >= 3 || chips >= 2000) {
+                // Save Reward
+                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                rewards['reward_batalla'] = true;
+                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                document.getElementById('win-modal').style.display = 'flex';
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('chips').textContent = chips;
+            document.getElementById('wars-won').textContent = warsWon + "/3";
+        }
+
+    </script>
+</body>
+
+</html>

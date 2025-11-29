@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruleta Rítmica</title>
+    <style>
+        :root {
+            --neon-green: #39ff14;
+            --neon-red: #ff003c;
+            --felt-green: #004d00;
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 1000;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+            transition: all 0.2s;
+        }
+
+        .btn-menu:hover {
+            background: var(--gold);
+            color: #000;
+        }
+
+        #game-container {
+            position: relative;
+            width: 1200px;
+            height: 700px;
+            background: radial-gradient(circle, var(--felt-green), #001100);
+            border: 20px solid #4a2c0f;
+            /* Wood */
+            border-radius: 50px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        /* Casino Chips for Rounds */
+        #chips-container {
+            position: absolute;
+            top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chip {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 4px dashed #fff;
+            background: #333;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            opacity: 0.5;
+        }
+
+        .chip.active {
+            background: var(--gold);
+            color: #000;
+            opacity: 1;
+            box-shadow: 0 0 10px var(--gold);
+        }
+
+        .chip.won {
+            background: var(--neon-green);
+            border-color: var(--neon-green);
+            opacity: 1;
+        }
+
+        .chip.lost {
+            background: var(--neon-red);
+            border-color: var(--neon-red);
+            opacity: 1;
+        }
+
+        #ecgCanvas {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #0f0;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        #status {
+            font-size: 2rem;
+            margin-top: 20px;
+            text-shadow: 2px 2px 0 #000;
+            height: 40px;
+            color: var(--gold);
+        }
+
+        #bpm-display {
+            font-size: 4rem;
+            color: var(--gold);
+            text-shadow: 0 0 20px var(--gold);
+            font-family: 'Impact', sans-serif;
+        }
+
+        #controls {
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 15px 50px;
+            font-size: 1.5rem;
+            background: linear-gradient(to bottom, var(--gold), #b8860b);
+            color: #000;
+            border: 2px solid #fff;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: #002200;
+            padding: 50px;
+            border: 4px double var(--gold);
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            box-shadow: 0 0 50px var(--gold);
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+
+        #note-icon {
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color:var(--gold);">
+        </div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="game-container">
+        <div id="chips-container">
+            <!-- 7 Chips -->
+            <div class="chip" id="chip-0">1</div>
+            <div class="chip" id="chip-1">2</div>
+            <div class="chip" id="chip-2">3</div>
+            <div class="chip" id="chip-3">4</div>
+            <div class="chip" id="chip-4">5</div>
+            <div class="chip" id="chip-5">6</div>
+            <div class="chip" id="chip-6">7</div>
+        </div>
+
+        <img id="note-icon" src="images/negra.jpg" alt="Puls">
+        <div id="bpm-display">60 BPM</div>
+        <div id="status">PREPARAT PER APOSTAR?</div>
+
+        <canvas id="ecgCanvas" width="800" height="200"></canvas>
+
+        <div id="controls">
+            <button id="tap-btn" class="btn" onmousedown="tap()" style="display:none;">TAP (ESPAI)</button>
+        </div>
+    </div>
+
+    <!-- Start Modal -->
+    <div id="start-modal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">RULETA RÍTMICA</h2>
+            <p>Benvingut al Casino del Ritme.</p>
+            <p>Has de superar <strong>7 RONDES</strong> amb diferents velocitats (BPM).</p>
+            <p>El metrònom sonarà 4 vegades. Després, TU ets el metrònom.</p>
+            <p>Mantigues el pols durant 8 pulsacions.</p>
+            <button class="btn" onclick="startGame()">FER APOSTA</button>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">JACKPOT RÍTMIC!</h2>
+            <div class="relic-icon">🎻</div>
+            <p style="font-size: 1.5rem; color: var(--gold);">"L'ARC DE PAU CASALS"</p>
+            <p>Has demostrat un pols d'acer, digne dels millors músics.</p>
+            <button class="btn" onclick="location.reload()">TORNAR</button>
+        </div>
+    </div>
+
+    <!-- Lose Modal -->
+    <div id="lose-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--neon-red);">BANCARROTA!</h2>
+            <p>Has perdut el ritme.</p>
+            <button class="btn" onclick="location.reload()">REINTENTAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_polsintern.mp3" loop></audio>
+    <script>
+        // Background Music
+        document.body.addEventListener('click', () => {
+            const bgMusic = document.getElementById('bg-music');
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const canvas = document.getElementById('ecgCanvas');
+        const ctx = canvas.getContext('2d');
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        let bpm = 60;
+        let interval = 60000 / bpm;
+        let state = 'idle'; // idle, listening, tapping, result
+        let metronomeCount = 0;
+        let tapCount = 0;
+        let lastTapTime = 0;
+        let scores = [];
+        let currentRound = 0;
+        const TOTAL_ROUNDS = 7;
+
+        // Drawing
+        let x = 0;
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'metro') {
+                osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.05);
+            } else if (type === 'tap') {
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.05);
+            } else if (type === 'win') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(1046, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } else if (type === 'lose') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            }
+        }
+
+        function startGame() {
+            document.getElementById('start-modal').style.display = 'none';
+            currentRound = 0;
+            updateChips();
+            startRound();
+        }
+
+        function startRound() {
+            resetCanvas();
+
+            // Random BPM between 50 and 140
+            bpm = 50 + Math.floor(Math.random() * 90);
+            interval = 60000 / bpm;
+
+            document.getElementById('bpm-display').textContent = `${bpm} BPM`;
+            document.getElementById('status').textContent = "ESCOLTA EL METRÒNOM...";
+            document.getElementById('status').style.color = "#ffd700";
+
+            metronomeCount = 0;
+            tapCount = 0;
+            scores = [];
+            state = 'listening';
+
+            document.getElementById('tap-btn').style.display = 'none';
+
+            updateChips();
+
+            // Start Metronome
+            let nextClick = performance.now() + 1000;
+            let count = 0;
+
+            function click() {
+                if (count < 4) {
+                    playSound('metro');
+                    drawPulse(true);
+                    count++;
+                    metronomeCount = count;
+                    lastTapTime = performance.now();
+                    setTimeout(click, interval);
+                } else {
+                    state = 'tapping';
+                    document.getElementById('status').textContent = "ARA TU! (Prem ESPAI)";
+                    document.getElementById('status').style.color = "#39ff14";
+                    document.getElementById('tap-btn').style.display = 'inline-block';
+                }
+            }
+            setTimeout(click, 1000);
+
+            requestAnimationFrame(drawLoop);
+        }
+
+        function resetCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#39ff14';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, 100);
+            x = 0;
+        }
+
+        function tap() {
+            if (state !== 'tapping') return;
+
+            const now = performance.now();
+            playSound('tap');
+            drawPulse(false);
+
+            const expected = lastTapTime + interval;
+            const diff = now - expected;
+            scores.push(Math.abs(diff));
+
+            lastTapTime = now;
+            tapCount++;
+
+            if (tapCount >= 8) {
+                finishRound();
+            }
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.code === 'Space') tap();
+        });
+
+        function drawPulse(isMetro) {
+            const spikeHeight = isMetro ? 80 : 60;
+            const color = isMetro ? '#ff003c' : '#39ff14';
+
+            ctx.strokeStyle = color;
+            ctx.lineTo(x, 100 - spikeHeight);
+            ctx.stroke();
+            ctx.lineTo(x, 100 + (spikeHeight / 2));
+            ctx.stroke();
+            ctx.lineTo(x, 100);
+            ctx.stroke();
+            ctx.strokeStyle = '#39ff14'; // Reset
+        }
+
+        function drawLoop() {
+            if (state === 'result' || state === 'idle') return;
+
+            x += 2;
+            if (x > canvas.width) {
+                const img = ctx.getImageData(2, 0, canvas.width - 2, canvas.height);
+                ctx.putImageData(img, 0, 0);
+                x -= 2;
+                ctx.clearRect(x, 0, 2, canvas.height);
+                ctx.beginPath();
+                ctx.moveTo(x, 100);
+            } else {
+                ctx.lineTo(x, 100);
+                ctx.stroke();
+            }
+
+            requestAnimationFrame(drawLoop);
+        }
+
+        function finishRound() {
+            state = 'result';
+            document.getElementById('tap-btn').style.display = 'none';
+
+            const avgDev = scores.reduce((a, b) => a + b, 0) / scores.length;
+
+            // Difficulty scaling? Or flat?
+            // Let's say < 80ms is pass.
+            let passed = avgDev < 80;
+
+            if (passed) {
+                document.getElementById('status').textContent = `CORRECTE! Desviació: ${avgDev.toFixed(0)}ms`;
+                document.getElementById('status').style.color = "#39ff14";
+                playSound('win');
+
+                // Mark chip
+                document.getElementById(`chip-${currentRound}`).classList.add('won');
+
+                currentRound++;
+                if (currentRound >= TOTAL_ROUNDS) {
+                    // Win Game
+                    // Save Reward
+                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_polsintern'] = true;
+                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                    setTimeout(() => {
+                        document.getElementById('win-modal').style.display = 'flex';
+                    }, 1500);
+                } else {
+                    setTimeout(startRound, 2000);
+                }
+            } else {
+                document.getElementById('status').textContent = `FALLADA! Desviació: ${avgDev.toFixed(0)}ms`;
+                document.getElementById('status').style.color = "#ff003c";
+                playSound('lose');
+
+                document.getElementById(`chip-${currentRound}`).classList.add('lost');
+
+                setTimeout(() => {
+                    document.getElementById('lose-modal').style.display = 'flex';
+                }, 1500);
+            }
+        }
+
+        function updateChips() {
+            for (let i = 0; i < TOTAL_ROUNDS; i++) {
+                const chip = document.getElementById(`chip-${i}`);
+                chip.className = 'chip'; // Reset
+                if (i === currentRound) chip.classList.add('active');
+            }
+        }
+    </script>
+</body>
+
+</html>

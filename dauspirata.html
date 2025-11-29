@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daus Mentiders vs El Pirata</title>
+    <style>
+        :root {
+            --wood-dark: #3e2723;
+            --wood-light: #8d6e63;
+            --gold: #ffd700;
+            --felt: #1b5e20;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            background-image: radial-gradient(circle, #222, #000);
+            color: #fff;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            border: 2px solid var(--gold);
+            padding: 10px 20px;
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            font-weight: bold;
+        }
+
+        /* Game Table */
+        #table {
+            width: 900px;
+            height: 600px;
+            background: var(--wood-dark);
+            border: 20px solid #222;
+            border-radius: 50px;
+            box-shadow: inset 0 0 100px #000, 0 0 50px rgba(0, 0, 0, 0.8);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px;
+            margin-top: 60px;
+        }
+
+        /* Felt Area */
+        #felt {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            right: 50px;
+            bottom: 50px;
+            background: var(--felt);
+            border-radius: 30px;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Pirate Area */
+        #pirate-area {
+            text-align: center;
+        }
+
+        #pirate-avatar {
+            font-size: 4rem;
+            filter: drop-shadow(0 0 10px #000);
+        }
+
+        #pirate-cup {
+            width: 100px;
+            height: 120px;
+            background: linear-gradient(to right, #5d4037, #3e2723);
+            border-radius: 10px 10px 50px 50px;
+            margin: 0 auto;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s;
+            border: 2px solid #222;
+        }
+
+        #pirate-dice-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+            height: 60px;
+            /* Space for dice */
+        }
+
+        /* Player Area */
+        #player-area {
+            text-align: center;
+        }
+
+        #player-cup {
+            width: 100px;
+            height: 120px;
+            background: linear-gradient(to right, #8d6e63, #5d4037);
+            border-radius: 10px 10px 50px 50px;
+            margin: 0 auto;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s;
+            border: 2px solid #222;
+            z-index: 10;
+        }
+
+        #player-cup:hover {
+            transform: translateY(-20px);
+        }
+
+        #player-dice-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 10px;
+            min-height: 60px;
+        }
+
+        .die {
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .die img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .die.hidden {
+            background: #333;
+            color: #555;
+            font-size: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .die.hidden::after {
+            content: "?";
+        }
+
+        /* Betting Area (Center) */
+        #bet-area {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            color: var(--gold);
+            font-size: 1.2rem;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #current-bet {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 5px;
+            text-shadow: 1px 1px 0 #000;
+        }
+
+        /* Controls */
+        #controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-action {
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: 2px solid var(--gold);
+            background: #3e2723;
+            color: var(--gold);
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+
+        .btn-action:hover {
+            background: var(--gold);
+            color: #3e2723;
+        }
+
+        .btn-action:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-spy {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            background: #000;
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .modal-content {
+            background: var(--wood-dark);
+            padding: 40px;
+            border: 4px solid var(--gold);
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+            color: #fff;
+        }
+
+        .bet-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+            align-items: center;
+        }
+
+        input[type=number] {
+            width: 60px;
+            font-size: 1.5rem;
+            text-align: center;
+            background: #222;
+            color: #fff;
+            border: 1px solid var(--gold);
+        }
+
+        .relic-icon {
+            font-size: 4rem;
+            margin: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+    </div>
+
+    <div id="table">
+        <div id="felt">
+            <!-- Pirate -->
+            <div id="pirate-area">
+                <div id="pirate-avatar">🏴‍☠️</div>
+                <div style="color: #aaa; font-size: 0.9rem;">CAPITÀ BARBA-RITME</div>
+                <div id="pirate-dice-container">
+                    <!-- Dice added by JS -->
+                </div>
+                <div id="pirate-cup"></div>
+                <div id="pirate-count">3 Daus</div>
+            </div>
+
+            <!-- Center Info -->
+            <div id="bet-area">
+                <div>APOSTA ACTUAL:</div>
+                <div id="current-bet">CAP (Comença tu)</div>
+                <div id="msg-area" style="font-size: 0.9rem; color: #ccc; margin-top: 5px;"></div>
+            </div>
+
+            <!-- Player -->
+            <div id="player-area">
+                <div id="player-cup" onclick="togglePlayerCup()"></div>
+                <div id="player-dice-container">
+                    <!-- Dice added by JS -->
+                </div>
+                <div style="color: var(--gold);">ELS TEUS DAUS</div>
+
+                <div id="controls">
+                    <button class="btn-action" id="btn-bet" onclick="openBetModal()">PUJAR APOSTA</button>
+                    <button class="btn-action" id="btn-liar" onclick="callLiar()">MENTIDA!</button>
+                </div>
+            </div>
+
+            <button class="btn-action btn-spy" id="btn-spy" onclick="spyPirate()">👁️ ESPIAR</button>
+        </div>
+    </div>
+
+    <!-- Bet Modal -->
+    <div id="bet-modal" class="modal">
+        <div class="modal-content">
+            <h2>FES LA TEVA APOSTA</h2>
+            <p>Hi ha almenys...</p>
+            <div class="bet-selector">
+                <input type="number" id="bet-qty" min="1" max="14" value="1">
+                <div style="display:flex; gap:5px;">
+                    <img src="images/negra.jpg" width="40" onclick="selectDieType('negra')"
+                        style="cursor:pointer; border:2px solid transparent;" id="sel-negra">
+                    <img src="images/blanca.jpg" width="40" onclick="selectDieType('blanca')"
+                        style="cursor:pointer; border:2px solid transparent;" id="sel-blanca">
+                    <img src="images/rodona.jpg" width="40" onclick="selectDieType('rodona')"
+                        style="cursor:pointer; border:2px solid transparent;" id="sel-rodona">
+                </div>
+            </div>
+            <button class="btn-action" onclick="submitBet()">APOSTAR</button>
+            <button class="btn-action" onclick="closeBetModal()"
+                style="background:#555; border-color:#777;">CANCEL·LAR</button>
+        </div>
+    </div>
+
+    <!-- Spy Modal -->
+    <div id="spy-modal" class="modal">
+        <div class="modal-content">
+            <h2>PREGUNTA D'ESPIONATGE</h2>
+            <p id="spy-q">Pregunta...</p>
+            <div id="spy-opts"></div>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">LA GRAN PORTA DE KÍEV!</h2>
+            <div class="relic-icon">🔔</div>
+            <p>"LES CAMPANES DE MÚSSORGSKI"</p>
+            <p>Les campanes que sonen a la 'Gran Porta de Kíev' de l'obra 'Quadres d'una Exposició'. L'ànima de la
+                música russa!</p>
+            <button class="btn-action" onclick="location.reload()">TORNAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_dauspirata.mp3" loop></audio>
+
+    <script>
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        // Background Music
+        document.body.addEventListener('click', () => {
+            const bgMusic = document.getElementById('bg-music');
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        // Game State
+        const POOL_DEF = { 'rodona': 2, 'blanca': 4, 'negra': 8 };
+        const VALUES = { 'negra': 1, 'blanca': 2, 'rodona': 4 }; // Value for sorting/logic
+        // Order for betting: negra < blanca < rodona
+
+        let pool = [];
+        let playerDice = [];
+        let pirateDice = [];
+
+        let currentBet = { qty: 0, type: null }; // e.g. {qty: 2, type: 'negra'}
+        let turn = 'player'; // 'player' or 'pirate'
+        let spyUsed = false;
+
+        // Init
+        startRound();
+
+        function startRound() {
+            // Check win/loss
+            const pCount = document.querySelectorAll('#player-dice-container .die').length; // Initial check might be empty
+            // We need persistent dice counts.
+            // Let's store counts in variables.
+            // On first load, 3 each.
+        }
+
+        let playerDiceCount = 3;
+        let pirateDiceCount = 3;
+
+        function initGame() {
+            playerDiceCount = 3;
+            pirateDiceCount = 3;
+            startNewHand();
+        }
+
+        function startNewHand() {
+            if (playerDiceCount === 0) {
+                alert("GAME OVER! El Pirata t'ha guanyat.");
+                location.reload();
+                return;
+            }
+            if (pirateDiceCount === 0) {
+                winGame();
+                return;
+            }
+
+            // Create Pool
+            pool = [];
+            for (let i = 0; i < POOL_DEF.rodona; i++) pool.push('rodona');
+            for (let i = 0; i < POOL_DEF.blanca; i++) pool.push('blanca');
+            for (let i = 0; i < POOL_DEF.negra; i++) pool.push('negra');
+
+            shuffle(pool);
+
+            playerDice = [];
+            pirateDice = [];
+
+            for (let i = 0; i < playerDiceCount; i++) playerDice.push(pool.pop());
+            for (let i = 0; i < pirateDiceCount; i++) pirateDice.push(pool.pop());
+
+            // Render
+            renderDice();
+
+            // Reset Bet
+            currentBet = { qty: 0, type: null };
+            updateBetUI();
+
+            document.getElementById('msg-area').textContent = "Nova ronda! Els daus s'han barrejat.";
+            playSound('shake');
+
+            // Turn
+            turn = 'player'; // Player always starts new hand for simplicity? Or loser starts? Let's say Player starts.
+            updateControls();
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function renderDice() {
+            const pCont = document.getElementById('player-dice-container');
+            pCont.innerHTML = '';
+            playerDice.forEach(type => {
+                const d = document.createElement('div');
+                d.className = 'die';
+                d.innerHTML = `<img src="images/${type}.jpg">`;
+                pCont.appendChild(d);
+            });
+
+            const piCont = document.getElementById('pirate-dice-container');
+            piCont.innerHTML = '';
+            pirateDice.forEach(type => {
+                const d = document.createElement('div');
+                d.className = 'die hidden';
+                d.dataset.type = type; // Store for reveal
+                piCont.appendChild(d);
+            });
+
+            document.getElementById('pirate-count').textContent = `${pirateDiceCount} Daus`;
+        }
+
+        function togglePlayerCup() {
+            const cup = document.getElementById('player-cup');
+            // Visual toggle? For now just hover effect is enough.
+            // Maybe click to peek? The dice are already visible below the cup in this UI design.
+            // Let's assume cup is "lifted" visually by default for player, or we hide them?
+            // "Cubilets de cuir que tapen els daus".
+            // Okay, let's hide player dice initially and click cup to show.
+            // For simplicity in this implementation, player dice are always visible to player.
+        }
+
+        let selectedBetType = 'negra';
+
+        function selectDieType(type) {
+            selectedBetType = type;
+            document.querySelectorAll('.bet-selector img').forEach(img => img.style.borderColor = 'transparent');
+            document.getElementById('sel-' + type).style.borderColor = 'var(--gold)';
+        }
+
+        function openBetModal() {
+            document.getElementById('bet-modal').style.display = 'flex';
+            selectDieType('negra');
+        }
+
+        function closeBetModal() {
+            document.getElementById('bet-modal').style.display = 'none';
+        }
+
+        function submitBet() {
+            const qty = parseInt(document.getElementById('bet-qty').value);
+            const type = selectedBetType;
+
+            // Validate: Must be higher than current
+            if (!isValidBet(qty, type)) {
+                alert("L'aposta ha de ser superior a l'actual!");
+                return;
+            }
+
+            currentBet = { qty, type };
+            updateBetUI();
+            closeBetModal();
+
+            turn = 'pirate';
+            updateControls();
+            setTimeout(pirateTurn, 1500);
+        }
+
+        function isValidBet(qty, type) {
+            if (currentBet.qty === 0) return true;
+
+            if (qty > currentBet.qty) return true;
+            if (qty === currentBet.qty) {
+                // Check type rank: negra < blanca < rodona
+                const ranks = { 'negra': 1, 'blanca': 2, 'rodona': 3 };
+                if (ranks[type] > ranks[currentBet.type]) return true;
+            }
+            return false;
+        }
+
+        function updateBetUI() {
+            const div = document.getElementById('current-bet');
+            if (currentBet.qty === 0) {
+                div.textContent = "CAP (Comença tu)";
+            } else {
+                div.innerHTML = `${currentBet.qty} x <img src="images/${currentBet.type}.jpg" style="width:30px; vertical-align:middle;">`;
+            }
+        }
+
+        function updateControls() {
+            const isPlayer = turn === 'player';
+            document.getElementById('btn-bet').disabled = !isPlayer;
+            document.getElementById('btn-liar').disabled = !isPlayer || currentBet.qty === 0;
+            document.getElementById('btn-spy').disabled = !isPlayer || spyUsed;
+
+            document.getElementById('msg-area').textContent = isPlayer ? "El teu torn." : "El Pirata està pensant...";
+        }
+
+        function pirateTurn() {
+            // Pirate Logic
+            // 1. Check if current bet is unbelievable
+            // Total pool: 14 dice. 
+            // Pirate knows his dice.
+            // He estimates probability.
+
+            // Simple AI:
+            // Count his own matching dice.
+            // Assume average distribution for unknown dice (Player's + Pool).
+            // Unknown dice = 14 - PirateCount.
+            // Expected matching in unknown = Unknown * (Prob of type).
+            // Prob: Negra (8/14), Blanca (4/14), Rodona (2/14).
+
+            const myCount = pirateDice.filter(d => d === currentBet.type).length;
+            const unknownCount = 14 - pirateDiceCount;
+
+            let prob = 0;
+            if (currentBet.type === 'negra') prob = 8 / 14;
+            else if (currentBet.type === 'blanca') prob = 4 / 14;
+            else prob = 2 / 14;
+
+            const expectedTotal = myCount + (unknownCount * prob);
+
+            // If bet is significantly higher than expected, Call Liar.
+            // Aggressiveness factor.
+            if (currentBet.qty > expectedTotal + 1.5) {
+                // Call Liar
+                document.getElementById('msg-area').textContent = "El Pirata diu: MENTIDA!";
+                playSound('pirate');
+                setTimeout(() => resolveRound(true), 2000); // True = Pirate calls Liar
+            } else {
+                // Raise Bet
+                // Try to raise quantity of a type he has, or just raise rank.
+                let nextQty = currentBet.qty;
+                let nextType = currentBet.type;
+
+                // Try to raise rank first if possible
+                const ranks = ['negra', 'blanca', 'rodona'];
+                let currentRankIdx = ranks.indexOf(currentBet.type);
+
+                if (currentRankIdx < 2) {
+                    // Try next rank same qty
+                    nextType = ranks[currentRankIdx + 1];
+                } else {
+                    // Must raise qty, reset to lowest rank (or best rank he has)
+                    nextQty++;
+                    nextType = 'negra'; // Reset to base
+                }
+
+                // He prefers betting on what he has
+                // Find best bet he can support
+                // For simplicity, just make a valid move.
+
+                currentBet = { qty: nextQty, type: nextType };
+                updateBetUI();
+                document.getElementById('msg-area').textContent = "El Pirata puja l'aposta!";
+                playSound('clack');
+
+                turn = 'player';
+                updateControls();
+            }
+        }
+
+        function callLiar() {
+            // Player calls Liar
+            resolveRound(false); // False = Player calls Liar
+        }
+
+        function resolveRound(pirateCalled) {
+            // Reveal all
+            document.querySelectorAll('.die.hidden').forEach(d => {
+                d.classList.remove('hidden');
+                d.innerHTML = `<img src="images/${d.dataset.type}.jpg">`;
+            });
+
+            // Count actual
+            const totalOnTable = playerDice.concat(pirateDice); // Only dice on table count? 
+            // "A l'inici... es reparteixen 3 i 3. Les 8 restants es queden fora".
+            // Usually in Liar's Dice you bet on TOTAL dice on table.
+            // "Aposta sobre el TOTAL de la taula (Els meus + els seus)".
+            // So we count playerDice + pirateDice.
+
+            const actualCount = totalOnTable.filter(d => d === currentBet.type).length;
+
+            let msg = `Hi ha ${actualCount} de ${currentBet.type}. L'aposta era ${currentBet.qty}.`;
+            let loser = '';
+
+            if (actualCount >= currentBet.qty) {
+                // Bet was TRUE. The one who called Liar loses.
+                msg += " L'APOSTA ERA CORRECTA!";
+                loser = pirateCalled ? 'pirate' : 'player';
+            } else {
+                // Bet was LIE. The one who bet loses (the previous player).
+                // Wait, if I call Liar and it IS a Lie, the bettor loses.
+                msg += " ERA MENTIDA!";
+                loser = pirateCalled ? 'player' : 'pirate'; // If pirate called liar (on me), and it was lie, I lose.
+            }
+
+            alert(msg);
+
+            if (loser === 'player') {
+                playerDiceCount--;
+                playSound('lose');
+            } else {
+                pirateDiceCount--;
+                playSound('win');
+            }
+
+            setTimeout(startNewHand, 1000);
+        }
+
+        function spyPirate() {
+            if (spyUsed) return;
+
+            // Generate Sum Question
+            // e.g. "Quant sumen 2 Blanques i 1 Negra?"
+            // Values: Negra=1, Blanca=2, Rodona=4
+
+            const items = [];
+            const types = ['negra', 'blanca', 'rodona'];
+            const labels = { 'negra': 'Negra', 'blanca': 'Blanca', 'rodona': 'Rodona' };
+            const values = { 'negra': 1, 'blanca': 2, 'rodona': 4 };
+
+            let totalSum = 0;
+            let qText = "Quant sumen ";
+
+            // Pick 2 or 3 items
+            const count = 2 + Math.floor(Math.random() * 2); // 2 or 3
+
+            for (let i = 0; i < count; i++) {
+                const t = types[Math.floor(Math.random() * 3)];
+                items.push(t);
+                totalSum += values[t];
+            }
+
+            // Format text
+            // e.g. "1 Negra, 1 Blanca"
+            const counts = {};
+            items.forEach(x => counts[x] = (counts[x] || 0) + 1);
+
+            const parts = [];
+            for (const [k, v] of Object.entries(counts)) {
+                let label = labels[k];
+                if (v > 1) label += 's'; // Pluralish (Negras, Blancas, Rodonas)
+                if (k === 'rodona' && v > 1) label = 'Rodones';
+                if (k === 'blanca' && v > 1) label = 'Blanques';
+                if (k === 'negra' && v > 1) label = 'Negres';
+
+                parts.push(`${v} ${label}`);
+            }
+
+            qText += parts.join(' i ') + "?";
+
+            // Generate Options
+            const opts = [totalSum];
+            while (opts.length < 3) {
+                const r = Math.max(1, totalSum - 2 + Math.floor(Math.random() * 5));
+                if (!opts.includes(r)) opts.push(r);
+            }
+            shuffle(opts);
+
+            document.getElementById('spy-q').textContent = qText;
+            const cont = document.getElementById('spy-opts');
+            cont.innerHTML = '';
+            opts.forEach(o => {
+                const b = document.createElement('button');
+                b.className = 'btn-action';
+                b.textContent = o;
+                b.onclick = () => checkSpy(o, totalSum);
+                cont.appendChild(b);
+            });
+
+            document.getElementById('spy-modal').style.display = 'flex';
+        }
+
+        function checkSpy(ans, correct) {
+            document.getElementById('spy-modal').style.display = 'none';
+            if (ans === correct) {
+                // Reveal 1 pirate die
+                const hidden = document.querySelectorAll('.die.hidden');
+                if (hidden.length > 0) {
+                    const die = hidden[0];
+                    die.classList.remove('hidden');
+                    die.innerHTML = `<img src="images/${die.dataset.type}.jpg">`;
+                    setTimeout(() => {
+                        die.classList.add('hidden');
+                        die.innerHTML = '';
+                    }, 3000);
+                }
+                spyUsed = true;
+                document.getElementById('btn-spy').disabled = true;
+            } else {
+                alert("Incorrecte! El Pirata riu.");
+                playSound('pirate');
+                spyUsed = true;
+                document.getElementById('btn-spy').disabled = true;
+            }
+        }
+
+        function winGame() {
+            // Save Reward
+            const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+            rewards['reward_daus'] = true;
+            localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+            document.getElementById('win-modal').style.display = 'flex';
+            playSound('fanfare');
+        }
+
+        // Audio
+        function playSound(type) {
+            const vol = document.getElementById('volume').value;
+            if (vol <= 0) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'shake') {
+                osc.type = 'sawtooth'; // Noise-ish
+                osc.frequency.setValueAtTime(100, now);
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            } else if (type === 'pirate') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(50, now);
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1);
+                osc.start();
+                osc.stop(now + 1);
+            } else if (type === 'win') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(880, now + 0.2);
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            }
+        }
+
+        // Start
+        initGame();
+
+    </script>
+</body>
+
+</html>

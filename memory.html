@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Rítmic: Duel al Casino</title>
+    <style>
+        :root {
+            --felt-green: #2d5a27;
+            --felt-dark: #1a3c1a;
+            --wood-border: #5d4037;
+            --gold: #ffd700;
+            --text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            --danger-red: #ff0033;
+            --wood-mahogany: #4a3728;
+            --card-back: #1a237e;
+            /* Dark Blue */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* Start Screen */
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a0000 0%, #000000 100%);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        #start-screen h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            text-align: center;
+        }
+
+        button.start-btn {
+            background: linear-gradient(to bottom, #ffd700, #b8860b);
+            border: 2px solid #fff;
+            padding: 20px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s, filter 0.2s;
+            font-family: 'Georgia', serif;
+            color: #3e2723;
+        }
+
+        button.start-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+
+        /* Reward Button - Top Right */
+        #btn-reward {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: #888;
+            border: 2px solid #555;
+            padding: 10px 20px;
+            border-radius: 15px;
+            cursor: not-allowed;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            z-index: 100;
+            transition: all 0.5s ease;
+            max-width: 250px;
+            text-align: left;
+            line-height: 1.2;
+        }
+
+        #btn-reward.unlocked {
+            background: linear-gradient(to bottom, #ffd700, #b8860b);
+            color: #3e2723;
+            border-color: #fff;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            0% {
+                filter: brightness(1);
+            }
+
+            50% {
+                filter: brightness(1.3);
+            }
+
+            100% {
+                filter: brightness(1);
+            }
+        }
+
+        /* Main Game Table */
+        #game-table {
+            width: 95vw;
+            height: 90vh;
+            background: radial-gradient(circle at center, var(--felt-green), var(--felt-dark));
+            border: 20px solid var(--wood-border);
+            border-radius: 50px;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Texture overlay */
+        #game-table::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            border-radius: 30px;
+        }
+
+        /* Header */
+        header {
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 0 40px;
+            box-sizing: border-box;
+        }
+
+        h1.game-title {
+            font-size: 2.5rem;
+            margin: 0;
+            color: var(--gold);
+            text-shadow: var(--text-shadow);
+            letter-spacing: 2px;
+        }
+
+        .score-board {
+            display: flex;
+            gap: 30px;
+            font-size: 1.5rem;
+            text-shadow: var(--text-shadow);
+            margin-top: 10px;
+        }
+
+        .score-item {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 5px 20px;
+            border-radius: 15px;
+            border: 1px solid var(--gold);
+        }
+
+        .active-turn {
+            box-shadow: 0 0 15px var(--gold);
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        /* Volume Control - Top Left */
+        .volume-control {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid var(--gold);
+        }
+
+        .volume-control span {
+            font-size: 1.5rem;
+        }
+
+        input[type=range] {
+            width: 100px;
+            accent-color: var(--gold);
+        }
+
+        #btn-menu {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            /* Moved to Bottom-Right */
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #ffd700;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Georgia', serif;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        #btn-menu:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        /* Game Container */
+        #game-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 15px;
+            width: 800px;
+            height: 600px;
+            z-index: 10;
+            perspective: 1000px;
+            margin-top: 20px;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched {
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s 0.5s, opacity 0.5s linear;
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #fff;
+            background: #fff;
+        }
+
+        .card-front {
+            background: var(--card-back);
+            background-image: repeating-linear-gradient(45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(255, 255, 255, 0.1) 10px,
+                    rgba(255, 255, 255, 0.1) 20px);
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+        }
+
+        .card-back img {
+            width: 80%;
+            height: auto;
+            max-height: 80%;
+        }
+
+        .card-back span {
+            color: #000;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        /* Message Area */
+        #message-area {
+            margin-top: 20px;
+            height: 40px;
+            font-size: 2rem;
+            color: var(--gold);
+            text-shadow: 1px 1px 2px #000;
+            text-align: center;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        /* Modals */
+        #reward-modal,
+        #gameover-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 500;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2d5a27, #1a3316);
+            border: 4px solid var(--gold);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            box-shadow: 0 0 50px var(--gold);
+        }
+
+        .modal-btn {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            font-family: 'Georgia', serif;
+            margin-top: 20px;
+        }
+
+        .modal-btn:hover {
+            transform: scale(1.05);
+            background: var(--gold);
+        }
+
+        /* Confetti */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--gold);
+            animation: fall linear forwards;
+            z-index: 1000;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="start-screen">
+        <h1>MEMORY RÍTMIC</h1>
+        <p style="font-size: 1.5rem; margin-bottom: 30px;">Duel al Casino</p>
+        <button id="btn-start-game" class="start-btn">COMENÇAR PARTIDA</button>
+    </div>
+
+    <!-- Reward Button -->
+    <button id="btn-reward" onclick="game.claimReward()">
+        <span style="font-size: 1.5rem;">🔒</span>
+        <span>Aconseguir la Guitarra Elèctrica</span>
+    </button>
+
+    <!-- Menu Button -->
+    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+
+    <div id="game-table">
+        <!-- Volume Control -->
+        <div class="volume-control">
+            <span id="volume-icon">🔊</span>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
+        </div>
+
+        <h1 class="game-title">MEMORY RÍTMIC</h1>
+
+        <div class="score-board">
+            <div class="score-item" id="player-score-box">JUGADOR: <span id="player-score">0</span></div>
+            <div class="score-item" id="casino-score-box">CASINO: <span id="casino-score">0</span></div>
+            <div class="score-item" style="border-color: #fff;">VICTÒRIES: <span id="wins-display">0</span>/2</div>
+        </div>
+        </header>
+
+        <div id="game-grid">
+            <!-- Cards generated by JS -->
+        </div>
+
+        <div id="message-area">Torn del Jugador</div>
+    </div>
+
+    <!-- Reward Modal -->
+    <div id="reward-modal">
+        <div class="modal-content">
+            <div style="font-size: 5rem;">🎸</div>
+            <h2 style="color: var(--gold);">JACKPOT LLEGENDARI!</h2>
+            <p>Has derrotat la Casa dues vegades!</p>
+            <p>Aquí tens la teva relíquia:</p>
+            <h3 style="color: var(--gold); font-size: 2rem;">LA PRIMERA GUITARRA ELÈCTRICA</h3>
+            <p style="font-size: 1rem; opacity: 0.8;">"Coneixuda com 'The Frying Pan' (1931), va canviar la música per
+                sempre."</p>
+            <button class="modal-btn" onclick="location.reload()">TORNAR A JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Game Over / Round End Modal -->
+    <div id="gameover-modal">
+        <div class="modal-content">
+            <h2 id="modal-title" style="color: var(--gold);">RESULTAT</h2>
+            <p id="modal-msg">...</p>
+            <button class="modal-btn" onclick="game.nextRound()">SEGÜENT RONDA</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="music/background_music_memory.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // --- DATA ---
+        const FIGURES = [
+            { id: 'rodona', img: 'images/rodona.jpg', name: 'Rodona' },
+            { id: 'blanca', img: 'images/blanca.jpg', name: 'Blanca' },
+            { id: 'negra', img: 'images/negra.jpg', name: 'Negra' },
+            { id: 'corxera', img: 'images/corxera.jpg', name: 'Corxera' },
+            { id: 'semicorxera', img: 'images/semicorxera.jpg', name: 'Semicorxera' }
+        ];
+
+        const RESTS = [
+            { id: 'rodona', img: 'images/silencirodona.jpg', name: 'Silenci Rodona' },
+            { id: 'blanca', img: 'images/silenciblanca.jpg', name: 'Silenci Blanca' },
+            { id: 'negra', img: 'images/silencinegra.jpg', name: 'Silenci Negra' },
+            { id: 'corxera', img: 'images/silencicorxera.jpg', name: 'Silenci Corxera' },
+            { id: 'semicorxera', img: 'images/silencisemicorxera.jpg', name: 'Silenci Semicorxera' }
+        ];
+
+        // --- AUDIO ENGINE ---
+        class AudioController {
+            constructor() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.bgMusic = document.getElementById('bg-music');
+                this.bgMusic.volume = 0.5;
+            }
+
+            startMusic() {
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                this.bgMusic.play().catch(e => console.log("Music failed", e));
+            }
+
+            setVolume(val) {
+                this.bgMusic.volume = val;
+            }
+
+            playTone(freq, type, duration) {
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            }
+
+            playFlip() {
+                this.playTone(200, 'triangle', 0.1);
+            }
+
+            playMatch() {
+                this.playTone(880, 'sine', 0.3);
+                setTimeout(() => this.playTone(1100, 'sine', 0.5), 100);
+            }
+
+            playError() {
+                this.playTone(150, 'sawtooth', 0.3);
+            }
+
+            playWin() {
+                this.playTone(523, 'square', 0.2);
+                setTimeout(() => this.playTone(659, 'square', 0.2), 200);
+                setTimeout(() => this.playTone(783, 'square', 0.4), 400);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        class Game {
+            constructor() {
+                this.audio = new AudioController();
+                this.grid = document.getElementById('game-grid');
+                this.msgArea = document.getElementById('message-area');
+                this.pScoreEl = document.getElementById('player-score');
+                this.cScoreEl = document.getElementById('casino-score');
+                this.winsEl = document.getElementById('wins-display');
+                this.btnReward = document.getElementById('btn-reward');
+
+                this.cards = [];
+                this.flippedCards = [];
+                this.matchedPairs = 0;
+                this.isLocked = false;
+                this.turn = 'player'; // 'player' or 'casino'
+
+                this.scores = { player: 0, casino: 0 };
+                this.totalWins = 0;
+                this.rewardUnlocked = false;
+
+                this.aiMemory = new Map();
+
+                this.setupVolume();
+            }
+
+            init() {
+                document.getElementById('start-screen').style.display = 'none';
+                this.audio.startMusic();
+                this.startRound();
+            }
+
+            setupVolume() {
+                const slider = document.getElementById('volume-slider');
+                slider.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    this.audio.setVolume(val);
+                    const icon = document.getElementById('volume-icon');
+                    if (val == 0) icon.textContent = "🔇";
+                    else if (val < 0.5) icon.textContent = "🔉";
+                    else icon.textContent = "🔊";
+                });
+            }
+
+            startRound() {
+                this.grid.innerHTML = '';
+                this.cards = [];
+                this.flippedCards = [];
+                this.matchedPairs = 0;
+                this.scores = { player: 0, casino: 0 };
+                this.aiMemory.clear();
+                this.turn = 'player';
+                this.isLocked = false;
+
+                this.updateUI();
+                this.generateDeck();
+            }
+
+            generateDeck() {
+                let deck = [];
+
+                // Add Set 1
+                FIGURES.forEach((fig, i) => {
+                    deck.push({ ...fig, type: 'figure', matchId: fig.id });
+                    deck.push({ ...RESTS[i], type: 'rest', matchId: fig.id });
+                });
+                // Add Set 2 (Duplicate)
+                FIGURES.forEach((fig, i) => {
+                    deck.push({ ...fig, type: 'figure', matchId: fig.id });
+                    deck.push({ ...RESTS[i], type: 'rest', matchId: fig.id });
+                });
+
+                // Shuffle
+                deck.sort(() => Math.random() - 0.5);
+
+                // Render
+                deck.forEach((cardData, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.dataset.index = index;
+                    card.dataset.id = cardData.matchId;
+
+                    card.innerHTML = `
+                        <div class="card-face card-front"></div>
+                        <div class="card-face card-back">
+                            <img src="${cardData.img}" alt="${cardData.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                            <span style="display:none">${cardData.name}</span>
+                        </div>
+                    `;
+
+                    card.addEventListener('click', () => this.handleCardClick(index));
+                    this.grid.appendChild(card);
+                    this.cards.push({ element: card, data: cardData, matched: false });
+                });
+            }
+
+            handleCardClick(index) {
+                if (this.isLocked || this.turn !== 'player') return;
+                if (this.cards[index].element.classList.contains('flipped')) return;
+                if (this.cards[index].matched) return;
+
+                this.flipCard(index);
+            }
+
+            flipCard(index) {
+                const cardObj = this.cards[index];
+                cardObj.element.classList.add('flipped');
+                this.flippedCards.push(index);
+                this.audio.playFlip();
+
+                // Add to AI Memory
+                this.aiMemory.set(index, cardObj.data.matchId);
+
+                if (this.flippedCards.length === 2) {
+                    this.isLocked = true;
+                    this.checkMatch();
+                }
+            }
+
+            checkMatch() {
+                const [idx1, idx2] = this.flippedCards;
+                const card1 = this.cards[idx1];
+                const card2 = this.cards[idx2];
+
+                const validTypes = (card1.data.type !== card2.data.type);
+                const sameId = (card1.data.matchId === card2.data.matchId);
+
+                if (sameId && validTypes) {
+                    // Match!
+                    setTimeout(() => {
+                        this.audio.playMatch();
+                        card1.element.classList.add('matched');
+                        card2.element.classList.add('matched');
+                        card1.matched = true;
+                        card2.matched = true;
+
+                        this.scores[this.turn]++;
+                        this.matchedPairs++;
+                        this.updateUI();
+
+                        this.flippedCards = [];
+                        this.isLocked = false;
+
+                        if (this.matchedPairs === 10) {
+                            this.endRound();
+                        } else {
+                            if (this.turn === 'casino') {
+                                setTimeout(() => this.aiTurn(), 1000);
+                            } else {
+                                this.msgArea.textContent = "Has encertat! Torna a tirar.";
+                            }
+                        }
+                    }, 1000);
+                } else {
+                    // No Match
+                    setTimeout(() => {
+                        this.audio.playError();
+                        card1.element.classList.remove('flipped');
+                        card2.element.classList.remove('flipped');
+                        this.flippedCards = [];
+
+                        this.switchTurn();
+                    }, 1500);
+                }
+            }
+
+            switchTurn() {
+                this.turn = this.turn === 'player' ? 'casino' : 'player';
+                this.isLocked = false;
+                this.updateUI();
+
+                if (this.turn === 'casino') {
+                    setTimeout(() => this.aiTurn(), 1000);
+                }
+            }
+
+            aiTurn() {
+                let move = this.findKnownMatch();
+
+                if (move) {
+                    this.flipCardAI(move[0]);
+                    setTimeout(() => this.flipCardAI(move[1]), 800);
+                } else {
+                    let first = this.pickRandomUnknown();
+                    this.flipCardAI(first);
+
+                    setTimeout(() => {
+                        const firstCardId = this.cards[first].data.matchId;
+                        const firstCardType = this.cards[first].data.type;
+
+                        let matchInMem = -1;
+                        for (let [idx, id] of this.aiMemory) {
+                            if (idx !== first && !this.cards[idx].matched && id === firstCardId && this.cards[idx].data.type !== firstCardType) {
+                                matchInMem = idx;
+                                break;
+                            }
+                        }
+
+                        // NERFED AI: Only 30% chance to use memory correctly
+                        if (matchInMem !== -1 && Math.random() < 0.30) {
+                            this.flipCardAI(matchInMem);
+                        } else {
+                            let second = this.pickRandomUnknown(first);
+                            this.flipCardAI(second);
+                        }
+                    }, 800);
+                }
+            }
+
+            flipCardAI(index) {
+                this.flipCard(index);
+            }
+
+            findKnownMatch() {
+                // NERFED AI: Only 30% chance to find a known match in memory
+                if (Math.random() > 0.30) return null;
+
+                let knownCards = Array.from(this.aiMemory.entries()).filter(([idx, id]) => !this.cards[idx].matched);
+
+                for (let i = 0; i < knownCards.length; i++) {
+                    for (let j = i + 1; j < knownCards.length; j++) {
+                        const [idx1, id1] = knownCards[i];
+                        const [idx2, id2] = knownCards[j];
+
+                        if (id1 === id2 && this.cards[idx1].data.type !== this.cards[idx2].data.type) {
+                            return [idx1, idx2];
+                        }
+                    }
+                }
+                return null;
+            }
+
+            pickRandomUnknown(excludeIdx = -1) {
+                let available = this.cards
+                    .map((c, i) => i)
+                    .filter(i => !this.cards[i].matched && !this.cards[i].element.classList.contains('flipped') && i !== excludeIdx);
+
+                return available[Math.floor(Math.random() * available.length)];
+            }
+
+            updateUI() {
+                this.pScoreEl.textContent = this.scores.player;
+                this.cScoreEl.textContent = this.scores.casino;
+                this.winsEl.textContent = this.totalWins;
+
+                const pBox = document.getElementById('player-score-box');
+                const cBox = document.getElementById('casino-score-box');
+
+                if (this.turn === 'player') {
+                    this.msgArea.textContent = "Torn del Jugador";
+                    pBox.classList.add('active-turn');
+                    cBox.classList.remove('active-turn');
+                } else {
+                    this.msgArea.textContent = "La Casa està pensant...";
+                    cBox.classList.add('active-turn');
+                    pBox.classList.remove('active-turn');
+                }
+
+                // Check Reward Unlock
+                if (this.totalWins >= 2 && !this.rewardUnlocked) {
+                    this.rewardUnlocked = true;
+                    this.btnReward.classList.add('unlocked');
+                    this.btnReward.innerHTML = '<span style="font-size: 1.5rem;">🎸</span><span>Aconseguir la Guitarra Elèctrica</span>';
+                    this.audio.playWin();
+                    this.createConfetti();
+
+                    // Save Reward
+                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_memory'] = true;
+                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                    // Redirect
+                    setTimeout(() => {
+                        window.location.href = 'menu.html';
+                    }, 4000);
+                }
+            }
+
+            claimReward() {
+                if (this.rewardUnlocked) {
+                    document.getElementById('reward-modal').style.display = 'flex';
+                    this.audio.playWin();
+                    this.createConfetti();
+                }
+            }
+
+            endRound() {
+                let title, msg;
+                if (this.scores.player > this.scores.casino) {
+                    title = "VICTÒRIA!";
+                    msg = "Has guanyat a la Casa.";
+                    this.totalWins++;
+                    this.audio.playWin();
+                    this.createConfetti();
+                } else if (this.scores.casino > this.scores.player) {
+                    title = "DERROTA...";
+                    msg = "La Casa sempre guanya.";
+                } else {
+                    title = "EMPAT";
+                    msg = "Repartiment de punts.";
+                }
+
+                this.updateUI(); // To trigger unlock if needed
+
+                if (this.totalWins >= 2) {
+                    setTimeout(() => {
+                        this.claimReward();
+                    }, 1000);
+                } else {
+                    document.getElementById('modal-title').textContent = title;
+                    document.getElementById('modal-msg').textContent = msg;
+                    setTimeout(() => {
+                        document.getElementById('gameover-modal').style.display = 'flex';
+                    }, 1000);
+                }
+            }
+
+            nextRound() {
+                document.getElementById('gameover-modal').style.display = 'none';
+                this.startRound();
+            }
+
+            createConfetti() {
+                for (let i = 0; i < 100; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                    document.body.appendChild(confetti);
+                }
+            }
+        }
+
+        const game = new Game();
+
+        document.getElementById('btn-start-game').addEventListener('click', () => {
+            game.init();
+        });
+
+    </script>
+</body>
+
+</html>

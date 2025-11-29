@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Laberint Rítmic</title>
+    <style>
+        :root {
+            --brass: #b5a642;
+            --wood: #5d4037;
+            --bg: #2e2e2e;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 1000;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--brass);
+            border: 1px solid var(--brass);
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+            transition: all 0.2s;
+        }
+
+        .btn-menu:hover {
+            background: var(--brass);
+            color: #000;
+        }
+
+        #game-container {
+            position: relative;
+            width: 600px;
+            height: 800px;
+            background: radial-gradient(circle, #4e342e 0%, #2e2e2e 100%);
+            border: 10px solid var(--brass);
+            border-radius: 20px;
+            box-shadow: 0 0 50px #000;
+        }
+
+        canvas {
+            display: block;
+            border-radius: 10px;
+        }
+
+        /* UI Overlay */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #header {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            pointer-events: auto;
+        }
+
+        #sequence-display {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            display: inline-flex;
+            gap: 10px;
+            border: 2px solid var(--brass);
+        }
+
+        .note-img {
+            width: 60px;
+            height: 60px;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            /* Side */
+            width: auto;
+            text-align: right;
+            pointer-events: auto;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: linear-gradient(to bottom, var(--brass), #8a7f30);
+            color: #000;
+            border: 2px solid #fff;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            filter: grayscale(1);
+            cursor: not-allowed;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: #2a0a10;
+            padding: 40px;
+            border: 4px double var(--brass);
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+            color: #fff;
+            box-shadow: 0 0 50px var(--brass);
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--brass);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color:var(--brass);">
+        </div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="600" height="800"></canvas>
+
+        <div id="ui-layer">
+            <div id="header">
+                <h1 style="color: var(--brass); margin: 0 0 10px 0;">EL LABERINT RÍTMIC</h1>
+                <div id="sequence-display">
+                    <!-- Notes injected here -->
+                </div>
+                <div style="margin-top: 5px;">OBJECTIU: <span id="target-sum">?</span> TEMPS</div>
+                <div>ENCERTS: <span id="score">0</span>/5</div>
+            </div>
+
+            <div id="controls">
+                <button id="launch-btn" class="btn" onclick="launchBall()">LANÇAR BOLA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Modal -->
+    <div id="start-modal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2 style="color: var(--brass);">MÀQUINA RENAIXENTISTA</h2>
+            <p>Calcula la suma de la seqüència.</p>
+            <p>Configura les palanques per guiar la bola al cubell correcte.</p>
+            <button class="btn" onclick="startGame()">ACTIVAR MÀQUINA</button>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--brass);">HARMONIA DE LES ESFERES!</h2>
+            <div class="relic-icon">🧭</div>
+            <p style="font-size: 1.5rem; color: #dcb;">"L'ASTROLABI DE GALILEI"</p>
+            <p>Vincenzo Galilei va unir música i ciència. Una eina per mesurar l'univers!</p>
+            <button class="btn" onclick="location.reload()">TORNAR</button>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="result-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="res-title">...</h2>
+            <p id="res-msg">...</p>
+            <button class="btn" onclick="nextRound()">SEGÜENT</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_laberinto.mp3" loop></audio>
+    <script>
+        // Background Music
+        document.body.addEventListener('click', () => {
+            const bgMusic = document.getElementById('bg-music');
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        const NOTES = {
+            'rodona': { val: 4, img: 'images/rodona.jpg' },
+            'blanca': { val: 2, img: 'images/blanca.jpg' },
+            'negra': { val: 1, img: 'images/negra.jpg' },
+            'corxera': { val: 0.5, img: 'images/corxera.jpg' },
+            'semicorxera': { val: 0.25, img: 'images/semicorxera.jpg' }
+        };
+
+        // Game State
+        let score = 0;
+        let targetSum = 0;
+        let gates = []; // Array of {x, y, dir: -1 (left) or 1 (right)}
+        let ball = { x: 300, y: 150, r: 15, vx: 0, vy: 0, active: false };
+        let buckets = [
+            { x: 100, val: 2, label: "2/4" },
+            { x: 300, val: 3, label: "3/4" },
+            { x: 500, val: 4, label: "4/4" }
+        ];
+
+        // Structure: A binary tree-like path
+        // Level 1: 1 Gate at 300, 250
+        // Level 2: 2 Gates at 200, 400 and 400, 400
+        // Level 3: Buckets at bottom
+
+        // Let's define nodes/junctions
+        const JUNCTIONS = [
+            { id: 0, x: 300, y: 250, left: 1, right: 2 }, // Top
+            { id: 1, x: 200, y: 450, left: 3, right: 4 }, // Mid Left
+            { id: 2, x: 400, y: 450, left: 4, right: 5 }, // Mid Right
+            // Bottom targets (Buckets)
+            // 3 -> Bucket 0 (Left)
+            // 4 -> Bucket 1 (Mid)
+            // 5 -> Bucket 2 (Right)
+        ];
+
+        // Map bucket indices to actual bucket objects
+        const TARGET_MAP = {
+            3: 0,
+            4: 1,
+            5: 2
+        };
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'click') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.05);
+            } else if (type === 'roll') {
+                // Noise loop? Just simple tone for now
+            } else if (type === 'thud') {
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            }
+        }
+
+        function startGame() {
+            document.getElementById('start-modal').style.display = 'none';
+
+            // Init Gates
+            gates = JUNCTIONS.map(j => ({
+                ...j,
+                dir: Math.random() < 0.5 ? -1 : 1 // Random initial direction
+            }));
+
+            nextRound();
+
+            // Input handling
+            canvas.addEventListener('click', e => {
+                if (ball.active) return; // Locked while rolling
+                const rect = canvas.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const my = e.clientY - rect.top;
+
+                gates.forEach(g => {
+                    // Check click near gate
+                    const dx = mx - g.x;
+                    const dy = my - g.y;
+                    if (Math.sqrt(dx * dx + dy * dy) < 40) {
+                        g.dir *= -1; // Toggle
+                        playSound('click');
+                        draw();
+                    }
+                });
+            });
+        }
+
+        function nextRound() {
+            document.getElementById('result-modal').style.display = 'none';
+            document.getElementById('launch-btn').disabled = false;
+
+            // Reset Ball
+            ball.x = 300;
+            ball.y = 150;
+            ball.vx = 0;
+            ball.vy = 0;
+            ball.active = false;
+            ball.currentNode = 0; // Start at top node
+            ball.state = 'ready'; // ready, moving_to_node, falling
+
+            // Generate Target
+            const r = Math.random();
+            if (r < 0.33) targetSum = 2;
+            else if (r < 0.66) targetSum = 3;
+            else targetSum = 4;
+
+            document.getElementById('target-sum').textContent = targetSum;
+
+            // Generate Sequence Display
+            const container = document.getElementById('sequence-display');
+            container.innerHTML = '';
+
+            let remaining = targetSum;
+            while (remaining > 0) {
+                // Pick random note <= remaining
+                let keys = Object.keys(NOTES);
+                // Filter
+                keys = keys.filter(k => NOTES[k].val <= remaining);
+                if (keys.length === 0) break; // Should not happen
+
+                let k = keys[Math.floor(Math.random() * keys.length)];
+                let img = document.createElement('img');
+                img.src = NOTES[k].img;
+                img.className = 'note-img';
+                container.appendChild(img);
+                remaining -= NOTES[k].val;
+            }
+
+            draw();
+        }
+
+        function launchBall() {
+            document.getElementById('launch-btn').disabled = true;
+            ball.active = true;
+            ball.state = 'moving_to_node';
+            ball.targetX = gates[0].x;
+            ball.targetY = gates[0].y;
+            requestAnimationFrame(update);
+        }
+
+        function update() {
+            if (!ball.active) return;
+
+            const speed = 5;
+
+            if (ball.state === 'moving_to_node') {
+                // Move towards target
+                const dx = ball.targetX - ball.x;
+                const dy = ball.targetY - ball.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < speed) {
+                    ball.x = ball.targetX;
+                    ball.y = ball.targetY;
+
+                    // Arrived at node
+                    // Check gate direction
+                    const currentGate = gates.find(g => g.x === ball.x && g.y === ball.y);
+
+                    if (currentGate) {
+                        // Determine next target
+                        const nextId = currentGate.dir === -1 ? currentGate.left : currentGate.right;
+
+                        // Is next a gate or a bucket?
+                        const nextGate = gates.find(g => g.id === nextId);
+
+                        if (nextGate) {
+                            ball.targetX = nextGate.x;
+                            ball.targetY = nextGate.y;
+                        } else {
+                            // It's a bucket
+                            const bucketIdx = TARGET_MAP[nextId];
+                            const bucket = buckets[bucketIdx];
+                            ball.targetX = bucket.x;
+                            ball.targetY = 700; // Bucket height
+                            ball.state = 'falling_to_bucket';
+                            ball.finalBucketIndex = bucketIdx;
+                        }
+                    }
+                } else {
+                    ball.x += (dx / dist) * speed;
+                    ball.y += (dy / dist) * speed;
+                }
+            } else if (ball.state === 'falling_to_bucket') {
+                const dx = ball.targetX - ball.x;
+                const dy = ball.targetY - ball.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < speed) {
+                    ball.x = ball.targetX;
+                    ball.y = ball.targetY;
+                    finishRound();
+                    return;
+                } else {
+                    ball.x += (dx / dist) * speed;
+                    ball.y += (dy / dist) * speed;
+                }
+            }
+
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        function finishRound() {
+            ball.active = false;
+            playSound('thud');
+
+            const bucket = buckets[ball.finalBucketIndex];
+            let msg = "";
+            let title = "";
+
+            if (bucket.val === targetSum) {
+                score++;
+                title = "CORRECTE!";
+                msg = "La bola ha caigut al cubell correcte.";
+                document.getElementById('score').textContent = score;
+            } else {
+                title = "ERROR";
+                msg = `Volies ${targetSum}, ha caigut a ${bucket.val}.`;
+            }
+
+            document.getElementById('res-title').textContent = title;
+            document.getElementById('res-msg').textContent = msg;
+
+            if (score >= 5) {
+                // Save Reward
+                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                rewards['reward_laberinto'] = true;
+                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                setTimeout(() => {
+                    document.getElementById('win-modal').style.display = 'flex';
+                }, 1000);
+            } else {
+                setTimeout(() => {
+                    document.getElementById('result-modal').style.display = 'flex';
+                }, 1000);
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Pipes
+            ctx.strokeStyle = '#5d4037';
+            ctx.lineWidth = 20;
+            ctx.lineCap = 'round';
+
+            // Draw connections
+            gates.forEach(g => {
+                // Line to left child
+                // Find coords of children
+                let leftChild = gates.find(c => c.id === g.left);
+                let rightChild = gates.find(c => c.id === g.right);
+
+                let lx, ly, rx, ry;
+
+                if (leftChild) { lx = leftChild.x; ly = leftChild.y; }
+                else {
+                    // Bucket
+                    let bIdx = TARGET_MAP[g.left];
+                    lx = buckets[bIdx].x; ly = 700;
+                }
+
+                if (rightChild) { rx = rightChild.x; ry = rightChild.y; }
+                else {
+                    let bIdx = TARGET_MAP[g.right];
+                    rx = buckets[bIdx].x; ry = 700;
+                }
+
+                ctx.beginPath();
+                ctx.moveTo(g.x, g.y);
+                ctx.lineTo(lx, ly);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(g.x, g.y);
+                ctx.lineTo(rx, ry);
+                ctx.stroke();
+            });
+
+            // Draw Input Pipe
+            ctx.beginPath();
+            ctx.moveTo(300, 0);
+            ctx.lineTo(300, 250);
+            ctx.stroke();
+
+            // Draw Buckets
+            buckets.forEach(b => {
+                ctx.fillStyle = '#444';
+                ctx.fillRect(b.x - 40, 700, 80, 60);
+                ctx.fillStyle = '#fff';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(b.label, b.x, 740);
+            });
+
+            // Draw Gates
+            gates.forEach(g => {
+                ctx.save();
+                ctx.translate(g.x, g.y);
+
+                // Draw Hub
+                ctx.beginPath();
+                ctx.arc(0, 0, 15, 0, Math.PI * 2);
+                ctx.fillStyle = '#b5a642';
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw Flap
+                ctx.rotate(g.dir === -1 ? -Math.PI / 4 : Math.PI / 4);
+                ctx.fillStyle = '#d4af37';
+                ctx.fillRect(-5, 0, 10, 40);
+
+                // Draw Arrow Indicator
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                if (g.dir === -1) { // Left
+                    ctx.moveTo(-10, 20); ctx.lineTo(-20, 30); ctx.lineTo(-10, 40);
+                } else { // Right
+                    ctx.moveTo(10, 20); ctx.lineTo(20, 30); ctx.lineTo(10, 40);
+                }
+                ctx.fill();
+
+                ctx.restore();
+            });
+
+            // Draw Ball
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+            ctx.fillStyle = '#aaa'; // Silver ball
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            // Shine
+            ctx.beginPath();
+            ctx.arc(ball.x - 5, ball.y - 5, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+        }
+
+        // Initial draw
+        setTimeout(draw, 100);
+
+    </script>
+</body>
+
+</html>

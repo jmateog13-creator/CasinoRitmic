@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mahjong Rítmic</title>
+    <style>
+        :root {
+            --bg: #003300;
+            /* Felt Green */
+            --tile-face: #fff;
+            --tile-side: #ddd;
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle, #004d00, #001a00);
+            /* Poker Felt */
+            color: #fff;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        #ui-bar>* {
+            pointer-events: auto;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+            transition: all 0.2s;
+        }
+
+        .btn-menu:hover {
+            background: var(--gold);
+            color: #000;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .tile {
+            position: absolute;
+            width: 100px;
+            /* Larger */
+            height: 140px;
+            /* Larger */
+            background: var(--tile-face);
+            border: 1px solid #aaa;
+            border-radius: 8px;
+            box-shadow: 6px 6px 0 var(--tile-side), 8px 8px 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s;
+            z-index: 10;
+        }
+
+        .tile:hover {
+            transform: translate(-1px, -1px);
+        }
+
+        .tile.selected {
+            background: #fffacd;
+            border: 3px solid var(--gold);
+            transform: translate(-2px, -2px);
+        }
+
+        .tile.blocked {
+            filter: brightness(0.5);
+            cursor: not-allowed;
+        }
+
+        .tile img {
+            width: 60px;
+            height: 60px;
+            pointer-events: none;
+        }
+
+        #header {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            z-index: 100;
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--gold);
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .modal-content {
+            background: #4a0a10;
+            padding: 40px;
+            border: 4px double var(--gold);
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+            color: #fff;
+            box-shadow: 0 0 50px var(--gold);
+        }
+
+        .btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color:var(--gold);">
+        </div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="header">
+        <h1>MAHJONG RÍTMIC</h1>
+        <div>PARELLES RESTANTS: <span id="pairs">?</span></div>
+    </div>
+
+    <div id="game-container">
+        <!-- Tiles generated here -->
+    </div>
+
+    <!-- Start Modal -->
+    <div id="start-modal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">SALA ORIENTAL</h2>
+            <p>Elimina parelles de fitxes amb el MATEIX VALOR.</p>
+            <p>Només pots agafar fitxes lliures.</p>
+            <div style="display:flex; gap:20px; justify-content:center; margin-top:20px;">
+                <button class="btn" onclick="startGame(1)">NIVELL 1 (20 Fitxes)</button>
+                <button class="btn" onclick="startGame(2)">NIVELL 2 (36 Fitxes)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">NESSUN DORMA!</h2>
+            <div class="relic-icon">🔔</div>
+            <p style="font-size: 1.5rem; color: #dcb;">"EL GONG DE PUCCINI"</p>
+            <p>Giacomo Puccini va utilitzar gongs reals a la seva òpera 'Turandot'.</p>
+            <button class="btn" onclick="location.reload()">TORNAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_mahjong.mp3" loop></audio>
+    <script>
+        // Background Music
+        document.body.addEventListener('click', () => {
+            const bgMusic = document.getElementById('bg-music');
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        const TILES = [
+            { type: 'rodona', val: 4, img: 'images/rodona.jpg' },
+            { type: 'blanca', val: 2, img: 'images/blanca.jpg' },
+            { type: 'negra', val: 1, img: 'images/negra.jpg' },
+            { type: 'corxera', val: 0.5, img: 'images/corxera.jpg' },
+            { type: 'semicorxera', val: 0.25, img: 'images/semicorxera.jpg' },
+            { type: 's_rodona', val: 4, img: 'images/silencirodona.jpg' },
+            { type: 's_blanca', val: 2, img: 'images/silenciblanca.jpg' },
+            { type: 's_negra', val: 1, img: 'images/silencinegra.jpg' },
+            { type: 's_corxera', val: 0.5, img: 'images/silencicorxera.jpg' },
+            { type: 's_semicorxera', val: 0.25, img: 'images/silencisemicorxera.jpg' }
+        ];
+
+        // Layouts
+        const LEVEL_1 = [
+            // Simple Pyramid
+            { x: 2, y: 1, z: 0 }, { x: 3, y: 1, z: 0 },
+            { x: 1, y: 2, z: 0 }, { x: 2, y: 2, z: 0 }, { x: 3, y: 2, z: 0 }, { x: 4, y: 2, z: 0 },
+            { x: 2, y: 3, z: 0 }, { x: 3, y: 3, z: 0 },
+
+            { x: 2.5, y: 2, z: 1 }, { x: 2.5, y: 2.5, z: 1 }
+        ]; // 10 tiles? Too few. Need pairs.
+        // Let's make a standard 24 tile layout for Level 1
+        const LAYOUT_1 = [
+            { x: 1, y: 1, z: 0 }, { x: 2, y: 1, z: 0 }, { x: 3, y: 1, z: 0 }, { x: 4, y: 1, z: 0 },
+            { x: 1, y: 2, z: 0 }, { x: 2, y: 2, z: 0 }, { x: 3, y: 2, z: 0 }, { x: 4, y: 2, z: 0 },
+            { x: 1, y: 3, z: 0 }, { x: 2, y: 3, z: 0 }, { x: 3, y: 3, z: 0 }, { x: 4, y: 3, z: 0 },
+
+            { x: 2, y: 2, z: 1 }, { x: 3, y: 2, z: 1 },
+            { x: 2, y: 3, z: 1 }, { x: 3, y: 3, z: 1 },
+
+            { x: 2.5, y: 2.5, z: 2 }, { x: 2.5, y: 1.5, z: 2 }
+        ]; // 12+4+2 = 18. Need even. +2 base = 20.
+
+        // Level 2: Complex "Fortress"
+        const LAYOUT_2 = [
+            { x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }, { x: 4, y: 0, z: 0 }, { x: 5, y: 0, z: 0 },
+            { x: 0, y: 1, z: 0 }, { x: 5, y: 1, z: 0 },
+            { x: 0, y: 2, z: 0 }, { x: 5, y: 2, z: 0 },
+            { x: 0, y: 3, z: 0 }, { x: 5, y: 3, z: 0 },
+            { x: 0, y: 4, z: 0 }, { x: 1, y: 4, z: 0 }, { x: 4, y: 4, z: 0 }, { x: 5, y: 4, z: 0 },
+
+            { x: 2, y: 2, z: 0 }, { x: 3, y: 2, z: 0 },
+            { x: 2, y: 2, z: 1 }, { x: 3, y: 2, z: 1 },
+            { x: 2.5, y: 2, z: 2 }
+        ]; // 14 + 2 + 2 + 1 = 19. Need even. Add one at top.
+        // Let's just define fixed counts.
+
+        let currentLayout = [];
+        let tiles = [];
+        let selectedTile = null;
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'click') {
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.05);
+            } else if (type === 'match') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            }
+        }
+
+        function startGame(level) {
+            document.getElementById('start-modal').style.display = 'none';
+
+            if (level === 1) {
+                // 20 Tiles
+                currentLayout = [
+                    { x: 1, y: 1, z: 0 }, { x: 2, y: 1, z: 0 }, { x: 3, y: 1, z: 0 }, { x: 4, y: 1, z: 0 },
+                    { x: 1, y: 2, z: 0 }, { x: 2, y: 2, z: 0 }, { x: 3, y: 2, z: 0 }, { x: 4, y: 2, z: 0 },
+                    { x: 1, y: 3, z: 0 }, { x: 2, y: 3, z: 0 }, { x: 3, y: 3, z: 0 }, { x: 4, y: 3, z: 0 },
+                    { x: 2, y: 2, z: 1 }, { x: 3, y: 2, z: 1 }, { x: 2, y: 3, z: 1 }, { x: 3, y: 3, z: 1 },
+                    { x: 2.5, y: 2.5, z: 2 }, { x: 2.5, y: 1.5, z: 2 },
+                    { x: 0, y: 2, z: 0 }, { x: 5, y: 2, z: 0 } // 20
+                ];
+            } else {
+                // 36 Tiles (Harder)
+                currentLayout = [];
+                for (let x = 0; x < 6; x++) {
+                    for (let y = 0; y < 4; y++) {
+                        currentLayout.push({ x, y, z: 0 });
+                    }
+                }
+                // 24 base.
+                // Layer 1: 8
+                currentLayout.push({ x: 1, y: 1, z: 1 }, { x: 2, y: 1, z: 1 }, { x: 3, y: 1, z: 1 }, { x: 4, y: 1, z: 1 });
+                currentLayout.push({ x: 1, y: 2, z: 1 }, { x: 2, y: 2, z: 1 }, { x: 3, y: 2, z: 1 }, { x: 4, y: 2, z: 1 });
+                // Layer 2: 4
+                currentLayout.push({ x: 2, y: 1.5, z: 2 }, { x: 3, y: 1.5, z: 2 });
+                currentLayout.push({ x: 2, y: 2.5, z: 2 }, { x: 3, y: 2.5, z: 2 });
+                // Total 36
+            }
+
+            initBoard();
+        }
+
+        function initBoard() {
+            const container = document.getElementById('game-container');
+            container.innerHTML = '';
+            tiles = [];
+
+            // Generate Pairs
+            let deck = [];
+            const numPairs = currentLayout.length / 2;
+            for (let i = 0; i < numPairs; i++) {
+                let t = TILES[Math.floor(Math.random() * TILES.length)];
+                deck.push({ ...t });
+                deck.push({ ...t });
+            }
+            // Shuffle
+            deck.sort(() => Math.random() - 0.5);
+
+            // Create Tile Elements
+            currentLayout.forEach((pos, idx) => {
+                const data = deck[idx];
+                const el = document.createElement('div');
+                el.className = 'tile';
+                el.style.left = (pos.x * 110 + 200) + 'px'; // Adjusted for larger tiles (100px + gap)
+                el.style.top = (pos.y * 150 + 50) + 'px'; // Adjusted for larger tiles (140px + gap)
+                el.style.zIndex = pos.z * 10;
+
+                // Fallback for missing images
+                const img = document.createElement('img');
+                img.src = data.img;
+                img.onerror = function () { this.style.display = 'none'; el.textContent = data.val; };
+                el.appendChild(img);
+
+                const tileObj = {
+                    id: idx,
+                    el: el,
+                    x: pos.x,
+                    y: pos.y,
+                    z: pos.z,
+                    val: data.val,
+                    active: true
+                };
+
+                el.onclick = () => clickTile(tileObj);
+                container.appendChild(el);
+                tiles.push(tileObj);
+            });
+
+            updateBlockedStatus();
+            document.getElementById('pairs').textContent = numPairs;
+        }
+
+        function updateBlockedStatus() {
+            tiles.forEach(t => {
+                if (!t.active) return;
+
+                let blocked = false;
+
+                // Check On Top
+                // A tile is on top if z is higher and overlaps
+                // Overlap logic: distance < 1 (since size is roughly 1 unit)
+                // Simple check: exact overlap or partial?
+                // Layout uses grid coordinates.
+                // Tile at z+1 blocks tile at z if coords match or are close.
+                // For this layout, z=1 blocks z=0 directly below.
+                // z=2 blocks z=1.
+
+                // Check for tiles directly above (z+1)
+                // Overlap range: x +/- 0.5, y +/- 0.5
+                const onTop = tiles.some(other =>
+                    other.active &&
+                    other.z === t.z + 1 &&
+                    Math.abs(other.x - t.x) < 1 &&
+                    Math.abs(other.y - t.y) < 1
+                );
+
+                if (onTop) blocked = true;
+
+                // Check Sides (Left/Right)
+                // Blocked if BOTH left AND right are present at same z
+                const left = tiles.some(other => other.active && other.z === t.z && other.x === t.x - 1 && other.y === t.y);
+                const right = tiles.some(other => other.active && other.z === t.z && other.x === t.x + 1 && other.y === t.y);
+
+                if (left && right) blocked = true;
+
+                t.blocked = blocked;
+                if (blocked) t.el.classList.add('blocked');
+                else t.el.classList.remove('blocked');
+            });
+        }
+
+        function checkSolvability() {
+            // Check if there are any valid pairs left
+            const visibleTiles = tiles.filter(t => t.active);
+            if (visibleTiles.length === 0) return true; // Won
+
+            // Group by value
+            const byVal = {};
+            visibleTiles.forEach(t => {
+                if (!byVal[t.val]) byVal[t.val] = [];
+                byVal[t.val].push(t);
+            });
+
+            // Check if any pair of same value is unblocked
+            for (const val in byVal) {
+                const group = byVal[val];
+                // Check all combinations in this group
+                for (let i = 0; i < group.length; i++) {
+                    for (let j = i + 1; j < group.length; j++) {
+                        if (!group[i].blocked && !group[j].blocked) {
+                            return true; // Found a valid move
+                        }
+                    }
+                }
+            }
+
+            return false; // No valid moves
+        }
+
+        function clickTile(t) {
+            if (t.blocked || !t.active) return;
+
+            playSound('click');
+
+            if (selectedTile === t) {
+                // Deselect
+                selectedTile.el.classList.remove('selected');
+                selectedTile = null;
+            } else if (selectedTile) {
+                // Check Match
+                if (selectedTile.val === t.val) {
+                    // Match!
+                    matchTiles(selectedTile, t);
+                    selectedTile = null;
+
+                    // Check if stuck
+                    setTimeout(() => {
+                        if (tiles.filter(tile => tile.active).length > 0 && !checkSolvability()) {
+                            alert("Ho sento, és impossible desxifrar-ho. Torna a intentar.");
+                            location.reload();
+                        }
+                    }, 500);
+
+                } else {
+                    // No match, switch selection
+                    selectedTile.el.classList.remove('selected');
+                    selectedTile = t;
+                    t.el.classList.add('selected');
+                }
+            } else {
+                // Select
+                selectedTile = t;
+                t.el.classList.add('selected');
+            }
+        }
+
+        function matchTiles(t1, t2) {
+            playSound('match');
+            t1.active = false;
+            t2.active = false;
+            t1.el.style.display = 'none';
+            t2.el.style.display = 'none';
+            selectedTile = null;
+
+            updateBlockedStatus();
+
+            const remaining = tiles.filter(t => t.active).length / 2;
+            document.getElementById('pairs').textContent = remaining;
+
+            if (remaining === 0) {
+                // Save Reward
+                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                rewards['reward_mahjong'] = true;
+                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                setTimeout(() => {
+                    document.getElementById('win-modal').style.display = 'flex';
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Els Daus del Compàs</title>
+    <style>
+        :root {
+            --felt-color: #35654d;
+            --felt-dark: #1e3c2f;
+            --wood-color: #5c4033;
+            --gold: #ffd700;
+            --card-size: 140px;
+            /* Larger 2D size */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* Game Table */
+        #game-table {
+            width: 90vw;
+            height: 85vh;
+            background: radial-gradient(circle at center, var(--felt-color), var(--felt-dark));
+            border: 30px solid var(--wood-color);
+            border-radius: 40px;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 10px;
+            width: 80%;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+            color: var(--gold);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            letter-spacing: 2px;
+        }
+
+        /* Reminder Text */
+        #reminder-text {
+            color: var(--gold);
+            font-size: 1.5rem;
+            margin: 10px 0;
+            text-shadow: 1px 1px 2px black;
+            font-style: italic;
+        }
+
+        /* Dice/Slots Container */
+        #dice-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            /* Reduced margin to fit text */
+            height: 220px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 2D Slot/Card Style */
+        .die {
+            width: var(--card-size);
+            height: var(--card-size);
+            background: white;
+            border-radius: 15px;
+            border: 4px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .die:hover {
+            transform: translateY(-5px);
+        }
+
+        .die img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        /* Rolling Animation (Blur/Spin effect) */
+        .die.rolling img {
+            animation: spinBlur 0.2s infinite linear;
+            filter: blur(2px);
+        }
+
+        @keyframes spinBlur {
+            0% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            50% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Locked State */
+        .die.locked {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px var(--gold);
+            transform: scale(0.95);
+        }
+
+        .die.locked::after {
+            content: "🔒";
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 1.5rem;
+            color: var(--gold);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Controls */
+        #controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        #roll-btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: var(--gold);
+            color: #3e2723;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s;
+        }
+
+        #roll-btn:active {
+            transform: scale(0.95);
+        }
+
+        #roll-btn:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        #status-panel {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid var(--gold);
+            text-align: center;
+            min-width: 300px;
+        }
+
+        .status-text {
+            font-size: 1.2rem;
+            margin: 5px 0;
+        }
+
+        /* Volume Control */
+        .volume-control {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid var(--gold);
+        }
+
+        input[type=range] {
+            width: 100px;
+            accent-color: var(--gold);
+        }
+
+        /* Progress Tracker */
+        #progress-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .progress-dot {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            background: transparent;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        .progress-dot.active {
+            background: var(--gold);
+            box-shadow: 0 0 10px var(--gold);
+        }
+
+        /* Start Screen */
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+
+        #start-content {
+            background: #222;
+            border: 5px solid var(--gold);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+        }
+
+        #start-btn {
+            font-size: 2rem;
+            padding: 15px 40px;
+            background: var(--gold);
+            color: #3e2723;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 30px;
+            box-shadow: 0 0 20px var(--gold);
+        }
+
+        /* Reward Button */
+        #btn-reward {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: #888;
+            border: 2px solid #555;
+            padding: 10px 20px;
+            border-radius: 15px;
+            cursor: not-allowed;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            z-index: 100;
+            transition: all 0.5s ease;
+        }
+
+        #btn-reward.unlocked {
+            background: linear-gradient(to bottom, #ffd700, #b8860b);
+            color: #3e2723;
+            border-color: #fff;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            0% {
+                filter: brightness(1);
+            }
+
+            50% {
+                filter: brightness(1.3);
+            }
+
+            100% {
+                filter: brightness(1);
+            }
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #222;
+            border: 5px solid var(--gold);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+        }
+
+        #btn-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #ffd700;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Georgia', serif;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        #btn-menu:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="start-screen">
+        <div id="start-content">
+            <h1 style="color: var(--gold); margin-bottom: 20px;">ELS DAUS DEL COMPÀS</h1>
+            <p style="font-size: 1.2rem; line-height: 1.6;">
+                Benvingut al casino rítmic! L'objectiu és aconseguir un <strong>COMPÀS PERFECTE</strong> de 4 temps.
+            </p>
+            <ul style="text-align: left; font-size: 1.1rem; margin: 20px auto; display: inline-block;">
+                <li>Tens <strong>3 llançaments</strong> per torn.</li>
+                <li>Fes clic a les figures per <strong>bloquejar-les</strong> i guardar el resultat.</li>
+                <li>Suma exactament <strong>4 temps</strong> per guanyar una victòria.</li>
+                <li>Aconsegueix <strong>4 victòries</strong> per desbloquejar el tresor de Bach.</li>
+                <li>Si sumes més de 4 temps, perds (Bust).</li>
+            </ul>
+            <br>
+            <button id="start-btn" onclick="game.startGame()">COMENÇAR JOC</button>
+        </div>
+    </div>
+
+    <!-- Menu Button -->
+    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+
+    <!-- Audio -->
+    <audio id="bg-music" src="music/background_music_dados.mp3" loop></audio>
+
+    <div id="game-table">
+        <!-- Volume -->
+        <div class="volume-control">
+            <span id="volume-icon">🔊</span>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5"
+                oninput="game.setVolume(this.value)">
+        </div>
+
+        <!-- Reward -->
+        <button id="btn-reward" onclick="game.claimReward()">
+            <span style="font-size: 1.5rem;">🎹</span>
+            <span>Aconseguir fragment de l'orgue que va tocar Bach</span>
+        </button>
+
+        <header>
+            <h1>ELS DAUS DEL COMPÀS</h1>
+        </header>
+
+        <div id="reminder-text">Recorda que has de plenar un compàs de 4/4</div>
+
+        <div id="progress-container">
+            <div class="progress-dot" id="dot-1"></div>
+            <div class="progress-dot" id="dot-2"></div>
+            <div class="progress-dot" id="dot-3"></div>
+            <div class="progress-dot" id="dot-4"></div>
+        </div>
+
+        <div id="dice-container">
+            <!-- Slots generated by JS -->
+        </div>
+
+        <div id="controls">
+            <button id="roll-btn" onclick="game.rollDice()">LLANÇAR (3)</button>
+
+            <div id="status-panel">
+                <div class="status-text">SUMA ACTUAL: <span id="sum-display"
+                        style="color: var(--gold); font-weight: bold;">0</span></div>
+                <div class="status-text" id="result-msg" style="min-height: 1.5em;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reward Modal -->
+    <div id="reward-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">FELICITATS!</h2>
+            <p style="font-size: 1.2rem;">Has completat 4 compassos perfectes!</p>
+            <div style="font-size: 5rem; margin: 20px;">🎹✨</div>
+            <p>Has trobat una peça de:</p>
+            <h3 style="color: var(--gold); font-size: 1.5rem;">L'ORGUE QUE VA TOCAR BACH</h3>
+            <button onclick="document.getElementById('reward-modal').style.display='none'"
+                style="padding: 10px 30px; margin-top: 20px; font-size: 1.2rem; cursor: pointer;">GUARDAR
+                TRESOR</button>
+        </div>
+    </div>
+
+    <script>
+        // Dice Faces Configuration with Weights (Smart Luck)
+        // Total Weight = 100
+        const FACES = [
+            { id: 1, name: "Corxera", value: 0.5, img: "images/corxera.jpg", weight: 15 },
+            { id: 2, name: "Blanca", value: 2, img: "images/blanca.jpg", weight: 10 }, // Low chance (Risky)
+            { id: 3, name: "Negra", value: 1, img: "images/negra.jpg", weight: 20 },
+            { id: 4, name: "Negra", value: 1, img: "images/negra.jpg", weight: 20 },
+            { id: 5, name: "Corxera", value: 0.5, img: "images/corxera.jpg", weight: 15 },
+            { id: 6, name: "Semicorxera", value: 0.25, img: "images/semicorxera.jpg", weight: 20 }
+        ];
+
+        class Game {
+            constructor() {
+                this.dice = [
+                    { value: 1, locked: false, element: null },
+                    { value: 1, locked: false, element: null },
+                    { value: 1, locked: false, element: null },
+                    { value: 1, locked: false, element: null } // Reduced to 4 dice
+                ];
+                this.rollsLeft = 5;
+                this.volume = 0.5;
+                this.rewardUnlocked = false;
+                this.wins = 0;
+                this.roundWon = false;
+
+                this.initUI();
+            }
+
+            // Weighted Random Selection
+            getWeightedFace() {
+                const totalWeight = FACES.reduce((sum, face) => sum + face.weight, 0);
+                let random = Math.random() * totalWeight;
+
+                for (const face of FACES) {
+                    if (random < face.weight) {
+                        return face;
+                    }
+                    random -= face.weight;
+                }
+                return FACES[0]; // Fallback
+            }
+
+            initUI() {
+                const container = document.getElementById('dice-container');
+                this.dice.forEach((die, index) => {
+                    const dieEl = document.createElement('div');
+                    dieEl.className = 'die';
+                    dieEl.onclick = () => this.toggleLock(index);
+
+                    // Initial Image (Weighted)
+                    const initialFace = this.getWeightedFace();
+                    dieEl.innerHTML = `<img src="${initialFace.img}" alt="${initialFace.name}">`;
+                    die.value = initialFace.value;
+                    die.faceObj = initialFace;
+
+                    container.appendChild(dieEl);
+                    die.element = dieEl;
+                });
+
+                this.initAudio();
+                this.updateUI();
+            }
+
+            initAudio() {
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const bgMusic = document.getElementById('bg-music');
+                bgMusic.volume = this.volume;
+                // Attempt play on interaction
+                document.body.addEventListener('click', () => {
+                    if (bgMusic.paused) bgMusic.play().catch(e => { });
+                    if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+                }, { once: true });
+            }
+
+            startGame() {
+                document.getElementById('start-screen').style.display = 'none';
+                // Audio play is now handled by initAudio on first interaction
+            }
+
+            setVolume(val) {
+                this.volume = val;
+                const icon = document.getElementById('volume-icon');
+                const bgMusic = document.getElementById('bg-music');
+                if (bgMusic) bgMusic.volume = val;
+
+                if (val == 0) icon.textContent = "🔇";
+                else if (val < 0.5) icon.textContent = "🔉";
+                else icon.textContent = "🔊";
+            }
+
+            toggleLock(index) {
+                if (this.rollsLeft === 5 || this.rollsLeft === 0) return; // Can't lock before first roll or after game over
+
+                this.dice[index].locked = !this.dice[index].locked;
+                if (this.dice[index].locked) {
+                    this.dice[index].element.classList.add('locked');
+                } else {
+                    this.dice[index].element.classList.remove('locked');
+                }
+            }
+
+            rollDice() {
+                if (this.rollsLeft <= 0) {
+                    this.resetGame();
+                    return;
+                }
+
+                this.rollsLeft--;
+
+                const rollBtn = document.getElementById('roll-btn');
+                rollBtn.disabled = true;
+                rollBtn.textContent = "RODANT...";
+
+                // Animation
+                this.dice.forEach(die => {
+                    if (!die.locked) {
+                        die.element.classList.add('rolling');
+                    }
+                });
+
+                setTimeout(() => {
+                    this.dice.forEach((die, index) => {
+                        if (!die.locked) {
+                            die.element.classList.remove('rolling');
+
+                            // Weighted Random Face
+                            const face = this.getWeightedFace();
+                            die.value = face.value;
+                            die.faceObj = face;
+
+                            // Update Image
+                            die.element.innerHTML = `<img src="${die.faceObj.img}" alt="${die.faceObj.name}">`;
+                        }
+                    });
+
+                    rollBtn.disabled = false;
+                    this.checkScore();
+
+                    if (this.rollsLeft === 0) {
+                        rollBtn.textContent = "NOVA PARTIDA";
+                    } else {
+                        rollBtn.textContent = `LLANÇAR (${this.rollsLeft})`;
+                    }
+
+                }, 500); // Faster spin for slots
+            }
+
+            checkScore() {
+                const sum = this.dice.reduce((acc, d) => acc + (d.faceObj ? d.faceObj.value : 0), 0);
+                const values = this.dice.map(d => d.faceObj ? d.faceObj.id : 0);
+
+                const counts = {};
+                values.forEach(v => counts[v] = (counts[v] || 0) + 1);
+                const maxCount = Math.max(...Object.values(counts));
+
+                let score = 0;
+                let msg = "";
+
+                if (sum === 4) {
+                    score = 50;
+                    msg = "COMPÀS PERFECTE! (50 pts)";
+                    this.registerWin();
+                } else if (sum > 4) {
+                    score = 0;
+                    msg = "BUST! T'has passat de 4 temps. (0 pts)";
+                } else {
+                    if (maxCount >= 4) {
+                        score = 40;
+                        msg = "PÒQUER! (40 pts)";
+                    } else if (Object.values(counts).includes(3) && Object.values(counts).includes(2)) { // Impossible with 4 dice but kept for safety
+                        score = 30;
+                        msg = "FULL HOUSE! (30 pts)";
+                    } else if (maxCount >= 3) {
+                        score = 10;
+                        msg = "TRIO! (10 pts)";
+                    } else {
+                        score = sum;
+                        if (score === 0) msg = `${sum} Temps (Sense Combo)`;
+                    }
+                }
+
+                document.getElementById('sum-display').textContent = sum;
+                document.getElementById('result-msg').textContent = msg;
+
+                if (score > 0) {
+                    document.getElementById('result-msg').style.color = "#4caf50";
+                } else {
+                    document.getElementById('result-msg').style.color = "#f44336";
+                }
+            }
+
+            registerWin() {
+                if (this.roundWon) return; // Only register a win once per round
+
+                this.roundWon = true;
+                this.wins++;
+                this.updateProgress();
+
+                if (this.wins >= 4) {
+                    this.unlockReward();
+                }
+            }
+
+            updateProgress() {
+                for (let i = 1; i <= 4; i++) {
+                    const dot = document.getElementById(`dot-${i}`);
+                    if (dot) { // Ensure dot exists
+                        if (i <= this.wins) {
+                            dot.classList.add('active');
+                        } else {
+                            dot.classList.remove('active');
+                        }
+                    }
+                }
+            }
+
+            unlockReward() {
+                if (!this.rewardUnlocked) {
+                    this.rewardUnlocked = true;
+                    const btn = document.getElementById('btn-reward');
+                    btn.classList.add('unlocked');
+                    btn.onclick = () => document.getElementById('reward-modal').style.display = 'flex';
+                    // Auto show the modal after a short delay
+                    setTimeout(() => document.getElementById('reward-modal').style.display = 'flex', 500);
+
+                    // Save Reward
+                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_daus'] = true;
+                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                    // Redirect
+                    setTimeout(() => {
+                        window.location.href = 'menu.html';
+                    }, 4000);
+                }
+            }
+
+            claimReward() {
+                if (this.rewardUnlocked) {
+                    document.getElementById('reward-modal').style.display = 'flex';
+                }
+            }
+
+            resetGame() {
+                this.rollsLeft = 5;
+                this.roundWon = false; // Reset round flag for new game
+                this.dice.forEach(d => {
+                    d.locked = false;
+                    d.element.classList.remove('locked');
+                    d.faceObj = null; // Clear face object
+                });
+                document.getElementById('roll-btn').textContent = "LLANÇAR (5)";
+                document.getElementById('sum-display').textContent = "0";
+                document.getElementById('result-msg').textContent = "";
+
+                // Re-roll all to start fresh visual (Weighted)
+                this.dice.forEach(die => {
+                    const initialFace = this.getWeightedFace();
+                    die.element.innerHTML = `<img src="${initialFace.img}" alt="${initialFace.name}">`;
+                    die.value = initialFace.value;
+                    die.faceObj = initialFace;
+                });
+                this.updateProgress();
+            }
+
+            updateUI() {
+                this.updateProgress();
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

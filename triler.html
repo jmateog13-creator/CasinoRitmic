@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Triler Rítmic</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #2c0505;
+            /* Dark Red Velvet */
+            --accent-gold: #d4af37;
+            --text-light: #f0f0f0;
+            --card-width: 150px;
+            --card-height: 220px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at center, #4a0a0a 0%, #1a0000 100%);
+            color: var(--text-light);
+            font-family: 'Playfair Display', serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #btn-menu {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #ffd700;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Georgia', serif;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        #btn-menu:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        /* Header & UI */
+        header {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 2px solid var(--accent-gold);
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 3rem;
+            color: var(--accent-gold);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        /* Game Area */
+        #game-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            perspective: 1000px;
+            position: relative;
+        }
+
+        #table-surface {
+            width: 800px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 100px;
+            border: 10px solid #3e1e1e;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 20px 50px rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Cards/Cups */
+        .card-container {
+            width: var(--card-width);
+            height: var(--card-height);
+            position: absolute;
+            /* Absolute for free movement */
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            /* Default transition */
+            transform-style: preserve-3d;
+        }
+
+        .card-container:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border: 2px solid var(--accent-gold);
+            background: #fff;
+        }
+
+        .card-back {
+            background: repeating-linear-gradient(45deg,
+                    #606dbc,
+                    #606dbc 10px,
+                    #465298 10px,
+                    #465298 20px);
+            /* Or a specific back image if available, using CSS pattern for now */
+            background-size: cover;
+        }
+
+        /* Using a placeholder pattern for card back to look like a standard playing card back */
+        .card-back::after {
+            content: '?';
+            font-size: 4rem;
+            color: white;
+            opacity: 0.5;
+        }
+
+        .card-front {
+            transform: rotateY(180deg);
+            background-color: white;
+        }
+
+        .card-front img {
+            width: 90%;
+            height: auto;
+        }
+
+        /* Controls & Info */
+        #controls {
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--accent-gold);
+        }
+
+        button {
+            background: linear-gradient(to bottom, #d4af37, #aa8c2c);
+            border: none;
+            padding: 12px 30px;
+            color: #2c0505;
+            font-family: 'Playfair Display', serif;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+            filter: brightness(1.1);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .score-board {
+            font-size: 1.5rem;
+            color: var(--accent-gold);
+        }
+
+        /* Modal */
+        #reward-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        #reward-modal.visible {
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2c0505, #000);
+            border: 4px solid var(--accent-gold);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            color: var(--text-light);
+            box-shadow: 0 0 50px var(--accent-gold);
+            transform: scale(0.8);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #reward-modal.visible .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content h2 {
+            color: var(--accent-gold);
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-content p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .reward-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+            color: var(--accent-gold);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        /* Audio Control */
+        #audio-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        #volume-slider {
+            width: 100px;
+            accent-color: var(--accent-gold);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>EL TRILER RÍTMIC</h1>
+        <div class="subtitle">Troba el Silenci... si pots!</div>
+    </header>
+
+    <div id="audio-controls">
+        <span>🎵</span>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
+    </div>
+
+    <!-- Menu Button -->
+    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+
+    <div id="game-container">
+        <div id="table-surface">
+            <!-- Cards will be injected here by JS -->
+        </div>
+    </div>
+
+    <div id="controls">
+        <div class="score-board">Encerts: <span id="streak-display">0</span>/5</div>
+        <button id="start-btn">JUGAR</button>
+        <div id="message-area" style="margin-left: 20px; font-style: italic;">Prem JUGAR per començar</div>
+    </div>
+
+    <!-- Reward Modal -->
+    <div id="reward-modal">
+        <div class="modal-content">
+            <div class="reward-icon">✋</div>
+            <h2>ENHORABONA!</h2>
+            <p>Has demostrat una agilitat visual i rítmica excepcional.</p>
+            <p>Aquí tens la teva recompensa:</p>
+            <h3 style="color: #fff; font-size: 1.8rem;">LA MÀ D'AREZZO</h3>
+            <p style="font-size: 1rem; opacity: 0.8;">(La Mà Guidoniana)</p>
+            <p>Una eina antiga per aprendre a llegir música.</p>
+            <button onclick="location.reload()">TORNAR A JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Audio Assets -->
+    <audio id="bg-music" loop>
+        <source src="music/background_music_triler.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // Game Constants
+        const CARDS_COUNT = 3;
+        const WIN_STREAK_TARGET = 5;
+        const POSITIONS = [-250, 0, 250]; // X positions relative to center
+
+        // Assets
+        const IMG_NEGRA = 'images/negra.jpg';
+        const IMG_SILENCI = 'images/silencinegra.jpg';
+
+        // State
+        let state = {
+            streak: 0,
+            isShuffling: false,
+            targetPosition: 1, // 0, 1, 2 (Index of the Silenci card)
+            cards: [0, 1, 2], // Current arrangement of card indices
+            shuffleSpeed: 600, // ms per swap
+            shuffleDuration: 3000 // ms total shuffling time
+        };
+
+        // DOM Elements
+        const tableSurface = document.getElementById('table-surface');
+        const startBtn = document.getElementById('start-btn');
+        const streakDisplay = document.getElementById('streak-display');
+        const messageArea = document.getElementById('message-area');
+        const bgMusic = document.getElementById('bg-music');
+        const volumeSlider = document.getElementById('volume-slider');
+        const rewardModal = document.getElementById('reward-modal');
+
+        // Audio Context for SFX
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        // Initialize
+        function init() {
+            createCards();
+            setupAudio();
+
+            startBtn.addEventListener('click', startGame);
+        }
+
+        function createCards() {
+            tableSurface.innerHTML = '';
+            for (let i = 0; i < CARDS_COUNT; i++) {
+                const cardContainer = document.createElement('div');
+                cardContainer.className = 'card-container';
+                cardContainer.id = `card-${i}`;
+                cardContainer.style.transform = `translateX(${POSITIONS[i]}px)`;
+
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                // Front (The Note)
+                const front = document.createElement('div');
+                front.className = 'card-face card-front';
+                const img = document.createElement('img');
+                // Middle card (index 1 initially) is the target
+                img.src = (i === 1) ? IMG_SILENCI : IMG_NEGRA;
+                front.appendChild(img);
+
+                // Back (Pattern)
+                const back = document.createElement('div');
+                back.className = 'card-face card-back';
+
+                card.appendChild(front);
+                card.appendChild(back);
+                cardContainer.appendChild(card);
+
+                // Click Event
+                cardContainer.addEventListener('click', () => handleCardClick(i));
+
+                tableSurface.appendChild(cardContainer);
+            }
+
+            // Initial state: Cards face up
+            // We want them face up so player sees where the target is
+            // Then we flip them down to shuffle
+        }
+
+        function setupAudio() {
+            volumeSlider.addEventListener('input', (e) => {
+                bgMusic.volume = e.target.value;
+            });
+            bgMusic.volume = 0.5;
+        }
+
+        function playSwishSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        async function startGame() {
+            if (state.isShuffling) return;
+
+            // Start Music if not playing
+            if (bgMusic.paused) bgMusic.play().catch(e => console.log("Audio play failed", e));
+
+            state.isShuffling = true;
+            startBtn.disabled = true;
+            messageArea.textContent = "Observa bé...";
+
+            // 1. Show cards (Flip up)
+            flipCards(true);
+
+            // Wait a moment for player to see
+            await wait(1500);
+
+            // 2. Flip down
+            flipCards(false);
+            await wait(800);
+
+            // 3. Shuffle Loop
+            messageArea.textContent = "Remenant...";
+            const startTime = Date.now();
+            const duration = state.shuffleDuration - (state.streak * 300); // Faster each win
+            const speed = Math.max(200, state.shuffleSpeed - (state.streak * 50));
+
+            while (Date.now() - startTime < duration) {
+                await performSwap(speed);
+            }
+
+            // 4. Ready to guess
+            state.isShuffling = false;
+            messageArea.textContent = "On està el Silenci?";
+            // Enable clicking (logic handled in click handler)
+        }
+
+        function flipCards(faceUp) {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                if (faceUp) card.classList.add('flipped');
+                else card.classList.remove('flipped');
+            });
+        }
+
+        async function performSwap(speed) {
+            // Pick two random indices to swap
+            const idx1 = Math.floor(Math.random() * CARDS_COUNT);
+            let idx2 = Math.floor(Math.random() * CARDS_COUNT);
+            while (idx1 === idx2) idx2 = Math.floor(Math.random() * CARDS_COUNT);
+
+            // Swap in state array (which tracks which logical card is at which visual position)
+            // Actually, let's track visual positions of the logical cards.
+            // Let's say card elements are static in DOM, we move them with translate.
+
+            const cardEl1 = document.getElementById(`card-${idx1}`);
+            const cardEl2 = document.getElementById(`card-${idx2}`);
+
+            // Get current visual positions (from style or computed)
+            // We can store current pos index in dataset
+            const pos1 = parseInt(cardEl1.dataset.pos || idx1);
+            const pos2 = parseInt(cardEl2.dataset.pos || idx2);
+
+            // Swap target positions
+            cardEl1.style.transform = `translateX(${POSITIONS[pos2]}px)`;
+            cardEl2.style.transform = `translateX(${POSITIONS[pos1]}px)`;
+
+            // Update dataset
+            cardEl1.dataset.pos = pos2;
+            cardEl2.dataset.pos = pos1;
+
+            playSwishSound();
+
+            await wait(speed);
+        }
+
+        function handleCardClick(cardIndex) {
+            if (state.isShuffling) return;
+            if (startBtn.disabled === false) return; // Game not started
+
+            // Reveal this card
+            const cardEl = document.getElementById(`card-${cardIndex}`);
+            const cardInner = cardEl.querySelector('.card');
+            cardInner.classList.add('flipped');
+
+            // Check if it's the target
+            // In our init, card-1 is the target (Silenci).
+            // So if cardIndex === 1, it's a win.
+
+            if (cardIndex === 1) {
+                messageArea.textContent = "Correcte!";
+                messageArea.style.color = "#4ade80";
+                state.streak++;
+                streakDisplay.textContent = state.streak;
+
+                if (state.streak >= WIN_STREAK_TARGET) {
+                    setTimeout(showReward, 1000);
+                } else {
+                    setTimeout(() => {
+                        resetRound();
+                    }, 1500);
+                }
+            } else {
+                messageArea.textContent = "Has fallat! Torna-ho a provar.";
+                messageArea.style.color = "#ff4444";
+                state.streak = 0;
+                streakDisplay.textContent = state.streak;
+
+                // Reveal the correct one too so they see it
+                setTimeout(() => {
+                    document.getElementById('card-1').querySelector('.card').classList.add('flipped');
+                }, 500);
+
+                setTimeout(() => {
+                    resetRound();
+                }, 2000);
+            }
+        }
+
+        function resetRound() {
+            startBtn.disabled = false;
+            messageArea.textContent = "Prem JUGAR per continuar";
+            messageArea.style.color = "var(--text-light)";
+            // Don't flip back yet, wait for start
+        }
+
+        function showReward() {
+            rewardModal.style.display = 'flex';
+            // Force reflow
+            rewardModal.offsetHeight;
+            rewardModal.classList.add('visible');
+            playWinSound();
+
+            // Save Reward
+            const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+            rewards['reward_triler'] = true;
+            localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+            // Redirect
+            setTimeout(() => {
+                window.location.href = 'menu.html';
+            }, 4000);
+        }
+
+        function playWinSound() {
+            // Simple win arpeggio
+            const now = audioCtx.currentTime;
+            [440, 554, 659, 880].forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.1, now + i * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.5);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + i * 0.1);
+                osc.stop(now + i * 0.1 + 0.5);
+            });
+        }
+
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Set initial data-pos
+        document.querySelectorAll('.card-container').forEach((el, i) => {
+            el.dataset.pos = i;
+        });
+
+        init();
+
+    </script>
+</body>
+
+</html>

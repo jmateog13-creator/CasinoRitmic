@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keno Rítmic</title>
+    <style>
+        :root {
+            --neon-blue: #00ffff;
+            --neon-pink: #ff00ff;
+            --neon-gold: #ffd700;
+            --dark-bg: #050510;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--dark-bg);
+            font-family: 'Courier New', Courier, monospace;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* Main Frame */
+        #keno-frame {
+            width: 900px;
+            height: 650px;
+            background: #111;
+            border: 4px solid var(--neon-gold);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--neon-gold);
+            text-shadow: 0 0 10px var(--neon-gold);
+        }
+
+        .stats {
+            font-size: 1.2rem;
+        }
+
+        .stat-box {
+            margin-left: 20px;
+        }
+
+        .stat-val {
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
+
+        /* Grid */
+        #grid {
+            display: flex;
+            /* Changed from grid to flex for single row */
+            justify-content: center;
+            gap: 20px;
+            flex-grow: 1;
+            align-items: center;
+        }
+
+        .measure {
+            background: #222;
+            border: 4px solid #444;
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            width: 180px;
+            /* Fixed width */
+            height: 250px;
+            /* Taller */
+        }
+
+        .measure:hover {
+            border-color: var(--neon-blue);
+            background: #2a2a2a;
+            transform: scale(1.05);
+        }
+
+        .measure.closed {
+            border-color: var(--neon-gold);
+            background: linear-gradient(135deg, #332a00, #000);
+            box-shadow: 0 0 25px var(--neon-gold);
+        }
+
+        .measure.bust {
+            border-color: #ff0033;
+            background: #220000;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .measure-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            height: 150px;
+            /* More space */
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .note-img {
+            height: 60px;
+            filter: invert(1);
+        }
+
+        /* Larger images */
+
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--neon-blue);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .closed .progress-fill {
+            background: var(--neon-gold);
+        }
+
+        .bust .progress-fill {
+            background: #ff0033;
+        }
+
+        .measure-val {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Control Panel */
+        #control-panel {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #222;
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid #444;
+        }
+
+        #ball-display {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #fff, #ccc);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            color: black;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            border: 4px solid #fff;
+        }
+
+        #ball-display img {
+            width: 50px;
+        }
+
+        #draw-btn {
+            background: linear-gradient(to bottom, var(--neon-blue), #008888);
+            border: none;
+            color: black;
+            font-weight: bold;
+            font-size: 1.5rem;
+            padding: 15px 40px;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--neon-blue);
+            transition: transform 0.1s;
+        }
+
+        #draw-btn:active {
+            transform: scale(0.95);
+        }
+
+        #draw-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        /* Volume */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type=range] {
+            accent-color: var(--neon-gold);
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        .modal-content {
+            background: #000;
+            padding: 40px;
+            border-radius: 30px;
+            border: 6px solid var(--neon-pink);
+            /* Pink border */
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 0 60px var(--neon-pink);
+            animation: zoomIn 0.5s;
+            font-family: 'Courier New', monospace;
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.1);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+
+        .action-btn {
+            background: var(--neon-pink);
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            text-transform: uppercase;
+        }
+
+        .action-btn:hover {
+            background: #fff;
+            color: var(--neon-pink);
+        }
+
+        /* Menu Button */
+        #btn-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            border: 1px solid #666;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+
+    <div id="keno-frame">
+        <header>
+            <h1>KENO RÍTMIC</h1>
+            <div class="stats">
+                <span class="stat-box">TANCATS: <span class="stat-val" id="closed-count">0</span>/4</span>
+                <span class="stat-box">TRENCATS: <span class="stat-val" id="bust-count"
+                        style="color:#ff0033">0</span></span>
+            </div>
+        </header>
+
+        <div id="grid">
+            <!-- Measures generated by JS -->
+        </div>
+
+        <div id="control-panel">
+            <div class="volume-control">
+                <span>🔊</span>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
+            </div>
+
+            <div style="text-align:center">
+                <div style="color:#888; margin-bottom:5px;">BOLA ACTUAL</div>
+                <div id="ball-display">?</div>
+            </div>
+
+            <button id="draw-btn" onclick="game.drawBall()">TREURE BOLA</button>
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h1 style="color: var(--neon-pink); font-size: 3rem;">KENO RÍTMIC</h1>
+            <p>Omple els compassos fins a 4 temps exactes.</p>
+            <p>Si et passes de 4, el compàs es trenca!</p>
+            <p>Objectiu: Tancar 4 compassos.</p>
+            <button class="action-btn" onclick="game.start()">JUGAR RÀPID</button>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--neon-gold);">PRECISIÓ BRITÀNICA!</h2>
+            <div class="relic-icon">🕰️</div>
+            <h3 style="color: var(--neon-gold);">EL RELLOTGE DE BUTXACA DE HAYDN</h3>
+            <p style="font-style: italic; color: #aaa;">"Franz Joseph Haydn, el pare de la simfonia, era famós per la
+                seva puntualitat i precisió rítmica. Has heretat el seu rellotge!"</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR A JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Lose Modal -->
+    <div id="lose-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #ff0033;">GAME OVER</h2>
+            <p>Has trencat un compàs!</p>
+            <button class="action-btn" onclick="location.reload()">REINTENTAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_keno.mp3" loop></audio>
+
+    <script>
+        // --- ASSETS ---
+        const NOTES = [
+            { id: 'rodona', img: 'images/rodona.jpg', val: 4 },
+            { id: 'blanca', img: 'images/blanca.jpg', val: 2 },
+            { id: 'negra', img: 'images/negra.jpg', val: 1 },
+            { id: 'corxera', img: 'images/corxera.jpg', val: 0.5 },
+            { id: 'semicorxera', img: 'images/semicorxera.jpg', val: 0.25 }
+        ];
+
+        // --- AUDIO ENGINE ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        const bgMusic = document.getElementById('bg-music');
+
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume-slider').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume-slider').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        function playTone(freq, type, duration, vol = 0.1) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const masterVol = parseFloat(document.getElementById('volume-slider').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol * masterVol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playPop() { playTone(300, 'sine', 0.1, 0.3); }
+        function playClick() { playTone(800, 'square', 0.05, 0.1); }
+        function playWin() {
+            playTone(440, 'triangle', 0.3, 0.3);
+            setTimeout(() => playTone(554, 'triangle', 0.3, 0.3), 100);
+            setTimeout(() => playTone(659, 'triangle', 0.6, 0.3), 200);
+        }
+        function playBust() {
+            playTone(100, 'sawtooth', 0.5, 0.4);
+            setTimeout(() => playTone(80, 'sawtooth', 0.5, 0.4), 100);
+        }
+
+        // --- GAME LOGIC ---
+        class Game {
+            constructor() {
+                this.measures = [];
+                this.currentBall = null;
+                this.closedCount = 0;
+                this.bustCount = 0;
+                this.gridEl = document.getElementById('grid');
+                this.ballDisplay = document.getElementById('ball-display');
+                this.drawBtn = document.getElementById('draw-btn');
+            }
+
+            start() {
+                document.getElementById('start-screen').style.display = 'none';
+                this.initGrid();
+            }
+
+            initGrid() {
+                this.gridEl.innerHTML = '';
+                this.measures = [];
+                for (let i = 0; i < 4; i++) { // Only 4 measures
+                    const m = {
+                        id: i,
+                        val: 0,
+                        notes: [],
+                        status: 'open' // open, closed, bust
+                    };
+                    this.measures.push(m);
+                    this.renderMeasure(m);
+                }
+            }
+
+            renderMeasure(m) {
+                let div = document.getElementById(`measure-${m.id}`);
+                if (!div) {
+                    div = document.createElement('div');
+                    div.id = `measure-${m.id}`;
+                    div.className = 'measure';
+                    div.onclick = () => this.placeBall(m.id);
+                    this.gridEl.appendChild(div);
+                }
+
+                div.className = `measure ${m.status}`;
+
+                // Content
+                let html = '<div class="measure-content">';
+                m.notes.forEach(n => {
+                    html += `<img src="${n.img}" class="note-img">`;
+                });
+                html += '</div>';
+
+                // Progress
+                const pct = (m.val / 4) * 100;
+                html += `
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:${Math.min(pct, 100)}%"></div>
+                    </div>
+                    <div class="measure-val">${m.val}/4</div>
+                `;
+
+                div.innerHTML = html;
+            }
+
+            drawBall() {
+                if (this.currentBall) return; // Must place current first
+
+                playPop();
+                const note = NOTES[Math.floor(Math.random() * NOTES.length)];
+                this.currentBall = note;
+
+                this.ballDisplay.innerHTML = `<img src="${note.img}" style="width:50px; filter:invert(0);">`;
+                this.drawBtn.disabled = true;
+                this.drawBtn.textContent = "POSA LA BOLA";
+            }
+
+            placeBall(id) {
+                if (!this.currentBall) return;
+                const m = this.measures[id];
+                if (m.status !== 'open') return;
+
+                playClick();
+                m.notes.push(this.currentBall);
+                m.val += this.currentBall.val;
+
+                if (m.val === 4) {
+                    m.status = 'closed';
+                    this.closedCount++;
+                    playWin();
+                    document.getElementById('closed-count').textContent = this.closedCount;
+                } else if (m.val > 4) {
+                    m.status = 'bust';
+                    this.bustCount++;
+                    playBust();
+                    document.getElementById('bust-count').textContent = this.bustCount;
+
+                    // Game Over immediately on bust
+                    setTimeout(() => {
+                        document.getElementById('lose-modal').style.display = 'flex';
+                    }, 500);
+                }
+
+                this.renderMeasure(m);
+
+                // Reset Ball
+                this.currentBall = null;
+                this.ballDisplay.textContent = "?";
+                this.drawBtn.disabled = false;
+                this.drawBtn.textContent = "TREURE BOLA";
+
+                this.checkGameStatus();
+            }
+
+            checkGameStatus() {
+                if (this.closedCount >= 4) { // Win condition 4
+                    // Save Reward
+                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_keno'] = true;
+                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                    setTimeout(() => {
+                        document.getElementById('win-modal').style.display = 'flex';
+                    }, 500);
+                } else {
+                    // Check if possible to continue
+                    const openMeasures = this.measures.filter(m => m.status === 'open').length;
+                    if (openMeasures === 0 && this.closedCount < 4) {
+                        setTimeout(() => {
+                            document.getElementById('lose-modal').style.display = 'flex';
+                        }, 500);
+                    }
+                }
+            }
+        }
+
+        const game = new Game();
+
+    </script>
+</body>
+
+</html>

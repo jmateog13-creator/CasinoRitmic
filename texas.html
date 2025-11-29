@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Texas Hold'em Rítmic</title>
+    <style>
+        :root {
+            --table-color: #2d5a27;
+            --felt-texture: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0, 0, 0, 0.03) 10px, rgba(0, 0, 0, 0.03) 20px);
+            --gold: #ffd700;
+            --wood: #5d4037;
+            --card-width: 120px;
+            --card-height: 168px;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background: #1a1a1a;
+            font-family: 'Courier New', Courier, monospace;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Start Screen */
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            text-align: center;
+        }
+
+        #start-screen h1 {
+            font-size: 3em;
+            color: var(--gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        .btn-start {
+            padding: 15px 40px;
+            font-size: 1.5em;
+            background: var(--gold);
+            color: black;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-start:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--gold);
+        }
+
+        /* Main Game Area */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Legend */
+        #legend {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--gold);
+            z-index: 10;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        #legend h3 {
+            color: var(--gold);
+            margin-top: 0;
+            text-align: center;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 4px;
+        }
+
+        .legend-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .legend-rank {
+            color: #aaa;
+            margin-right: 10px;
+            font-size: 0.9em;
+        }
+
+        .legend-name {
+            color: white;
+            font-weight: bold;
+            font-size: 1em;
+        }
+
+        .legend-desc {
+            font-size: 0.8em;
+            color: #bbb;
+            margin-top: 2px;
+            font-style: italic;
+        }
+
+        /* Reward Button */
+        #reward-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 20;
+        }
+
+        #btn-reward {
+            background: #333;
+            color: #777;
+            border: 2px solid #555;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: not-allowed;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        #btn-reward.unlocked {
+            background: linear-gradient(45deg, #ffd700, #ffaa00);
+            color: black;
+            border-color: white;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+            }
+
+            100% {
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            }
+        }
+
+        /* Poker Table */
+        #poker-table {
+            width: 85%;
+            max-width: 1200px;
+            height: 70%;
+            background-color: var(--table-color);
+            background-image: var(--felt-texture);
+            border: 20px solid var(--wood);
+            border-radius: 300px;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Community Cards */
+        #community-cards {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            min-width: 680px;
+            /* Space for 5 cards */
+            min-height: var(--card-height);
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Players */
+        .player {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 250px;
+        }
+
+        .player-avatar {
+            width: 70px;
+            height: 70px;
+            background: #333;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5em;
+            margin-bottom: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .player-info {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #555;
+            width: 100%;
+        }
+
+        .player-name {
+            font-weight: bold;
+            color: var(--gold);
+            font-size: 1.1em;
+        }
+
+        .player-money {
+            color: #4ade80;
+            font-size: 1.1em;
+        }
+
+        .player-action {
+            font-size: 0.9em;
+            color: #aaa;
+            min-height: 1.2em;
+            font-style: italic;
+            margin-top: 2px;
+        }
+
+        /* Player Positions */
+        #player-user {
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #player-mozart {
+            top: 40%;
+            left: -140px;
+        }
+
+        #player-bach {
+            top: 40%;
+            right: -140px;
+        }
+
+        /* Cards */
+        .card {
+            width: var(--card-width);
+            height: var(--card-height);
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .card img {
+            width: 85%;
+            height: auto;
+        }
+
+        .card.back {
+            background: repeating-linear-gradient(45deg,
+                    #b71c1c,
+                    #b71c1c 10px,
+                    #c62828 10px,
+                    #c62828 20px);
+            border: 3px solid white;
+        }
+
+        .card.back::after {
+            content: "♫";
+            font-size: 60px;
+            color: white;
+        }
+
+        .hand {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        /* UI Controls */
+        #controls {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .btn-action {
+            padding: 15px 30px;
+            font-size: 1.3em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: opacity 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-action:active {
+            transform: translateY(2px);
+        }
+
+        .btn-action:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-fold {
+            background: #ef4444;
+        }
+
+        .btn-call {
+            background: #3b82f6;
+        }
+
+        .btn-raise {
+            background: #eab308;
+            color: black;
+        }
+
+        #pot-display {
+            position: absolute;
+            top: 28%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 25px;
+            border-radius: 25px;
+            border: 2px solid var(--gold);
+            font-size: 1.5em;
+            color: var(--gold);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        #message-display {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            text-shadow: 0 2px 4px black;
+            text-align: center;
+            width: 100%;
+            color: white;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+        }
+
+        /* Volume Control */
+        #volume-control {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 15px;
+            border-radius: 25px;
+            z-index: 20;
+        }
+
+        input[type=range] {
+            width: 120px;
+        }
+
+        /* Animations */
+        @keyframes deal {
+            from {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .dealing {
+            animation: deal 0.5s ease-out forwards;
+        }
+
+        /* Modal */
+        #modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #modal-content {
+            background: #222;
+            padding: 40px;
+            border-radius: 20px;
+            border: 2px solid var(--gold);
+            text-align: center;
+            max-width: 600px;
+        }
+
+        #modal h2 {
+            color: var(--gold);
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        #modal p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        #modal img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #555;
+        }
+
+        .btn-close {
+            padding: 10px 30px;
+            font-size: 1.2em;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #btn-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            /* Moved to Right */
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #ffd700;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Courier New', Courier, monospace;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        #btn-menu:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <h1>Texas Hold'em Rítmic</h1>
+        <p style="font-size: 1.2em; max-width: 600px; margin-bottom: 30px; line-height: 1.5;">
+            Benvingut al Casino de Beethoven.<br>
+            Aconsegueix la millor mà de 5 cartes.<br>
+            <strong>Compàs Perfecte (Suma 4)</strong> guanya a tot!
+        </p>
+        <button class="btn-start" onclick="game.start()">JUGAR</button>
+    </div>
+
+    <!-- Menu Button -->
+    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+
+    <!-- Reward Button -->
+    <div id="reward-container">
+        <button id="btn-reward" onclick="game.showReward()">
+            <span>🎻</span> <span id="reward-text">Aconseguir el primer violí Stradivarius (1000/5000)</span>
+        </button>
+    </div>
+
+    <!-- Legend -->
+    <div id="legend">
+        <h3>Ranking de Mans</h3>
+        <div class="legend-item">
+            <div class="legend-row"><span class="legend-rank">1</span><span class="legend-name">Compàs Perfecte
+                    (4)</span></div>
+            <div class="legend-desc">Suma exacta de 4 temps</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-row"><span class="legend-rank">2</span><span class="legend-name">Pòquer</span></div>
+            <div class="legend-desc">4 cartes del mateix valor</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-row"><span class="legend-rank">3</span><span class="legend-name">Full House</span></div>
+            <div class="legend-desc">Trio + Parella</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-row"><span class="legend-rank">4</span><span class="legend-name">Color (Flush)</span>
+            </div>
+            <div class="legend-desc">5 cartes del mateix tipus (Notes/Silencis)</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-row"><span class="legend-rank">5</span><span class="legend-name">Escala</span></div>
+            <div class="legend-desc">5 valors diferents</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-row"><span class="legend-rank">6</span><span class="legend-name">Trio</span></div>
+            <div class="legend-desc">3 cartes del mateix valor</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-row"><span class="legend-rank">7</span><span class="legend-name">Doble Parella</span>
+            </div>
+            <div class="legend-desc">2 parelles diferents</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-row"><span class="legend-rank">8</span><span class="legend-name">Parella</span></div>
+            <div class="legend-desc">2 cartes del mateix valor</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-row"><span class="legend-rank">9</span><span class="legend-name">Carta Alta</span></div>
+            <div class="legend-desc">La carta més alta</div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal">
+        <div id="modal-content">
+            <h2>Felicitats!</h2>
+            <p>Has demostrat ser un mestre del ritme i l'estratègia.</p>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Violin_Stradivarius_1703.jpg/640px-Violin_Stradivarius_1703.jpg"
+                alt="Stradivarius">
+            <p>Aquí tens el teu premi: <strong>El Primer Violí Stradivarius</strong>.</p>
+            <button class="btn-close" onclick="document.getElementById('modal').style.display='none'">Tancar</button>
+        </div>
+    </div>
+
+    <!-- Volume -->
+    <div id="volume-control">
+        <span id="vol-icon">🔊</span>
+        <input type="range" id="vol-slider" min="0" max="1" step="0.1" value="0.5">
+    </div>
+
+    <!-- Game Area -->
+    <div id="game-container">
+
+        <div id="message-display">Esperant partida...</div>
+
+        <div id="poker-table">
+
+            <div id="pot-display">POT: 0</div>
+
+            <div id="community-cards">
+                <!-- Cards will go here -->
+            </div>
+
+            <!-- Players -->
+            <div id="player-mozart" class="player">
+                <div class="player-avatar">M</div>
+                <div class="player-info">
+                    <div class="player-name">Mozart</div>
+                    <div class="player-money">1000</div>
+                    <div class="player-action"></div>
+                </div>
+                <div class="hand" id="hand-mozart"></div>
+            </div>
+
+            <div id="player-bach" class="player">
+                <div class="player-avatar">B</div>
+                <div class="player-info">
+                    <div class="player-name">Bach</div>
+                    <div class="player-money">1000</div>
+                    <div class="player-action"></div>
+                </div>
+                <div class="hand" id="hand-bach"></div>
+            </div>
+
+            <div id="player-user" class="player">
+                <div class="player-avatar">👤</div>
+                <div class="player-info">
+                    <div class="player-name">JUGADOR</div>
+                    <div class="player-money">1000</div>
+                    <div class="player-action"></div>
+                </div>
+                <div class="hand" id="hand-user"></div>
+            </div>
+
+        </div>
+
+        <!-- Controls -->
+        <div id="controls">
+            <button class="btn-action btn-fold" id="btn-fold" disabled>RETIRAR-SE</button>
+            <button class="btn-action btn-call" id="btn-call" disabled>IGUALAR</button>
+            <button class="btn-action btn-raise" id="btn-raise" disabled>PUJAR</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATA & CONFIG ---
+        const CARD_TYPES = [
+            { name: "Rodona", value: 4, type: "note", img: "images/rodona.jpg" },
+            { name: "Blanca", value: 2, type: "note", img: "images/blanca.jpg" },
+            { name: "Negra", value: 1, type: "note", img: "images/negra.jpg" },
+            { name: "Corxera", value: 0.5, type: "note", img: "images/corxera.jpg" },
+            { name: "Semicorxera", value: 0.25, type: "note", img: "images/semicorxera.jpg" },
+            { name: "Silenci Rodona", value: 4, type: "rest", img: "images/silencirodona.jpg" },
+            { name: "Silenci Blanca", value: 2, type: "rest", img: "images/silenciblanca.jpg" },
+            { name: "Silenci Negra", value: 1, type: "rest", img: "images/silencinegra.jpg" },
+            { name: "Silenci Corxera", value: 0.5, type: "rest", img: "images/silencicorxera.jpg" },
+            { name: "Silenci Semicorxera", value: 0.25, type: "rest", img: "images/semicorxera.jpg" }
+        ];
+
+        // --- CLASSES ---
+
+        class Card {
+            constructor(typeObj) {
+                this.name = typeObj.name;
+                this.value = typeObj.value;
+                this.type = typeObj.type; // 'note' or 'rest'
+                this.img = typeObj.img;
+                this.id = Math.random().toString(36).substr(2, 9);
+            }
+        }
+
+        class Deck {
+            constructor() {
+                this.cards = [];
+                this.reset();
+            }
+
+            reset() {
+                this.cards = [];
+                // Create 40 cards (4 of each type)
+                for (let i = 0; i < 4; i++) {
+                    CARD_TYPES.forEach(type => {
+                        this.cards.push(new Card(type));
+                    });
+                }
+                this.shuffle();
+            }
+
+            shuffle() {
+                for (let i = this.cards.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
+                }
+            }
+
+            deal(bias = false) {
+                if (bias) {
+                    // Smart Deal: Draw 2, keep best (Higher Value = Better for Compàs Perfecte usually)
+                    // Actually, for Compàs Perfecte (Sum 4), we want high value cards like Rodona (4) or Blanca (2).
+                    // Low values are good for straights but high values are instant wins.
+                    if (this.cards.length < 2) return this.cards.pop();
+
+                    const c1 = this.cards.pop();
+                    const c2 = this.cards.pop();
+
+                    // Simple heuristic: Prefer higher value
+                    if (c1.value >= c2.value) {
+                        this.cards.unshift(c2); // Put back at bottom
+                        return c1;
+                    } else {
+                        this.cards.unshift(c1);
+                        return c2;
+                    }
+                }
+                return this.cards.pop();
+            }
+        }
+
+        class HandEvaluator {
+            static evaluate(cards) {
+                // cards is array of 5 Card objects
+                // Returns { rank: number, name: string, score: number }
+                // Rank 9: Compàs Perfecte (Sum = 4)
+                // Rank 8: Poker (4 of a kind)
+                // Rank 7: Full House
+                // Rank 6: Flush (All Note or All Rest)
+                // Rank 5: Straight
+                // Rank 4: Trio
+                // Rank 3: Two Pair
+                // Rank 2: Pair
+                // Rank 1: High Card
+
+                const sum = cards.reduce((a, b) => a + b.value, 0);
+                if (Math.abs(sum - 4.0) < 0.001) {
+                    return { rank: 9, name: "COMPÀS PERFECTE (ROYAL FLUSH)", score: 9000 };
+                }
+
+                // Group by Value
+                const counts = {};
+                cards.forEach(c => {
+                    counts[c.value] = (counts[c.value] || 0) + 1;
+                });
+                const values = Object.keys(counts).map(Number).sort((a, b) => b - a);
+                const countsArr = Object.values(counts).sort((a, b) => b - a);
+
+                // Group by Type
+                const types = {};
+                cards.forEach(c => {
+                    types[c.type] = (types[c.type] || 0) + 1;
+                });
+                const isFlush = Object.values(types).some(c => c === 5);
+
+                // Check Straight
+                const uniqueValues = [...new Set(cards.map(c => c.value))].sort((a, b) => b - a);
+                let isStraight = false;
+                // Possible straight: 4, 2, 1, 0.5, 0.25 (This is the only full straight possible with these values?)
+                // Actually, standard poker straights are consecutive ranks. Here ranks are values.
+                // Let's define Straight as 5 unique values present (since there are only 5 distinct values: 4, 2, 1, 0.5, 0.25)
+                if (uniqueValues.length === 5) {
+                    isStraight = true;
+                }
+
+                // 4 of a Kind
+                if (countsArr[0] === 4) return { rank: 8, name: "PÒQUER", score: 8000 + values[0] };
+
+                // Full House
+                if (countsArr[0] === 3 && countsArr[1] === 2) return { rank: 7, name: "FULL HOUSE", score: 7000 };
+
+                // Flush
+                if (isFlush) return { rank: 6, name: "COLOR (FLUSH)", score: 6000 };
+
+                // Straight
+                if (isStraight) return { rank: 5, name: "ESCALA", score: 5000 };
+
+                // Trio
+                if (countsArr[0] === 3) return { rank: 4, name: "TRIO", score: 4000 + values[0] };
+
+                // Two Pair
+                if (countsArr[0] === 2 && countsArr[1] === 2) return { rank: 3, name: "DOBLE PARELLA", score: 3000 };
+
+                // Pair
+                if (countsArr[0] === 2) return { rank: 2, name: "PARELLA", score: 2000 + values[0] };
+
+                // High Card
+                return { rank: 1, name: "CARTA ALTA", score: 1000 + Math.max(...cards.map(c => c.value)) };
+            }
+
+            static getBestHand(holeCards, communityCards) {
+                // Combine 2 hole + 5 community = 7 cards
+                // Find best 5-card combination
+                const allCards = [...holeCards, ...communityCards];
+
+                // If less than 5 cards (e.g. pre-flop), just eval what we have? 
+                // No, Texas Holdem evaluates at showdown. 
+                // For AI logic during betting, we need partial eval.
+                // But for final winner, we need best 5 of 7.
+
+                if (allCards.length < 5) return HandEvaluator.evaluate(allCards); // Fallback
+
+                let bestHand = { score: -1 };
+
+                // Generate all combinations of 5 from 7
+                // (7 choose 5) = 21 combinations
+                const getCombinations = (arr, k) => {
+                    if (k === 0) return [[]];
+                    if (arr.length === 0) return [];
+                    const [head, ...tail] = arr;
+                    const withHead = getCombinations(tail, k - 1).map(c => [head, ...c]);
+                    const withoutHead = getCombinations(tail, k);
+                    return [...withHead, ...withoutHead];
+                };
+
+                const combos = getCombinations(allCards, 5);
+
+                combos.forEach(combo => {
+                    const res = HandEvaluator.evaluate(combo);
+                    if (res.score > bestHand.score) {
+                        bestHand = res;
+                    }
+                });
+
+                return bestHand;
+            }
+        }
+
+        class Player {
+            constructor(id, name, isBot = false, strategy = null) {
+                this.id = id;
+                this.name = name;
+                this.isBot = isBot;
+                this.strategy = strategy; // 'aggressive' (Mozart) or 'conservative' (Bach)
+                this.money = 1000;
+                this.hand = [];
+                this.currentBet = 0;
+                this.folded = false;
+                this.allIn = false;
+            }
+
+            reset() {
+                this.hand = [];
+                this.currentBet = 0;
+                this.folded = false;
+                this.allIn = false;
+                this.updateUI();
+                document.getElementById(`hand-${this.id.split('-')[1]}`).innerHTML = '';
+            }
+
+            receiveCard(card) {
+                this.hand.push(card);
+                this.renderHand();
+            }
+
+            renderHand(showFace = false) {
+                const container = document.getElementById(`hand-${this.id.split('-')[1]}`);
+                container.innerHTML = '';
+                this.hand.forEach(card => {
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'card';
+                    if (this.isBot && !showFace) {
+                        cardEl.classList.add('back');
+                    } else {
+                        cardEl.innerHTML = `<img src="${card.img}" alt="${card.name}">`;
+                    }
+                    container.appendChild(cardEl);
+                });
+            }
+
+            updateUI() {
+                const el = document.getElementById(this.id);
+                el.querySelector('.player-money').textContent = this.money;
+            }
+
+            setAction(text) {
+                const el = document.getElementById(this.id);
+                el.querySelector('.player-action').textContent = text;
+            }
+        }
+
+        class Game {
+            constructor() {
+                this.deck = new Deck();
+                this.players = [
+                    new Player('player-mozart', 'Mozart', true, 'aggressive'),
+                    new Player('player-bach', 'Bach', true, 'conservative'),
+                    new Player('player-user', 'JUGADOR', false)
+                ];
+                this.communityCards = [];
+                this.pot = 0;
+                this.currentBet = 0; // Highest bet in current round
+                this.dealerIdx = 0;
+                this.turnIdx = 0;
+                this.phase = 'pre-start'; // pre-start, deal, betting1, flop, betting2, showdown
+
+                this.rewardUnlocked = false;
+
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                this.bgMusic = new Audio('music/background_music_texas.mp3');
+                this.bgMusic.loop = true;
+                this.volume = 0.5;
+
+                this.initUI();
+            }
+
+            initUI() {
+                document.getElementById('vol-slider').addEventListener('input', (e) => {
+                    this.volume = e.target.value;
+                    this.bgMusic.volume = this.volume;
+                });
+
+                document.getElementById('btn-fold').onclick = () => this.playerAction('fold');
+                document.getElementById('btn-call').onclick = () => this.playerAction('call');
+                document.getElementById('btn-raise').onclick = () => this.playerAction('raise');
+
+                this.updateRewardUI();
+            }
+
+            start() {
+                document.getElementById('start-screen').style.display = 'none';
+                this.bgMusic.play().catch(e => console.log("Audio play failed", e));
+                this.startRound();
+            }
+
+            async startRound() {
+                this.phase = 'deal';
+                this.deck.reset();
+                this.communityCards = [];
+                this.pot = 0;
+                this.currentBet = 50; // Big Blind / Entry
+
+                // Reset Players
+                this.players.forEach(p => {
+                    p.reset();
+                    p.money -= 50; // Ante
+                    p.currentBet = 50;
+                    p.setAction("Ante: 50");
+                    this.pot += 50;
+                });
+
+                this.updatePot();
+                this.renderCommunityCards();
+
+                this.showMessage("Repartint cartes...");
+                await this.wait(1000);
+
+                // Deal 2 cards each
+                for (let i = 0; i < 2; i++) {
+                    for (const p of this.players) {
+                        // Smart Deal for User (index 2)
+                        const isUser = p.id === 'player-user';
+                        p.receiveCard(this.deck.deal(isUser));
+                        this.playSound('deal');
+                        await this.wait(200);
+                    }
+                }
+
+                this.startBettingRound('betting1');
+            }
+
+            startBettingRound(phaseName) {
+                this.phase = phaseName;
+                this.turnIdx = 2; // User starts (simplified)
+                this.processTurn();
+            }
+
+            async processTurn() {
+                const player = this.players[this.turnIdx];
+
+                if (player.folded) {
+                    this.nextTurn();
+                    return;
+                }
+
+                // Highlight active player
+                document.querySelectorAll('.player').forEach(el => el.style.opacity = 0.5);
+                document.getElementById(player.id).style.opacity = 1;
+
+                if (player.isBot) {
+                    await this.wait(1000);
+                    this.botAI(player);
+                } else {
+                    this.enableControls(true);
+                    this.showMessage("El teu torn...");
+                }
+            }
+
+            botAI(bot) {
+                const callAmount = this.currentBet - bot.currentBet;
+
+                // Adjusted AI (Looser / Easier for user)
+                let action = 'call';
+
+                if (bot.strategy === 'aggressive') {
+                    // Mozart: Raises often, rarely folds
+                    if (Math.random() < 0.3) action = 'raise';
+                    // Fold only if bet is huge and hand is terrible (very rare now)
+                    else if (Math.random() < 0.05 && callAmount > 200) action = 'fold';
+                } else {
+                    // Bach: Conservative but now more likely to call
+                    const handStrength = HandEvaluator.evaluate(bot.hand).rank;
+                    // Fold only if really bad and expensive
+                    if (callAmount > 150 && handStrength < 2 && Math.random() < 0.5) action = 'fold';
+                    else if (handStrength >= 3) action = 'raise';
+                }
+
+                // Force call if raise is too high for simple logic
+                if (action === 'raise' && this.currentBet >= 200) action = 'call';
+
+                this.handleAction(bot, action);
+            }
+
+            playerAction(action) {
+                this.enableControls(false);
+                this.handleAction(this.players[2], action);
+            }
+
+            handleAction(player, action) {
+                const callAmount = this.currentBet - player.currentBet;
+
+                if (action === 'fold') {
+                    player.folded = true;
+                    player.setAction("S'ha retirat");
+                    this.playSound('fold');
+                } else if (action === 'call') {
+                    player.money -= callAmount;
+                    player.currentBet += callAmount;
+                    this.pot += callAmount;
+                    player.setAction("Iguala");
+                    this.playSound('chip');
+                } else if (action === 'raise') {
+                    const raiseAmt = callAmount + 100; // Fixed raise
+                    player.money -= raiseAmt;
+                    player.currentBet += raiseAmt;
+                    this.pot += raiseAmt;
+                    this.currentBet = player.currentBet;
+                    player.setAction("Puja 100");
+                    this.playSound('chip');
+                }
+
+                player.updateUI();
+                this.updatePot();
+                this.nextTurn();
+            }
+
+            nextTurn() {
+                this.turnIdx = (this.turnIdx + 1) % 3;
+
+                // Check if round complete (simplified: everyone acted once)
+                // In real poker, betting continues until bets match. 
+                // For this simplified version, we'll do one pass per phase or until user acts.
+                // Let's do: User -> Mozart -> Bach -> Next Phase.
+
+                if (this.turnIdx === 2) { // Back to user means round over
+                    this.nextPhase();
+                } else {
+                    this.processTurn();
+                }
+            }
+
+            async nextPhase() {
+                if (this.phase === 'betting1') {
+                    // Reveal Community Cards
+                    this.phase = 'flop';
+                    this.showMessage("El Flop!");
+
+                    for (let i = 0; i < 5; i++) {
+                        this.communityCards.push(this.deck.deal());
+                    }
+                    this.renderCommunityCards();
+                    this.playSound('deal');
+                    await this.wait(1000);
+
+                    this.startBettingRound('betting2');
+
+                } else if (this.phase === 'betting2') {
+                    this.showdown();
+                }
+            }
+
+            async showdown() {
+                this.phase = 'showdown';
+                this.showMessage("SHOWDOWN!");
+
+                // Reveal Bot Cards
+                this.players[0].renderHand(true); // Mozart
+                this.players[1].renderHand(true); // Bach
+
+                await this.wait(1000);
+
+                // Evaluate Hands
+                let bestPlayer = null;
+                let bestScore = -1;
+                let bestHandName = "";
+
+                this.players.forEach(p => {
+                    if (!p.folded) {
+                        const best = HandEvaluator.getBestHand(p.hand, this.communityCards);
+                        p.setAction(best.name);
+                        if (best.score > bestScore) {
+                            bestScore = best.score;
+                            bestPlayer = p;
+                            bestHandName = best.name;
+                        }
+                    }
+                });
+
+                if (bestPlayer) {
+                    this.showMessage(`Guanya ${bestPlayer.name} amb ${bestHandName}!`);
+                    bestPlayer.money += this.pot;
+                    bestPlayer.updateUI();
+                    this.playSound('win');
+
+                    // Highlight winner
+                    document.getElementById(bestPlayer.id).style.boxShadow = "0 0 50px var(--gold)";
+
+                    // Check Progression
+                    this.updateRewardUI();
+
+                } else {
+                    this.showMessage("Tothom s'ha retirat.");
+                }
+
+                setTimeout(() => {
+                    document.getElementById(bestPlayer?.id).style.boxShadow = "none";
+                    this.startRound();
+                }, 5000);
+            }
+
+            updateRewardUI() {
+                const btn = document.getElementById('btn-reward');
+                const text = document.getElementById('reward-text');
+                const playerMoney = this.players[2].money;
+
+                if (playerMoney >= 5000) {
+                    this.rewardUnlocked = true;
+                    btn.classList.add('unlocked');
+                    btn.style.cursor = 'pointer';
+                    text.textContent = "VEURE PREMI (DESBLOQUEJAT)";
+                } else {
+                    text.textContent = `Aconseguir el primer violí Stradivarius (${Math.max(0, playerMoney)}/5000)`;
+                }
+            }
+
+            showReward() {
+                if (this.rewardUnlocked) {
+                    document.getElementById('modal').style.display = 'flex';
+
+                    // Save Reward
+                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_texas'] = true;
+                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                    // Redirect
+                    setTimeout(() => {
+                        window.location.href = 'menu.html';
+                    }, 4000);
+                }
+            }
+
+            renderCommunityCards() {
+                const container = document.getElementById('community-cards');
+                container.innerHTML = '';
+                this.communityCards.forEach(card => {
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'card';
+                    cardEl.innerHTML = `<img src="${card.img}" alt="${card.name}">`;
+                    container.appendChild(cardEl);
+                });
+            }
+
+            enableControls(enabled) {
+                const callAmount = this.currentBet - this.players[2].currentBet;
+                document.getElementById('btn-fold').disabled = !enabled;
+                document.getElementById('btn-call').disabled = !enabled;
+                document.getElementById('btn-raise').disabled = !enabled;
+
+                if (enabled) {
+                    document.getElementById('btn-call').textContent = callAmount > 0 ? `IGUALAR (${callAmount})` : "PASSAR";
+                }
+            }
+
+            updatePot() {
+                document.getElementById('pot-display').textContent = `POT: ${this.pot}`;
+            }
+
+            showMessage(msg) {
+                document.getElementById('message-display').textContent = msg;
+            }
+
+            wait(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            playSound(type) {
+                if (!this.audioCtx) return;
+
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+
+                const now = this.audioCtx.currentTime;
+
+                if (type === 'deal') {
+                    // Shhhht sound (Noise buffer would be better, but using simple osc slide)
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                    gain.gain.setValueAtTime(this.volume * 0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'chip') {
+                    // Click
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1200, now);
+                    gain.gain.setValueAtTime(this.volume, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'fold') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    gain.gain.setValueAtTime(this.volume, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'win') {
+                    // Fanfare
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C E G C
+                    notes.forEach((freq, i) => {
+                        const o = this.audioCtx.createOscillator();
+                        const g = this.audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(this.audioCtx.destination);
+                        o.type = 'square';
+                        o.frequency.value = freq;
+                        g.gain.setValueAtTime(this.volume * 0.3, now + i * 0.1);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.4);
+                        o.start(now + i * 0.1);
+                        o.stop(now + i * 0.1 + 0.4);
+                    });
+                }
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

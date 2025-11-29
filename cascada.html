@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Cascada d'Or</title>
+    <style>
+        :root {
+            --gold: #ffd700;
+            --dark-gold: #b8860b;
+            --bg-dark: #1a1a1a;
+            --deco-font: 'Playfair Display', serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            font-family: var(--deco-font);
+            overflow: hidden;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* Art Deco Frame */
+        #cabinet {
+            position: relative;
+            width: 1200px;
+            /* Increased from 900px */
+            height: 95vh;
+            background: linear-gradient(135deg, #222, #000);
+            border: 10px solid var(--dark-gold);
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.2);
+            display: flex;
+            flex-direction: row;
+            padding: 20px;
+            box-sizing: border-box;
+            gap: 20px;
+        }
+
+        /* Left Panel: Game */
+        #game-area {
+            flex: 3;
+            /* Increased flex share */
+            position: relative;
+            background: #111;
+            border: 4px solid var(--gold);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Right Panel: Controls & Questions */
+        #side-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Marquee */
+        #marquee {
+            text-align: center;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            color: var(--gold);
+            text-shadow: 0 0 10px var(--dark-gold);
+            letter-spacing: 2px;
+        }
+
+        /* Question Box */
+        #question-box {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid var(--gold);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #question-text {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            min-height: 60px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: #222;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 10px;
+            cursor: pointer;
+            font-family: var(--deco-font);
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            background: var(--gold);
+            color: #000;
+        }
+
+        /* Stats */
+        #stats-box {
+            background: #222;
+            padding: 15px;
+            border: 1px solid #555;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 2rem;
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        /* Volume Control - Bottom Left (Absolute to body) */
+        .volume-control {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid var(--gold);
+        }
+
+        .volume-control span {
+            font-size: 1.5rem;
+        }
+
+        input[type=range] {
+            width: 100px;
+            accent-color: var(--gold);
+        }
+
+        /* Menu Button - Top Right (Absolute to body) */
+        #btn-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 1px solid var(--gold);
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        #btn-menu:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #222, #111);
+            padding: 40px;
+            border-radius: 20px;
+            border: 4px solid var(--gold);
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 0 50px var(--gold);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+        }
+
+        .action-btn {
+            background: var(--gold);
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+
+    <div id="cabinet">
+        <div id="game-area">
+            <canvas id="gameCanvas" width="800" height="800"></canvas> <!-- Increased size -->
+        </div>
+
+        <div id="side-panel">
+            <div id="marquee">
+                <h1>LA CASCADA D'OR</h1>
+                <p style="color: #aaa; margin: 5px;">Coin Pusher Musical</p>
+            </div>
+
+            <div id="stats-box">
+                <span style="color: #aaa;">MONEDES CAIGUDES</span><br>
+                <span class="stat-val" id="score">0/25</span>
+            </div>
+
+            <div id="question-box">
+                <div id="question-text">Carregant pregunta...</div>
+                <div class="options-grid" id="options-container">
+                    <!-- Buttons generated by JS -->
+                </div>
+                <p id="feedback" style="height: 20px; margin-top: 10px; font-weight: bold;"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Volume Control -->
+    <div class="volume-control">
+        <span id="volume-icon">🔊</span>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h1 style="color: var(--gold);">LA CASCADA D'OR</h1>
+            <p>Respon preguntes musicals per llançar monedes.</p>
+            <p>Empeny 25 monedes al buit per guanyar!</p>
+            <button class="action-btn" onclick="game.start()">INSERIR MONEDA</button>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">OBSESSIÓ RÍTMICA!</h2>
+            <div class="relic-icon">🥢</div>
+            <h3 style="color: var(--gold);">LA BAQUETA DEL BOLERO DE RAVEL</h3>
+            <p style="font-style: italic; color: #aaa;">"Maurice Ravel va compondre el Bolero, on la caixa toca el
+                mateix ritme obsessiu durant 15 minuts sense parar. Símbol de la constància!"</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR A JUGAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_cascada.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ENGINE ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        const bgMusic = document.getElementById('bg-music');
+
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume-slider').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume-slider').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const sounds = {
+            motor: null
+        };
+
+        function playTone(freq, type, duration, vol = 0.1) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playMotor() {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(40, audioCtx.currentTime); // Low rumble
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            return { osc, gain };
+        }
+
+        function playCoinHit() {
+            // Metallic clink
+            playTone(1200 + Math.random() * 500, 'triangle', 0.05, 0.05);
+        }
+
+        function playCoinDrop() {
+            // Satisfying drop
+            playTone(800, 'sine', 0.1, 0.2);
+            setTimeout(() => playTone(600, 'sine', 0.2, 0.2), 50);
+        }
+
+        function playWinSound() {
+            playTone(523, 'square', 0.2);
+            setTimeout(() => playTone(659, 'square', 0.2), 200);
+            setTimeout(() => playTone(783, 'square', 0.4), 400);
+        }
+
+        // --- PHYSICS ENGINE ---
+        class Coin {
+            constructor(x, y, r, isBig = false) {
+                this.x = x;
+                this.y = y;
+                this.r = r;
+                this.vx = 0;
+                this.vy = 0;
+                this.mass = isBig ? 5 : 1; // Big coins push harder
+                this.isBig = isBig;
+                this.friction = 0.95;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+
+                // Walls
+                if (this.x - this.r < 0) {
+                    this.x = this.r;
+                    this.vx *= -0.5;
+                }
+                if (this.x + this.r > 800) { // New width
+                    this.x = 800 - this.r;
+                    this.vx *= -0.5;
+                }
+
+                // Top wall (pusher area limit)
+                if (this.y - this.r < 0) {
+                    this.y = this.r;
+                    this.vy *= -0.5;
+                }
+            }
+
+            draw(ctx) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+
+                // Gold gradient
+                const grad = ctx.createRadialGradient(this.x - this.r / 3, this.y - this.r / 3, this.r / 10, this.x, this.y, this.r);
+                grad.addColorStop(0, '#fff');
+                grad.addColorStop(0.3, '#ffd700');
+                grad.addColorStop(1, '#b8860b');
+
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.strokeStyle = '#8a6d3b';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Shine removed as per user request "quita los fx"
+            }
+        }
+
+        class Pusher {
+            constructor() {
+                this.y = 100;
+                this.height = 50;
+                this.width = 800;
+                this.maxSteps = 18; // Increased to 18 steps to reach the very end
+                this.stepSize = 45; // Pixels per step - Full range
+                this.currentStep = 0;
+                this.offset = 0; // Current visual offset
+                this.targetOffset = 0; // Target offset based on step
+            }
+
+            stepDown() {
+                if (this.currentStep < this.maxSteps) {
+                    this.currentStep++;
+                    this.updateTarget();
+                }
+            }
+
+            stepUp() {
+                if (this.currentStep > 0) {
+                    this.currentStep--;
+                    this.updateTarget();
+                }
+            }
+
+            updateTarget() {
+                this.targetOffset = this.currentStep * this.stepSize;
+            }
+
+            update() {
+                // Smooth interpolation
+                const diff = this.targetOffset - this.offset;
+                if (Math.abs(diff) > 0.5) {
+                    this.offset += diff * 0.1; // Smooth factor
+                } else {
+                    this.offset = this.targetOffset;
+                }
+            }
+
+            getBottomY() {
+                return this.y + this.offset + this.height;
+            }
+
+            draw(ctx) {
+                const currentY = this.y + this.offset;
+
+                ctx.save();
+
+                // Block
+                ctx.fillStyle = '#333';
+                ctx.fillRect(0, 0, this.width, currentY); // Cover area behind
+
+                // Pusher Face
+                const grad = ctx.createLinearGradient(0, currentY, 0, currentY + this.height);
+                grad.addColorStop(0, '#555');
+                grad.addColorStop(0.5, '#888');
+                grad.addColorStop(1, '#555');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, currentY, this.width, this.height);
+
+                // Border
+                ctx.strokeStyle = '#aaa';
+                ctx.strokeRect(0, currentY, this.width, this.height);
+
+                // Ruler Lines (Casino Style)
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 2;
+                for (let i = 1; i <= this.maxSteps; i++) {
+                    const lineY = this.y + (i * this.stepSize);
+                    // Draw small markers on sides
+                    ctx.beginPath();
+                    ctx.moveTo(0, lineY);
+                    ctx.lineTo(20, lineY); // Left marker
+                    ctx.moveTo(this.width - 20, lineY);
+                    ctx.lineTo(this.width, lineY); // Right marker
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+        }
+
+        // --- QUESTIONS DATA ---
+        const QUESTIONS = [
+            { q: "Quant suma una Negra + dos Corxeres?", a: "2 temps", opts: ["1 temps", "1.5 temps", "2 temps", "3 temps"] },
+            { q: "A quantes Negres equival una Blanca amb Punt?", a: "3", opts: ["2", "3", "4", "1.5"] },
+            { q: "Quina figura val la meitat d'una Negra?", a: "Corxera", opts: ["Blanca", "Semicorxera", "Corxera", "Rodona"] },
+            { q: "Quant val una Rodona en compàs 4/4?", a: "4 temps", opts: ["2 temps", "3 temps", "4 temps", "1 temps"] },
+            { q: "Dos Semicorxeres sumen...", a: "1 Corxera", opts: ["1 Negra", "1 Corxera", "1 Blanca", "1 Fusa"] },
+            { q: "El silenci de Blanca dura...", a: "2 temps", opts: ["1 temps", "2 temps", "4 temps", "0.5 temps"] },
+            { q: "Quantes Semicorxeres entren en una Negra?", a: "4", opts: ["2", "3", "4", "8"] },
+            { q: "Què significa el puntet?", a: "+ meitat valor", opts: ["+1 temps", "+ meitat valor", "x2 valor", "-1 temps"] }
+        ];
+
+        // --- GAME LOGIC ---
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.coins = [];
+                this.pusher = new Pusher();
+                this.score = 0;
+                this.isRunning = false;
+                this.motorSound = null;
+
+                this.setupVolume();
+            }
+
+            setupVolume() {
+                const slider = document.getElementById('volume-slider');
+                slider.addEventListener('input', (e) => {
+                    // Volume logic
+                });
+            }
+
+            start() {
+                document.getElementById('start-screen').style.display = 'none';
+                this.isRunning = true;
+                this.score = 0;
+                this.coins = [];
+
+                // Initial Coins (Max 25)
+                for (let i = 0; i < 25; i++) {
+                    this.coins.push(new Coin(
+                        Math.random() * 800, // New width
+                        Math.random() * 500 + 250, // Lower area
+                        35 + Math.random() * 10
+                    ));
+                }
+
+                this.motorSound = playMotor();
+                this.askQuestion();
+                this.loop();
+            }
+
+            askQuestion() {
+                const q = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+                document.getElementById('question-text').textContent = q.q;
+
+                const container = document.getElementById('options-container');
+                container.innerHTML = '';
+
+                // Shuffle options
+                const shuffled = [...q.opts].sort(() => Math.random() - 0.5);
+
+                shuffled.forEach(opt => {
+                    const btn = document.createElement('div');
+                    btn.className = 'option-btn';
+                    btn.textContent = opt;
+                    btn.onclick = () => this.checkAnswer(opt, q.a);
+                    container.appendChild(btn);
+                });
+            }
+
+            checkAnswer(selected, correct) {
+                const feedback = document.getElementById('feedback');
+                if (selected === correct) {
+                    feedback.textContent = "CORRECTE! BAIXANT PREMSA!";
+                    feedback.style.color = "#4ade80";
+                    this.pusher.stepDown(); // Move Down
+                } else {
+                    feedback.textContent = "INCORRECTE... PUJANT PREMSA";
+                    feedback.style.color = "#ff4444";
+                    this.pusher.stepUp(); // Move Up
+                }
+
+                setTimeout(() => {
+                    feedback.textContent = "";
+                    this.askQuestion();
+                }, 500); // Faster questions (was 2000)
+            }
+
+            dropCoin(isBig) {
+                // Drop in the pusher area (top)
+                const r = isBig ? 60 : 40;
+                const x = Math.random() * (800 - 2 * r) + r; // New width
+                const y = 50; // Top area
+                this.coins.push(new Coin(x, y, r, isBig));
+            }
+
+            win() {
+                this.isRunning = false;
+                if (this.motorSound) {
+                    this.motorSound.osc.stop();
+                    this.motorSound = null;
+                }
+
+                // Save Reward
+                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                rewards['reward_cascada'] = true;
+                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                document.getElementById('win-modal').style.display = 'flex';
+                playWinSound();
+            }
+
+            loop() {
+                if (!this.isRunning) return;
+
+                this.ctx.clearRect(0, 0, 800, 800);
+
+                // Update Pusher
+                this.pusher.update();
+                this.pusher.draw(this.ctx);
+                const pusherY = this.pusher.getBottomY();
+
+                // Physics
+                for (let i = 0; i < this.coins.length; i++) {
+                    const c = this.coins[i];
+
+                    // Pusher Collision (Only affects coins in top area)
+                    if (c.y < pusherY + c.r && c.y > this.pusher.y) {
+                        // Push down
+                        c.vy += 0.5;
+                        c.y += 2; // Force push
+                    }
+
+                    c.update();
+
+                    // Check Fall
+                    if (c.y > 800 + c.r) { // New height
+                        this.score++;
+                        document.getElementById('score').textContent = `${this.score}/25`; // Goal 25
+                        playCoinDrop();
+                        this.coins.splice(i, 1);
+                        i--;
+
+                        if (this.score >= 25) {
+                            this.win();
+                            return;
+                        }
+                        continue;
+                    }
+                }
+
+                // Collisions (Coin-Coin) - Simple Iterative Solver
+                for (let k = 0; k < 2; k++) { // 2 iterations for stability
+                    for (let i = 0; i < this.coins.length; i++) {
+                        for (let j = i + 1; j < this.coins.length; j++) {
+                            const c1 = this.coins[i];
+                            const c2 = this.coins[j];
+
+                            const dx = c2.x - c1.x;
+                            const dy = c2.y - c1.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            const minDist = c1.r + c2.r;
+
+                            if (dist < minDist) {
+                                playCoinHit();
+                                const angle = Math.atan2(dy, dx);
+                                const tx = c1.x + Math.cos(angle) * minDist;
+                                const ty = c1.y + Math.sin(angle) * minDist;
+
+                                const ax = (tx - c2.x) * 0.05; // Push apart
+                                const ay = (ty - c2.y) * 0.05;
+
+                                // Weight based on mass
+                                const m1 = c1.mass / (c1.mass + c2.mass);
+                                const m2 = c2.mass / (c1.mass + c2.mass);
+
+                                c1.x -= ax * m2;
+                                c1.y -= ay * m2;
+                                c2.x += ax * m1;
+                                c2.y += ay * m1;
+
+                                c1.vx -= ax * m2;
+                                c1.vy -= ay * m2;
+                                c2.vx += ax * m1;
+                                c2.vy += ay * m1;
+                            }
+                        }
+                    }
+                }
+
+                // Draw Coins
+                for (let c of this.coins) {
+                    c.draw(this.ctx);
+                }
+
+                requestAnimationFrame(() => this.loop());
+            }
+        }
+
+        const game = new Game();
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conecta 4 Rítmic</title>
+    <style>
+        :root {
+            --board: #004d00;
+            /* Felt Green */
+            --slot: #002200;
+            --p1: #ff0000;
+            /* Red Chips */
+            --p2: #ffd700;
+            /* Gold Chips */
+            --gold: #ffd700;
+            --wood: #4a2c0f;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle, #1a0a00, #000);
+            color: #fff;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 1000;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+            transition: all 0.2s;
+        }
+
+        .btn-menu:hover {
+            background: var(--gold);
+            color: #000;
+        }
+
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        #board-frame {
+            background: var(--wood);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            border: 5px solid var(--gold);
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(7, 80px);
+            grid-template-rows: repeat(6, 80px);
+            gap: 10px;
+            background-color: var(--board);
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #003300;
+        }
+
+        .slot {
+            width: 80px;
+            height: 80px;
+            background-color: var(--slot);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            box-shadow: inset 0 0 10px #000;
+        }
+
+        .slot:hover {
+            background-color: #003300;
+        }
+
+        .token {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5), 2px 2px 5px rgba(0, 0, 0, 0.5);
+            animation: drop 0.5s ease-out;
+            border: 5px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        .token.p1 {
+            background-color: var(--p1);
+            border-color: #800;
+        }
+
+        .token.p2 {
+            background-color: var(--p2);
+            border-color: #b8860b;
+        }
+
+        .token img {
+            width: 50px;
+            height: 50px;
+            pointer-events: none;
+        }
+
+        @keyframes drop {
+            from {
+                transform: translateY(-500px);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        #status {
+            font-size: 2rem;
+            margin: 20px;
+            color: var(--gold);
+            text-shadow: 0 0 10px var(--gold);
+        }
+
+        #selector {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 50px;
+            border: 2px solid var(--gold);
+        }
+
+        .sel-item {
+            width: 70px;
+            height: 70px;
+            background: #fff;
+            border: 4px solid #ccc;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .sel-item:hover {
+            transform: scale(1.1);
+        }
+
+        .sel-item.selected {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px var(--gold);
+            transform: scale(1.1);
+        }
+
+        .sel-item img {
+            width: 50px;
+            height: 50px;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: #002200;
+            padding: 50px;
+            border: 4px double var(--gold);
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            box-shadow: 0 0 50px var(--gold);
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: linear-gradient(to bottom, var(--gold), #b8860b);
+            color: #000;
+            border: 2px solid #fff;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color:var(--gold);">
+        </div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="status">Torn: JUGADOR (Negres)</div>
+
+    <!-- Selector Removed -->
+
+    <div id="game-container">
+        <div id="board-frame">
+            <div id="board">
+                <!-- Slots generated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Modal -->
+    <div id="start-modal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">CONECTA 4 RÍTMIC</h2>
+            <p>Benvingut al Casino.</p>
+            <p>Guanya si fas una línia de 4 fitxes.</p>
+            <p>Tu jugues amb <b>NEGRES</b> (Vermell).</p>
+            <p>La IA juga amb <b>BLANQUES</b> (Groc).</p>
+            <button class="btn" onclick="startGame()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">CANTATA DEL CAFÈ!</h2>
+            <div class="relic-icon">☕</div>
+            <p style="font-size: 1.5rem; color: var(--gold);">"LA CAFETERA DE J.S. BACH"</p>
+            <p>Bach estimava tant el cafè que li va dedicar una cantata.</p>
+            <button class="btn" onclick="location.reload()">TORNAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_conecta4.mp3" loop></audio>
+    <script>
+        // Background Music
+        document.body.addEventListener('click', () => {
+            const bgMusic = document.getElementById('bg-music');
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        const ROWS = 6;
+        const COLS = 7;
+        let board = [];
+        let turn = 1; // 1 = Player, 2 = AI
+        let selectedVal = 1;
+        let selectedType = 'negra';
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'drop') {
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'win') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1);
+            }
+        }
+
+        function startGame() {
+            document.getElementById('start-modal').style.display = 'none';
+            initBoard();
+        }
+
+        function initBoard() {
+            const container = document.getElementById('board');
+            container.innerHTML = '';
+            board = [];
+
+            for (let r = 0; r < ROWS; r++) {
+                let row = [];
+                for (let c = 0; c < COLS; c++) {
+                    row.push(null);
+                    const slot = document.createElement('div');
+                    slot.className = 'slot';
+                    slot.onclick = () => dropToken(c);
+                    slot.dataset.r = r;
+                    slot.dataset.c = c;
+                    container.appendChild(slot);
+                }
+                board.push(row);
+            }
+        }
+
+        // Fixed Types
+        const PLAYER_TYPE = { t: 'negra', v: 1 };
+        const AI_TYPE = { t: 'blanca', v: 2 };
+
+        function selectNote(type, val) {
+            // No selection needed anymore, but keep function to avoid errors if called
+        }
+
+        function dropToken(col) {
+            if (turn !== 1) return;
+
+            let r = ROWS - 1;
+            while (r >= 0 && board[r][col] !== null) {
+                r--;
+            }
+
+            if (r < 0) return;
+
+            placeToken(r, col, 1, PLAYER_TYPE.t, PLAYER_TYPE.v);
+
+            if (checkWin(1)) {
+                winGame(1);
+            } else {
+                turn = 2;
+                document.getElementById('status').textContent = "Torn: IA (Blanques)...";
+                setTimeout(aiTurn, 1000);
+            }
+        }
+
+        function aiTurn() {
+            // Simple AI: Block or Win
+            // 1. Check if AI can win
+            // 2. Check if Player can win (block)
+            // 3. Random valid
+
+            let bestMove = -1;
+
+            // Helper to simulate drop
+            function simulate(c, p) {
+                let r = ROWS - 1;
+                while (r >= 0 && board[r][c] !== null) r--;
+                if (r < 0) return false;
+
+                // Temp place
+                const type = p === 1 ? PLAYER_TYPE : AI_TYPE;
+                board[r][c] = { player: p, type: type.t, val: type.v };
+                const win = checkWin(p);
+                board[r][c] = null; // Undo
+                return win;
+            }
+
+            // 1. Try to win
+            for (let c = 0; c < COLS; c++) {
+                if (simulate(c, 2)) {
+                    bestMove = c;
+                    break;
+                }
+            }
+
+            // 2. Block player
+            if (bestMove === -1) {
+                for (let c = 0; c < COLS; c++) {
+                    if (simulate(c, 1)) {
+                        bestMove = c;
+                        break;
+                    }
+                }
+            }
+
+            // 3. Random
+            if (bestMove === -1) {
+                let attempts = 0;
+                while (attempts < 50) {
+                    let c = Math.floor(Math.random() * COLS);
+                    if (board[0][c] === null) {
+                        bestMove = c;
+                        break;
+                    }
+                    attempts++;
+                }
+            }
+
+            // Fallback if full (draw?)
+            if (bestMove === -1) {
+                // Check draw or just return
+                return;
+            }
+
+            let r = ROWS - 1;
+            while (r >= 0 && board[r][bestMove] !== null) r--;
+
+            placeToken(r, bestMove, 2, AI_TYPE.t, AI_TYPE.v);
+
+            if (checkWin(2)) {
+                winGame(2);
+            } else {
+                turn = 1;
+                document.getElementById('status').textContent = `Torn: JUGADOR (Negres) - Ronda ${playerWins + aiWins + 1}`;
+            }
+        }
+
+        function checkWin(player) {
+            // Only check for 4 identical player tokens
+            function checkLine(cells) {
+                if (cells.some(c => c === null || c.player !== player)) return false;
+                return true;
+            }
+
+            // Horizontal
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS - 3; c++) {
+                    if (checkLine([board[r][c], board[r][c + 1], board[r][c + 2], board[r][c + 3]])) return true;
+                }
+            }
+            // Vertical
+            for (let r = 0; r < ROWS - 3; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (checkLine([board[r][c], board[r + 1][c], board[r + 2][c], board[r + 3][c]])) return true;
+                }
+            }
+            // Diag 1
+            for (let r = 0; r < ROWS - 3; r++) {
+                for (let c = 0; c < COLS - 3; c++) {
+                    if (checkLine([board[r][c], board[r + 1][c + 1], board[r + 2][c + 2], board[r + 3][c + 3]])) return true;
+                }
+            }
+            // Diag 2
+            for (let r = 3; r < ROWS; r++) {
+                for (let c = 0; c < COLS - 3; c++) {
+                    if (checkLine([board[r][c], board[r - 1][c + 1], board[r - 2][c + 2], board[r - 3][c + 3]])) return true;
+                }
+            }
+            return false;
+        }
+
+        function winGame(winner) {
+            if (winner === 1) {
+                playerWins++;
+                document.getElementById('status').textContent = `JUGADOR GUANYA LA RONDA! (${playerWins}/${WIN_SCORE})`;
+                document.getElementById('status').style.color = "#39ff14";
+            } else {
+                aiWins++;
+                document.getElementById('status').textContent = `IA GUANYA LA RONDA! (${aiWins}/${WIN_SCORE})`;
+                document.getElementById('status').style.color = "#ff003c";
+            }
+
+            playSound('win');
+
+            if (playerWins >= WIN_SCORE) {
+                // Match Win
+                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                rewards['reward_conecta4'] = true;
+                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                setTimeout(() => {
+                    document.getElementById('win-modal').style.display = 'flex';
+                }, 1500);
+            } else if (aiWins >= WIN_SCORE) {
+                // Match Lose
+                setTimeout(() => {
+                    alert("LA IA HA GUANYAT EL TORNEIG! Torna-ho a provar.");
+                    location.reload();
+                }, 1500);
+            } else {
+                // Next Round
+                setTimeout(() => {
+                    initBoard();
+                    turn = 1;
+                    document.getElementById('status').textContent = `Torn: JUGADOR (Vermell) - Ronda ${playerWins + aiWins + 1}`;
+                    document.getElementById('status').style.color = "var(--gold)";
+                }, 2000);
+            }
+        }
+
+        function aiTurn() {
+            // Simple Heuristic AI
+            // 1. Check if can win
+            // 2. Check if player can win next (block)
+            // 3. Pick center/random
+
+            const opts = [
+                { t: 'negra', v: 1 }, { t: 'blanca', v: 2 }, { t: 'corxera', v: 0.5 }
+            ];
+
+            // Helper to simulate drop
+            function simulate(c, p, t, v) {
+                let r = ROWS - 1;
+                while (r >= 0 && board[r][c] !== null) r--;
+                if (r < 0) return false;
+                board[r][c] = { player: p, type: t, val: v };
+                const win = checkWin(p);
+                board[r][c] = null; // Undo
+                return win;
+            }
+
+            let bestMove = null;
+
+            // 1. Try to win
+            for (let c = 0; c < COLS; c++) {
+                for (let opt of opts) {
+                    if (simulate(c, 2, opt.t, opt.v)) {
+                        bestMove = { c, t: opt.t, v: opt.v };
+                        break;
+                    }
+                }
+                if (bestMove) break;
+            }
+
+            // 2. Block player
+            if (!bestMove) {
+                for (let c = 0; c < COLS; c++) {
+                    // Assume player uses 'negra' (most common) or check all?
+                    // Checking all player options is expensive. Let's check 'negra' and 'blanca'.
+                    if (simulate(c, 1, 'negra', 1) || simulate(c, 1, 'blanca', 2)) {
+                        bestMove = { c, t: 'negra', v: 1 }; // Block with default
+                        break;
+                    }
+                }
+            }
+
+            // 3. Random valid
+            if (!bestMove) {
+                let col = Math.floor(Math.random() * COLS);
+                let attempts = 0;
+                while (board[0][col] !== null && attempts < 100) {
+                    col = Math.floor(Math.random() * COLS);
+                    attempts++;
+                }
+                if (attempts < 100) {
+                    const choice = opts[Math.floor(Math.random() * opts.length)];
+                    bestMove = { c: col, t: choice.t, v: choice.v };
+                }
+            }
+
+            if (bestMove) {
+                let r = ROWS - 1;
+                while (r >= 0 && board[r][bestMove.c] !== null) r--;
+                placeToken(r, bestMove.c, 2, bestMove.t, bestMove.v);
+
+                if (checkWin(2)) {
+                    winGame(2);
+                } else {
+                    turn = 1;
+                    document.getElementById('status').textContent = `Torn: JUGADOR (Vermell) - Ronda ${playerWins + aiWins + 1}`;
+                }
+            }
+        }
+
+        function winGame(player) {
+            if (player === 1) {
+                playSound('win');
+                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                rewards['reward_conecta4'] = true;
+                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                document.getElementById('win-modal').style.display = 'flex';
+            } else {
+                alert("Ha guanyat la IA!");
+                location.reload();
+            }
+        }
+    </script>
+</body>
+
+</html>

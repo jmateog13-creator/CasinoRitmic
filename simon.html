@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simon Rítmic</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #2c0505;
+            /* Dark Red Velvet */
+            --accent-gold: #d4af37;
+            --text-light: #f0f0f0;
+            --panel-bg: rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at center, #4a0a0a 0%, #1a0000 100%);
+            color: var(--text-light);
+            font-family: 'Playfair Display', serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Header */
+        header {
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid var(--accent-gold);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            color: var(--accent-gold);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            letter-spacing: 1px;
+        }
+
+        .status-panel {
+            display: flex;
+            gap: 20px;
+            font-size: 1.2rem;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .status-item {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border: 1px solid var(--accent-gold);
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .status-label {
+            color: #aaa;
+            font-size: 0.8rem;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        .status-value {
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        /* Main Game Area */
+        #btn-menu {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            /* Moved to Bottom-Right */
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #ffd700;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Playfair Display', serif;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        #btn-menu:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        #game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+            max-width: 1000px;
+            padding: 20px;
+        }
+
+        /* Master Screen */
+        #master-screen {
+            width: 600px;
+            height: 250px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 4px solid #5a2a2a;
+            border-radius: 15px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        #master-screen.active {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+        }
+
+        #master-screen.error {
+            border-color: #ff4444;
+            box-shadow: 0 0 30px rgba(255, 68, 68, 0.4);
+        }
+
+        #screen-icon {
+            font-size: 5rem;
+            color: var(--accent-gold);
+            opacity: 0.5;
+            transition: all 0.3s;
+        }
+
+        #master-screen.playing #screen-icon {
+            opacity: 1;
+            transform: scale(1.1);
+            text-shadow: 0 0 20px var(--accent-gold);
+        }
+
+        #start-message {
+            font-family: 'Roboto', sans-serif;
+            color: #aaa;
+            font-size: 1.5rem;
+            font-style: italic;
+        }
+
+        /* Keypad */
+        #keypad {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            padding: 25px;
+            background: rgba(44, 5, 5, 0.6);
+            border-radius: 20px;
+            border: 1px solid var(--accent-gold);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .pad-btn {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(145deg, #3e1e1e, #2a1010);
+            border: 2px solid #5a2a2a;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.1s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .pad-btn img {
+            width: 80%;
+            height: auto;
+            pointer-events: none;
+            opacity: 0.9;
+            filter: sepia(0.2);
+        }
+
+        .pad-btn:hover {
+            border-color: var(--accent-gold);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .pad-btn:active,
+        .pad-btn.flash {
+            background: #5a2a2a;
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+            transform: scale(0.95);
+            filter: brightness(1.2);
+        }
+
+        .pad-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+            filter: grayscale(0.8);
+        }
+
+        /* Controls */
+        #controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        button.action-btn {
+            background: linear-gradient(to bottom, #d4af37, #aa8c2c);
+            color: #2c0505;
+            border: none;
+            padding: 12px 40px;
+            font-family: 'Playfair Display', serif;
+            font-weight: bold;
+            font-size: 1.3rem;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            transition: all 0.2s;
+        }
+
+        button.action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(212, 175, 55, 0.4);
+            filter: brightness(1.1);
+        }
+
+        button.action-btn:disabled {
+            background: #555;
+            color: #888;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Audio Controls - MOVED TO BOTTOM */
+        .volume-control {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid #555;
+            z-index: 200;
+        }
+
+        #volume-slider {
+            width: 100px;
+            accent-color: var(--accent-gold);
+        }
+
+        /* Modal */
+        #reward-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        #reward-modal.visible {
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2c0505, #000);
+            border: 4px solid var(--accent-gold);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            color: var(--text-light);
+            box-shadow: 0 0 50px var(--accent-gold);
+            position: relative;
+            overflow: hidden;
+            transform: scale(0.8);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #reward-modal.visible .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--accent-gold);
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .reward-icon {
+            font-size: 6rem;
+            margin: 20px 0;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        /* Confetti */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent-gold);
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+
+        #message-area {
+            height: 30px;
+            color: var(--accent-gold);
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>SIMON RÍTMIC</h1>
+        <div class="status-panel">
+            <div class="status-item">
+                <span class="status-label">NIVELL</span>
+                <span class="status-value" id="level-display">1</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">RATXA</span>
+                <span class="status-value" id="streak-display">0</span>
+            </div>
+        </div>
+    </header>
+
+    <div id="audio-controls">
+        <span>🎵</span>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.3">
+    </div>
+
+    <!-- Menu Button -->
+    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+
+    <div id="game-container">
+        <div id="master-screen">
+            <!-- Replaced Image with Icon/Text for listening mode -->
+            <div id="screen-icon" style="display: none;">👂</div>
+            <div id="start-message">Prem START per començar</div>
+        </div>
+
+        <div id="message-area"></div>
+
+        <div id="keypad">
+            <!-- Buttons generated by JS -->
+        </div>
+
+        <div id="controls">
+            <button id="start-btn" class="action-btn">START</button>
+            <!-- New Replay Button -->
+            <button id="replay-btn" class="action-btn"
+                style="font-size: 1rem; padding: 12px 20px; display: none; margin-left: 10px;">↻ REPETIR</button>
+        </div>
+    </div>
+
+    <!-- Reward Modal -->
+    <div id="reward-modal">
+        <div class="modal-content">
+            <div class="reward-icon">🥁</div>
+            <h2>LLEGENDARI!</h2>
+            <p>Has demostrat una memòria rítmica increïble.</p>
+            <p>Aquí tens la teva recompensa:</p>
+            <h3 style="color: var(--accent-gold); font-size: 1.8rem;">LES BAQUETES DE RINGO STARR</h3>
+            <p style="font-size: 1rem; opacity: 0.8;">"I've got blisters on my fingers!"</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR A JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Audio Assets -->
+    <audio id="bg-music" loop>
+        <source src="music/background_music_simon.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // --- DATA ---
+        const RHYTHM_DATA = {
+            1: { seq: [1, 1, 0.5, 0.5, 1], img: 'images/ritme1.png' },              // Negra, Negra, 2 Corx, Negra
+            2: { seq: [1, 1, 1, 0.5, 0.5], img: 'images/ritme2.png' },              // Negra, Negra, Negra, 2 Corx
+            3: { seq: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1], img: 'images/ritme3.png' },// 2 Corx, 2 Corx, 2 Corx, Negra
+            4: { seq: [0.5, 0.5, 1, 1, 1], img: 'images/ritme4.png' },              // 2 Corx, Negra, Negra, Negra
+            5: { seq: [1, -1, 1, 1], img: 'images/ritme5.png' },                    // Negra, Silencio, Negra, Negra
+            6: { seq: [0.5, 0.5, 1, 0.5, 0.5, 1], img: 'images/ritme6.png' },       // 2 Corx, Negra, 2 Corx, Negra
+            7: { seq: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], img: 'images/ritme7.png' }, // 8 Corxeres
+            8: { seq: [1, 0.5, 0.5, 0.5, 0.5, 1], img: 'images/ritme8.png' },       // Negra, 2 Corx, 2 Corx, Negra
+            9: { seq: [1, 0.5, 0.5, 0.5, 0.5, 1], img: 'images/ritme9.png' },       // Idèntic al 8
+            10: { seq: [1, 2, 0.5, 0.5], img: 'images/ritme10.png' }                // Negra, Blanca, 2 Corxeres
+        };
+
+        // --- CONSTANTS ---
+        const TEMPO_BPM = 100; // Beats per minute
+        const BEAT_DURATION = 60000 / TEMPO_BPM; // ms per quarter note (Negra) ~600ms
+        const WIN_STREAK = 8;
+
+        // --- STATE ---
+        let state = {
+            sequence: [], // Array of rhythm IDs
+            playerIndex: 0,
+            streak: 0,
+            isPlaying: false,
+            isPlayerTurn: false,
+            gameOver: false,
+            userVolume: 0.3 // Store user preferred volume
+        };
+
+        // --- AUDIO ENGINE ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        const bgMusic = document.getElementById('bg-music');
+
+        function playWoodblock(time) {
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            // Woodblock synthesis: High pitch sine wave with very short decay
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, time);
+            osc.frequency.exponentialRampToValueAtTime(1200, time + 0.05); // Pitch bend up slightly
+
+            gainNode.gain.setValueAtTime(0.0, time);
+            gainNode.gain.linearRampToValueAtTime(0.7, time + 0.01); // Attack
+            gainNode.gain.exponentialRampToValueAtTime(0.01, time + 0.1); // Decay
+
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            osc.start(time);
+            osc.stop(time + 0.15);
+        }
+
+        function fadeMusic(targetVol, duration) {
+            // Simple linear fade
+            const startVol = bgMusic.volume;
+            const stepTime = 50; // ms
+            const steps = duration / stepTime;
+            const volStep = (targetVol - startVol) / steps;
+            let currentStep = 0;
+
+            const fadeInterval = setInterval(() => {
+                currentStep++;
+                let newVol = startVol + (volStep * currentStep);
+                // Clamp
+                if (newVol < 0) newVol = 0;
+                if (newVol > 1) newVol = 1;
+
+                bgMusic.volume = newVol;
+
+                if (currentStep >= steps) {
+                    clearInterval(fadeInterval);
+                    bgMusic.volume = targetVol;
+                }
+            }, stepTime);
+        }
+
+        // --- DOM ELEMENTS ---
+        const masterScreen = document.getElementById('master-screen');
+        const screenIcon = document.getElementById('screen-icon');
+        const startMessage = document.getElementById('start-message');
+        const keypad = document.getElementById('keypad');
+        const startBtn = document.getElementById('start-btn');
+        const replayBtn = document.getElementById('replay-btn');
+        const levelDisplay = document.getElementById('level-display');
+        const streakDisplay = document.getElementById('streak-display');
+        const messageArea = document.getElementById('message-area');
+        const volumeSlider = document.getElementById('volume-slider');
+        const rewardModal = document.getElementById('reward-modal');
+
+        // --- INITIALIZATION ---
+        function init() {
+            createKeypad();
+
+            startBtn.addEventListener('click', startGame);
+            replayBtn.addEventListener('click', replaySequence);
+
+            volumeSlider.addEventListener('input', (e) => {
+                state.userVolume = parseFloat(e.target.value);
+                // Only update immediately if not currently ducked (playing sequence)
+                if (!state.isPlaying) {
+                    bgMusic.volume = state.userVolume;
+                }
+            });
+            bgMusic.volume = state.userVolume;
+        }
+
+        function createKeypad() {
+            keypad.innerHTML = '';
+            for (let i = 1; i <= 10; i++) {
+                const btn = document.createElement('div');
+                btn.className = 'pad-btn disabled';
+                btn.id = `btn-${i}`;
+                btn.dataset.id = i;
+
+                const img = document.createElement('img');
+                img.src = RHYTHM_DATA[i].img;
+                btn.appendChild(img);
+
+                btn.addEventListener('click', () => handleInput(i));
+
+                keypad.appendChild(btn);
+            }
+        }
+
+        // --- GAME LOGIC ---
+
+        async function startGame() {
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+            // Reset State
+            state.sequence = [];
+            state.playerIndex = 0;
+            state.streak = 0;
+            state.gameOver = false;
+
+            updateUI();
+
+            startBtn.disabled = true;
+            startBtn.style.display = 'none';
+            replayBtn.style.display = 'inline-block';
+            replayBtn.disabled = true; // Disabled while playing
+            startMessage.style.display = 'none';
+
+            if (bgMusic.paused) bgMusic.play().catch(e => console.log("Music play failed", e));
+
+            // Start first round
+            messageArea.textContent = "Escolta...";
+            addToSequence();
+            await playSequence();
+        }
+
+        function addToSequence() {
+            // Exclude 8 and 9 as per user request
+            const validIds = [1, 2, 3, 4, 5, 6, 7, 10];
+            const randomId = validIds[Math.floor(Math.random() * validIds.length)];
+
+            // User requested "New one directly", implying non-cumulative
+            state.sequence = [randomId];
+            state.playerIndex = 0;
+            levelDisplay.textContent = state.streak + 1;
+        }
+
+        async function playSequence() {
+            state.isPlaying = true;
+            state.isPlayerTurn = false;
+            disableKeypad(true);
+            replayBtn.disabled = true;
+            messageArea.textContent = "Escolta...";
+            masterScreen.classList.add('active');
+            screenIcon.style.display = 'block'; // Show ear icon
+
+            // Duck Music
+            fadeMusic(0, 500);
+            await wait(500);
+
+            // Wait a bit before starting
+            await wait(500);
+
+            for (let i = 0; i < state.sequence.length; i++) {
+                const rhythmId = state.sequence[i];
+                const rhythm = RHYTHM_DATA[rhythmId];
+
+                // DO NOT Show Image (Visual Hiding)
+                // Just animate the ear icon slightly to show activity?
+                masterScreen.classList.add('playing');
+
+                // Play Rhythm
+                const now = audioCtx.currentTime;
+                let startTime = now;
+
+                // Calculate total duration of this rhythm to wait
+                let totalDuration = 0;
+
+                for (let noteVal of rhythm.seq) {
+                    const duration = Math.abs(noteVal) * (60 / TEMPO_BPM); // seconds
+
+                    if (noteVal > 0) {
+                        playWoodblock(startTime);
+                    }
+                    // If negative (rest), just advance time without playing
+
+                    startTime += duration;
+                    totalDuration += duration;
+                }
+
+                // Wait for rhythm to finish
+                await wait(totalDuration * 1000 + 200); // +200ms gap
+
+                masterScreen.classList.remove('playing');
+                await wait(300); // Gap between rhythms
+            }
+
+            masterScreen.classList.remove('active');
+            screenIcon.style.display = 'none'; // Hide ear icon
+            state.isPlaying = false;
+            state.isPlayerTurn = true;
+            messageArea.textContent = "Repeteix la seqüència!";
+            disableKeypad(false);
+            replayBtn.disabled = false;
+
+            // Restore Music
+            fadeMusic(state.userVolume, 1000);
+        }
+
+        async function handleInput(id) {
+            if (!state.isPlayerTurn || state.gameOver) return;
+
+            // Visual Feedback
+            const btn = document.getElementById(`btn-${id}`);
+            btn.classList.add('flash');
+            setTimeout(() => btn.classList.remove('flash'), 200);
+
+            // Play the rhythm of the button (fast preview)
+            playRhythmPreview(id);
+
+            // Check Logic
+            const expectedId = state.sequence[state.playerIndex];
+
+            if (id === expectedId) {
+                // Correct
+                state.playerIndex++;
+
+                if (state.playerIndex >= state.sequence.length) {
+                    // Sequence Complete
+                    state.streak++;
+                    streakDisplay.textContent = state.streak;
+                    state.isPlayerTurn = false;
+                    disableKeypad(true);
+                    replayBtn.disabled = true;
+
+                    if (state.streak >= WIN_STREAK) {
+                        winGame();
+                    } else {
+                        messageArea.textContent = "Correcte! Següent nivell...";
+                        messageArea.style.color = "#4ade80"; // Green
+
+                        // Wait 5 seconds as requested
+                        await wait(5000);
+
+                        messageArea.style.color = "var(--accent-gold)";
+                        addToSequence();
+                        playSequence();
+                    }
+                }
+            } else {
+                // Incorrect
+                gameOver();
+            }
+        }
+
+        function playRhythmPreview(id) {
+            // Play the rhythm quickly
+            const rhythm = RHYTHM_DATA[id];
+            const now = audioCtx.currentTime;
+            let startTime = now;
+
+            for (let noteVal of rhythm.seq) {
+                const duration = Math.abs(noteVal) * (60 / TEMPO_BPM);
+                if (noteVal > 0) {
+                    playWoodblock(startTime);
+                }
+                startTime += duration;
+            }
+        }
+
+        function gameOver() {
+            state.gameOver = true;
+            state.isPlayerTurn = false;
+            disableKeypad(true);
+            replayBtn.disabled = true;
+            masterScreen.classList.add('error');
+            messageArea.textContent = "Has fallat! Game Over.";
+            messageArea.style.color = "#ff4444";
+
+            // Switch buttons
+            startBtn.style.display = 'inline-block';
+            replayBtn.style.display = 'none';
+            startBtn.disabled = false;
+            startBtn.textContent = "RETRY";
+
+            // Error sound
+            const osc = audioCtx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5);
+            osc.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+
+            setTimeout(() => {
+                masterScreen.classList.remove('error');
+                messageArea.style.color = "var(--accent-gold)";
+            }, 1000);
+        }
+
+        function winGame() {
+            state.gameOver = true;
+            showReward();
+        }
+
+        function showReward() {
+            rewardModal.style.display = 'flex';
+            // Force reflow
+            rewardModal.offsetHeight;
+            rewardModal.classList.add('visible');
+            createConfetti();
+
+            // Save Reward
+            const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+            rewards['reward_simon'] = true;
+            localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+            // Redirect
+            setTimeout(() => {
+                window.location.href = 'menu.html';
+            }, 4000);
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                // Random gold/red colors
+                const isGold = Math.random() > 0.5;
+                confetti.style.backgroundColor = isGold ? '#d4af37' : '#ff0000';
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                document.body.appendChild(confetti);
+            }
+        }
+
+        function disableKeypad(disabled) {
+            const btns = document.querySelectorAll('.pad-btn');
+            btns.forEach(btn => {
+                if (disabled) btn.classList.add('disabled');
+                else btn.classList.remove('disabled');
+            });
+        }
+
+        function updateUI() {
+            levelDisplay.textContent = state.sequence.length || 1;
+            streakDisplay.textContent = state.streak;
+        }
+
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+
+</html>

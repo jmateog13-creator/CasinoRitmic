@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Solitari del Mestre</title>
+    <style>
+        :root {
+            --felt-blue: #003366;
+            --felt-burgundy: #660000;
+            --gold: #ffd700;
+            --card-bg: #fff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            font-family: 'Times New Roman', serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        #ui-bar>* {
+            pointer-events: auto;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+            transition: all 0.2s;
+        }
+
+        .btn-menu:hover {
+            background: var(--gold);
+            color: #000;
+        }
+
+        /* Table */
+        #table {
+            width: 1400px;
+            /* Larger table */
+            height: 900px;
+            background: radial-gradient(circle, var(--felt-blue), #001122);
+            border: 20px solid #4a3c31;
+            /* Wood */
+            border-radius: 30px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            position: relative;
+            overflow: hidden;
+            transform: scale(0.9);
+            /* Fit in screen if needed, or just be big */
+        }
+
+        /* Header */
+        #header {
+            position: absolute;
+            top: 30px;
+            width: 100%;
+            text-align: center;
+            color: var(--gold);
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 3rem;
+        }
+
+        p {
+            margin: 5px;
+            font-size: 1.5rem;
+            color: #aaa;
+        }
+
+        /* Card Styles */
+        .card {
+            width: 120px;
+            /* Larger cards */
+            height: 180px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: 1px solid #ccc;
+        }
+
+        .card img {
+            width: 80px;
+        }
+
+        .card.blocked {
+            filter: brightness(0.4);
+            cursor: not-allowed;
+        }
+
+        .card.selected {
+            transform: translateY(-20px);
+            box-shadow: 0 0 25px var(--gold);
+            border: 4px solid var(--gold);
+        }
+
+        .card.removed {
+            transform: scale(0);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s;
+        }
+
+        /* Deck & Discard */
+        #deck-area {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+        }
+
+        #stock {
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjODAwIiBzdHJva2U9IiNmZmQiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==');
+            background-size: cover;
+        }
+
+        #discard {
+            border: 4px dashed #aaa;
+            background: transparent;
+        }
+
+        /* Controls */
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 20px;
+        }
+
+        input[type=range] {
+            accent-color: var(--gold);
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        .modal-content {
+            background: #fff;
+            /* White paper style */
+            color: #000;
+            padding: 50px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            text-align: center;
+            max-width: 600px;
+            box-shadow: 0 0 50px rgba(255, 255, 255, 0.5);
+            animation: fadeIn 0.5s;
+            font-family: 'Times New Roman', serif;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+
+        .action-btn {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            border: 2px solid #000;
+        }
+
+        .action-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        /* Menu Button */
+        #btn-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #aaa;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color:var(--gold);">
+        </div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <!-- <a href="menu.html" id="btn-menu">🏠 MENÚ</a> Removed old button -->
+
+    <div id="table">
+        <div id="header">
+            <h1>EL SOLITARI DEL MESTRE</h1>
+            <p>Elimina parelles que sumin 2 TEMPS</p>
+        </div>
+
+        <div id="pyramid">
+            <!-- Cards generated by JS -->
+        </div>
+
+        <div id="deck-area">
+            <div id="stock" class="card" onclick="game.drawCard()"></div>
+            <div id="discard" class="card"></div>
+            <!-- Red Card "Cheat" -->
+            <div id="red-card" class="card" style="background: #800; border: 2px solid red; cursor: pointer;"
+                onclick="game.addRandomCard()">
+                <div style="color:white; font-size:3rem; font-weight:bold;">+</div>
+            </div>
+        </div>
+
+        <div id="controls">
+            <div class="volume-control">
+                <span>🔊</span>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h1 style="color: #000; font-style: italic;">EL SOLITARI DEL MESTRE</h1>
+            <p>Neteja la piràmide eliminant cartes.</p>
+            <p>Regla: Suma <strong style="color:#800;">EXACTAMENT 2 TEMPS</strong>.</p>
+            <p>(Ex: Blanca sola, o 2 Negres).</p>
+            <div style="display:flex; gap:20px; justify-content:center; margin-top:20px;">
+                <button class="action-btn" onclick="game.start(1)">NIVELL 1 (Fàcil)</button>
+                <button class="action-btn" onclick="game.start(2)">NIVELL 2 (Mitjà)</button>
+                <button class="action-btn" onclick="game.start(3)">NIVELL 3 (Difícil)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">VIRTUOSISME ROMÀNTIC!</h2>
+            <div class="relic-icon">🎹</div>
+            <h3 style="color: var(--gold);">EL PIANO PLEYEL DE CHOPIN</h3>
+            <p style="font-style: italic; color: #aaa;">"El piano preferit de Frédéric Chopin. Deia que era l'únic
+                instrument capaç de transmetre la seva ànima."</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR A JUGAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_solitario.mp3" loop></audio>
+    <script>
+        // Background Music
+        document.body.addEventListener('click', () => {
+            const bgMusic = document.getElementById('bg-music');
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        // --- ASSETS ---
+        const CARDS = [
+            { id: 'blanca', img: 'images/blanca.jpg', val: 2 },
+            { id: 's_blanca', img: 'images/silenciblanca.jpg', val: 2 },
+            { id: 'negra', img: 'images/negra.jpg', val: 1 },
+            { id: 's_negra', img: 'images/silencinegra.jpg', val: 1 }
+        ];
+
+        // --- AUDIO ENGINE ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playTone(freq, type, duration, vol = 0.1) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const masterVol = parseFloat(document.getElementById('volume-slider').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol * masterVol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playFlip() { playTone(200, 'sine', 0.1, 0.2); }
+        function playMatch() {
+            playTone(523, 'sine', 0.3, 0.2);
+            setTimeout(() => playTone(659, 'sine', 0.3, 0.2), 100);
+        }
+        function playError() { playTone(100, 'sawtooth', 0.2, 0.2); }
+
+        // --- GAME LOGIC ---
+        class Game {
+            constructor() {
+                this.deck = [];
+                this.pyramid = []; // Array of card objects
+                this.stock = [];
+                this.discard = []; // Array of discarded cards
+                this.selectedCard = null;
+                this.tableEl = document.getElementById('table');
+            }
+
+            start(level) {
+                document.getElementById('start-screen').style.display = 'none';
+                this.createDeck();
+                this.dealPyramid(level);
+            }
+
+            createDeck() {
+                this.deck = [];
+                // Create a standard deck size (e.g., 52 cards equivalent)
+                for (let i = 0; i < 13; i++) { // 13 of each type roughly
+                    CARDS.forEach(c => this.deck.push({ ...c, uid: Math.random() }));
+                }
+                // Shuffle
+                this.deck.sort(() => Math.random() - 0.5);
+            }
+
+            dealPyramid(level) {
+                this.pyramid = [];
+                let cardIndex = 0;
+                let rowY = 150; // Started lower
+
+                let rows = 5;
+                if (level === 2) rows = 6;
+                if (level === 3) rows = 7;
+                this.pyramidRows = rows; // Store for updateBlockedStatus
+
+                // Rows: 1, 2, 3, 4, 5...
+                for (let row = 0; row < rows; row++) {
+                    const cardsInRow = row + 1;
+                    const startX = 700 - ((cardsInRow * 130) / 2) + 65; // Center based on 1400 width
+
+                    for (let col = 0; col < cardsInRow; col++) {
+                        const cardData = this.deck.pop();
+                        const card = {
+                            ...cardData,
+                            row: row,
+                            col: col,
+                            el: null,
+                            isRemoved: false
+                        };
+
+                        this.createCardElement(card, startX + (col * 130), rowY);
+                        this.pyramid.push(card);
+                    }
+                    rowY += 90; // Overlap vertical
+                }
+
+                this.stock = this.deck;
+                this.updateBlockedStatus();
+            }
+
+            createCardElement(card, x, y) {
+                const el = document.createElement('div');
+                el.className = 'card';
+                el.style.left = `${x}px`;
+                el.style.top = `${y}px`;
+                el.innerHTML = `<img src="${card.img}">`;
+                el.onclick = () => this.clickCard(card);
+
+                this.tableEl.appendChild(el);
+                card.el = el;
+            }
+
+            updateBlockedStatus() {
+                // A card is blocked if it is covered by two cards in the row below
+                // Card at (row, col) is covered by (row+1, col) and (row+1, col+1)
+                this.pyramid.forEach(card => {
+                    if (card.isRemoved) return;
+
+                    let blocked = false;
+                    // Check row below
+                    const nextRow = card.row + 1;
+                    if (nextRow < this.pyramidRows) { // Use this.pyramidRows for dynamic check
+                        const cover1 = this.pyramid.find(c => c.row === nextRow && c.col === card.col && !c.isRemoved);
+                        const cover2 = this.pyramid.find(c => c.row === nextRow && c.col === card.col + 1 && !c.isRemoved);
+                        if (cover1 || cover2) blocked = true;
+                    }
+
+                    if (blocked) {
+                        card.el.classList.add('blocked');
+                    } else {
+                        card.el.classList.remove('blocked');
+                    }
+                    card.isBlocked = blocked;
+                });
+            }
+
+            clickCard(card) {
+                if (card.isBlocked || card.isRemoved) return;
+                playFlip();
+
+                // Logic for matching
+                if (card.val === 2) {
+                    // Instant remove
+                    this.removeCard(card);
+                    playMatch();
+                    // Deselect any previously selected card to avoid confusion
+                    if (this.selectedCard) {
+                        this.selectedCard.el.classList.remove('selected');
+                        this.selectedCard = null;
+                    }
+                } else {
+                    // Select logic
+                    if (this.selectedCard === card) {
+                        // Deselect
+                        this.selectedCard = null;
+                        card.el.classList.remove('selected');
+                    } else if (this.selectedCard) {
+                        // Check match
+                        if (this.selectedCard.val + card.val === 2) {
+                            this.removeCard(this.selectedCard);
+                            this.removeCard(card);
+                            playMatch();
+                            this.selectedCard = null;
+                        } else {
+                            // Invalid match, switch selection
+                            this.selectedCard.el.classList.remove('selected');
+                            this.selectedCard = card;
+                            card.el.classList.add('selected');
+                            playError();
+                        }
+                    } else {
+                        // Select first
+                        this.selectedCard = card;
+                        card.el.classList.add('selected');
+                    }
+                }
+            }
+
+            removeCard(card) {
+                card.isRemoved = true;
+                card.el.classList.add('removed');
+                if (card.el.classList.contains('selected')) card.el.classList.remove('selected');
+
+                this.updateBlockedStatus();
+                this.checkWin();
+            }
+
+            drawCard() {
+                if (this.stock.length === 0) {
+                    // Recycle discard to stock
+                    if (this.discard.length > 0) {
+                        this.stock = this.discard.reverse(); // Reverse to simulate flipping over
+                        this.discard = [];
+                        document.getElementById('discard').innerHTML = '';
+                        document.getElementById('discard').onclick = null;
+                        document.getElementById('stock').style.display = 'block'; // Show stock again
+                        // alert("Baralla reciclada!");
+                        return;
+                    } else {
+                        return; // No cards left anywhere
+                    }
+                }
+
+                const cardData = this.stock.pop();
+
+                // If stock empty after pop, maybe hide it or show empty state?
+                // We keep it clickable for recycle if needed (handled above)
+
+                this.discard.push(cardData); // Add to discard array
+
+                const discardEl = document.getElementById('discard');
+
+                // Visual update of discard pile
+                discardEl.innerHTML = `<img src="${cardData.img}">`;
+
+                // The discard card is now "in play" for matching
+                discardEl.onclick = () => this.clickDiscard(cardData);
+
+                this.currentDiscard = cardData;
+            }
+
+            clickDiscard(cardData) {
+                if (!cardData) return;
+                playFlip();
+
+                // Same matching logic as clickCard but for discard
+                if (cardData.val === 2) {
+                    this.removeDiscard();
+                    playMatch();
+                } else {
+                    if (this.selectedCard) {
+                        if (this.selectedCard.val + cardData.val === 2) {
+                            this.removeCard(this.selectedCard);
+                            this.removeDiscard();
+                            playMatch();
+                            this.selectedCard = null;
+                        } else {
+                            playError();
+                        }
+                    } else {
+                        // Select discard? 
+                        // Complex to implement visual selection on discard div.
+                        // Let's simplify: Discard can only COMPLETE a pair from pyramid.
+                        // Or pyramid can complete discard.
+                        // Let's allow selecting pyramid card then clicking discard.
+                    }
+                }
+            }
+
+            removeDiscard() {
+                document.getElementById('discard').innerHTML = '';
+                document.getElementById('discard').onclick = null;
+                this.currentDiscard = null;
+            }
+
+            checkWin() {
+                const remaining = this.pyramid.filter(c => !c.isRemoved).length;
+                if (remaining === 0) {
+                    // Save Reward
+                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_solitari'] = true;
+                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                    setTimeout(() => {
+                        document.getElementById('win-modal').style.display = 'flex';
+                    }, 1000);
+                }
+            }
+
+            // Cheat/Help Mechanic
+            addRandomCard() {
+                // Add a random card to the table (bottom area)
+                const cardData = this.deck.length > 0 ? this.deck.pop() : { ...CARDS[Math.floor(Math.random() * CARDS.length)], uid: Math.random() };
+
+                // Place it near the deck
+                const x = 800 + (Math.random() * 100);
+                const y = 700 + (Math.random() * 50);
+
+                const card = {
+                    ...cardData,
+                    row: -1, // Special
+                    col: -1,
+                    el: null,
+                    isRemoved: false,
+                    isBlocked: false // Always free
+                };
+
+                this.createCardElement(card, x, y);
+                this.pyramid.push(card); // Treat as part of the "board" for matching purposes
+            }
+        }
+
+        const game = new Game();
+
+    </script>
+</body>
+
+</html>

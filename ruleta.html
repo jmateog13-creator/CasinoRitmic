@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Ruleta Russa del Tempo</title>
+    <style>
+        :root {
+            --felt-green: #2d5a27;
+            --felt-dark: #1a3c1a;
+            --wood-border: #5d4037;
+            --gold: #ffd700;
+            --card-white: #f0f0f0;
+            --text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            --danger-red: #ff0033;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* Main Game Table */
+        #game-table {
+            width: 95vw;
+            height: 90vh;
+            background: radial-gradient(circle at center, var(--felt-green), var(--felt-dark));
+            border: 20px solid var(--wood-border);
+            border-radius: 50px;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Texture overlay */
+        #game-table::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            border-radius: 30px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+            color: var(--gold);
+            text-shadow: var(--text-shadow);
+            letter-spacing: 2px;
+            z-index: 10;
+            text-align: center;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            font-size: 1.5rem;
+            margin-top: 10px;
+            text-shadow: var(--text-shadow);
+            z-index: 10;
+            width: 100%;
+        }
+
+        /* Wheel Area */
+        #wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 15px solid var(--wood-border);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        #wheel-image {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        .blur-spin {
+            animation: spinBlur 0.1s infinite linear;
+            filter: blur(5px) !important;
+        }
+
+        @keyframes spinBlur {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Timer Bar */
+        #timer-container {
+            width: 80%;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--gold);
+            border-radius: 15px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: none;
+            /* Hidden by default */
+            z-index: 10;
+        }
+
+        #timer-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, #ff0000, #ff6600);
+            box-shadow: 0 0 10px #ff0000;
+            transform-origin: left;
+        }
+
+        /* Controls Area */
+        #controls-area {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            min-height: 150px;
+            z-index: 10;
+        }
+
+        .question-text {
+            font-size: 2rem;
+            text-align: center;
+            color: var(--gold);
+            text-shadow: var(--text-shadow);
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            background: linear-gradient(to bottom, #ffd700, #b8860b);
+            border: 2px solid #fff;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s, filter 0.2s;
+            font-family: 'Georgia', serif;
+            color: #3e2723;
+        }
+
+        button:hover:not(:disabled) {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            border-color: #444;
+            transform: none;
+        }
+
+        .btn-option {
+            min-width: 80px;
+            font-size: 1.5rem;
+        }
+
+        /* Input for betting */
+        input[type="number"] {
+            padding: 10px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            border: 2px solid var(--gold);
+            background: #333;
+            color: white;
+            width: 100px;
+            text-align: center;
+            font-family: 'Georgia', serif;
+        }
+
+        /* Overlay Messages */
+        #message-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 500;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            border-radius: 30px;
+        }
+
+        #message-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #message-text {
+            font-size: 4rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .msg-win {
+            color: var(--gold);
+            text-shadow: 0 0 20px var(--gold);
+        }
+
+        .msg-lose {
+            color: var(--danger-red);
+            text-shadow: 0 0 20px var(--danger-red);
+        }
+
+        /* Start Screen */
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a0000 0%, #000000 100%);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        #start-screen h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Reward Button */
+        #btn-reward {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: #888;
+            border: 2px solid #555;
+            padding: 10px 20px;
+            border-radius: 15px;
+            cursor: not-allowed;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            z-index: 100;
+            transition: all 0.5s ease;
+            max-width: 250px;
+            text-align: left;
+            line-height: 1.2;
+        }
+
+        #btn-reward.unlocked {
+            background: linear-gradient(to bottom, #ffd700, #b8860b);
+            color: #3e2723;
+            border-color: #fff;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            0% {
+                filter: brightness(1);
+            }
+
+            50% {
+                filter: brightness(1.3);
+            }
+
+            100% {
+                filter: brightness(1);
+            }
+        }
+
+        #btn-menu {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            /* Moved to Left */
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #ffd700;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Georgia', serif;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        #btn-menu:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        /* Volume Control - Bottom Left */
+        .volume-control {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid var(--gold);
+        }
+
+        .volume-control span {
+            font-size: 1.5rem;
+        }
+
+        input[type=range] {
+            width: 100px;
+            accent-color: var(--gold);
+        }
+
+        /* Victory Modal */
+        .modal {
+            background: #222;
+            border: 5px solid var(--gold);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+        }
+
+        .modal h2 {
+            color: var(--gold);
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0% {
+                transform: translate(1px, 1px) rotate(0deg);
+            }
+
+            10% {
+                transform: translate(-1px, -2px) rotate(-1deg);
+            }
+
+            20% {
+                transform: translate(-3px, 0px) rotate(1deg);
+            }
+
+            30% {
+                transform: translate(3px, 2px) rotate(0deg);
+            }
+
+            40% {
+                transform: translate(1px, -1px) rotate(1deg);
+            }
+
+            50% {
+                transform: translate(-1px, 2px) rotate(-1deg);
+            }
+
+            60% {
+                transform: translate(-3px, 1px) rotate(0deg);
+            }
+
+            70% {
+                transform: translate(3px, 1px) rotate(-1deg);
+            }
+
+            80% {
+                transform: translate(-1px, -1px) rotate(1deg);
+            }
+
+            90% {
+                transform: translate(1px, 2px) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(1px, -2px) rotate(-1deg);
+            }
+        }
+
+        .shake-anim {
+            animation: shake 0.5s;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="start-screen">
+        <h1>LA RULETA RUSSA</h1>
+        <p style="font-size: 1.5rem; margin-bottom: 30px;">Benvingut al Casino de Beethoven</p>
+        <button id="btn-start-game" class="start-btn">COMENÇAR PARTIDA</button>
+    </div>
+
+    <!-- Reward Button -->
+    <button id="btn-reward" onclick="game.claimReward()">
+        <span style="font-size: 1.5rem;">🔒</span>
+        <span>Aconseguir la primera partitura del Rèquiem de Mozart (5000💰)</span>
+    </button>
+
+    <div id="game-table">
+        <!-- Volume Control -->
+        <div class="volume-control">
+            <span id="volume-icon">🔊</span>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5"
+                oninput="game.setVolume(this.value)">
+        </div>
+
+        <header>
+            <h1>LA RULETA RUSSA DEL TEMPO</h1>
+            <div class="stats-bar">
+                <div class="stat-item">VIDES: <span id="lives">3</span> ❤️</div>
+                <div class="stat-item">CRÈDITS: <span id="credits">1000</span> 💰</div>
+            </div>
+        </header>
+
+        <div id="wheel-container">
+            <img id="wheel-image" src="images/rodona.jpg" alt="Nota Musical">
+        </div>
+
+        <!-- Menu Button -->
+        <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+
+        <div class="game-container">
+            <div id="timer-container">
+                <div id="timer-bar"></div>
+            </div>
+
+            <div id="controls-area">
+                <!-- Betting Controls -->
+                <div id="bet-controls">
+                    <p style="font-size: 1.2rem; margin-bottom: 10px;">FES LA TEVA APOSTA:</p>
+                    <div class="btn-group">
+                        <input type="number" id="bet-amount" value="100" min="10" step="10">
+                        <button onclick="game.spin()">GIRAR</button>
+                    </div>
+                </div>
+
+                <!-- Challenge Controls (Hidden initially) -->
+                <div id="challenge-controls" class="hidden">
+                    <div class="question-text">Quantes en caben en una RODONA?</div>
+                    <div class="btn-group">
+                        <button class="btn-option" onclick="game.checkAnswer(1)">1</button>
+                        <button class="btn-option" onclick="game.checkAnswer(2)">2</button>
+                        <button class="btn-option" onclick="game.checkAnswer(4)">4</button>
+                        <button class="btn-option" onclick="game.checkAnswer(8)">8</button>
+                        <button class="btn-option" onclick="game.checkAnswer(16)">16</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="message-overlay">
+                <div id="message-text"></div>
+                <button onclick="game.resetRound()">CONTINUAR</button>
+            </div>
+
+            <!-- Victory Modal (Hidden initially) -->
+            <div id="victory-modal" class="hidden"
+                style="position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index: 600; display: flex; justify-content: center; align-items: center;">
+                <div class="modal">
+                    <h2>✒️ ENHORABONA! ✒️</h2>
+                    <p style="font-size: 1.2rem;">Has aconseguit la primera partitura del Rèquiem de Mozart!</p>
+                    <div style="font-size: 5rem; margin: 20px;">🪶✨</div>
+                    <p>Ara podràs compondre les teves pròpies obres mestres.</p>
+                    <button onclick="document.getElementById('victory-modal').classList.add('hidden')">TANCAR</button>
+                </div>
+            </div>
+        </div>
+
+        <audio id="bg-music" src="music/background_music_ruleta.mp3" loop></audio>
+        <script>
+            // Background Music
+            document.body.addEventListener('click', () => {
+                const bgMusic = document.getElementById('bg-music');
+                if (bgMusic.paused) {
+                    bgMusic.volume = document.getElementById('volume').value * 0.5;
+                    bgMusic.play().catch(e => console.log(e));
+                }
+            }, { once: true });
+
+            document.getElementById('volume').addEventListener('input', (e) => {
+                const bgMusic = document.getElementById('bg-music');
+                bgMusic.volume = e.target.value * 0.5;
+            });
+
+            const NOTES = [
+                { name: "Rodona", value: 1, img: "images/rodona.jpg" },
+                { name: "Blanca", value: 2, img: "images/blanca.jpg" },
+                { name: "Negra", value: 4, img: "images/negra.jpg" },
+                { name: "Corxera", value: 8, img: "images/corxera.jpg" },
+                { name: "Semicorxera", value: 16, img: "images/semicorxera.jpg" }
+            ];
+
+            class Game {
+                constructor() {
+                    this.lives = 3;
+                    this.credits = 1000;
+                    this.currentBet = 0;
+                    this.currentNote = null;
+                    this.timerInterval = null;
+                    this.audioCtx = null;
+                    this.rewardUnlocked = false;
+                }
+
+                init() {
+                    document.getElementById('start-screen').classList.add('hidden');
+                    this.initAudio();
+                    this.setVolume(0.5);
+                    document.getElementById('bg-music').play().catch(e => console.log("Audio play failed", e));
+                    this.updateUI();
+                }
+
+                initAudio() {
+                    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                setVolume(value) {
+                    const audio = document.getElementById('bg-music');
+                    const icon = document.getElementById('volume-icon');
+                    audio.volume = value;
+                    if (value == 0) {
+                        icon.textContent = "🔇";
+                    } else if (value < 0.5) {
+                        icon.textContent = "🔉";
+                    } else {
+                        icon.textContent = "🔊";
+                    }
+                }
+
+                playTone(freq, type, duration) {
+                    if (!this.audioCtx) return;
+                    const osc = this.audioCtx.createOscillator();
+                    const gain = this.audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.audioCtx.destination);
+                    osc.start();
+                    osc.stop(this.audioCtx.currentTime + duration);
+                }
+
+                playClick() {
+                    this.playTone(800, 'square', 0.05);
+                }
+
+                playBeep() {
+                    this.playTone(1200, 'sine', 0.1);
+                }
+
+                playExplosion() {
+                    if (!this.audioCtx) return;
+                    const bufferSize = this.audioCtx.sampleRate * 2; // 2 seconds
+                    const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = Math.random() * 2 - 1;
+                    }
+                    const noise = this.audioCtx.createBufferSource();
+                    noise.buffer = buffer;
+                    const gain = this.audioCtx.createGain();
+                    gain.gain.setValueAtTime(0.5, this.audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 2);
+                    noise.connect(gain);
+                    gain.connect(this.audioCtx.destination);
+                    noise.start();
+                }
+
+                playWinSound() {
+                    this.playTone(440, 'sine', 0.2);
+                    setTimeout(() => this.playTone(554, 'sine', 0.2), 200);
+                    setTimeout(() => this.playTone(659, 'sine', 0.4), 400);
+                }
+
+                updateUI() {
+                    document.getElementById('lives').textContent = this.lives;
+                    document.getElementById('credits').textContent = this.credits;
+
+                    // Check Reward Unlock
+                    const btnReward = document.getElementById('btn-reward');
+                    if (this.credits >= 5000 && !this.rewardUnlocked) {
+                        this.rewardUnlocked = true;
+                        btnReward.classList.add('unlocked');
+                        btnReward.innerHTML = '<span style="font-size: 1.5rem;">🪶</span><span>Aconseguir la primera partitura del Rèquiem de Mozart</span>';
+                        btnReward.onclick = () => this.claimReward();
+                    }
+                }
+
+                claimReward() {
+                    if (this.rewardUnlocked) {
+                        document.getElementById('victory-modal').classList.remove('hidden');
+
+                        // Save Reward
+                        const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                        rewards['reward_ruleta'] = true;
+                        localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                        // Redirect
+                        setTimeout(() => {
+                            window.location.href = 'menu.html';
+                        }, 4000);
+                    }
+                }
+
+                spin() {
+                    // Resume audio context on user interaction
+                    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+                        this.audioCtx.resume();
+                    }
+
+                    const betInput = document.getElementById('bet-amount');
+                    const bet = parseInt(betInput.value);
+
+                    if (isNaN(bet) || bet <= 0) {
+                        alert("Aposta invàlida!");
+                        return;
+                    }
+                    if (bet > this.credits) {
+                        alert("No tens prou crèdits!");
+                        return;
+                    }
+
+                    this.currentBet = bet;
+                    this.credits -= bet;
+                    this.updateUI();
+
+                    // UI State
+                    document.getElementById('bet-controls').classList.add('hidden');
+                    const wheelImg = document.getElementById('wheel-image');
+                    wheelImg.classList.add('blur-spin');
+
+                    // Spin Animation Logic
+                    let spins = 0;
+                    const maxSpins = 20;
+                    const spinInterval = setInterval(() => {
+                        this.playClick();
+                        const randomNote = NOTES[Math.floor(Math.random() * NOTES.length)];
+                        wheelImg.src = randomNote.img;
+                        spins++;
+                        if (spins >= maxSpins) {
+                            clearInterval(spinInterval);
+                            this.stopSpin();
+                        }
+                    }, 100);
+                }
+
+                stopSpin() {
+                    const wheelImg = document.getElementById('wheel-image');
+                    wheelImg.classList.remove('blur-spin');
+
+                    // Select final note
+                    this.currentNote = NOTES[Math.floor(Math.random() * NOTES.length)];
+                    wheelImg.src = this.currentNote.img;
+
+                    // Start Challenge
+                    setTimeout(() => this.startChallenge(), 500);
+                }
+
+                startChallenge() {
+                    document.getElementById('challenge-controls').classList.remove('hidden');
+                    document.getElementById('timer-container').style.display = 'block';
+
+                    const timerBar = document.getElementById('timer-bar');
+                    timerBar.style.transition = 'none';
+                    timerBar.style.transform = 'scaleX(1)';
+
+                    // Force reflow
+                    void timerBar.offsetWidth;
+
+                    timerBar.style.transition = 'transform 3s linear';
+                    timerBar.style.transform = 'scaleX(0)';
+
+                    let timeLeft = 3000;
+                    const intervalStep = 100;
+
+                    this.timerInterval = setInterval(() => {
+                        timeLeft -= intervalStep;
+                        if (timeLeft % 500 === 0) this.playBeep();
+
+                        if (timeLeft <= 0) {
+                            this.gameOver("timeout");
+                        }
+                    }, intervalStep);
+                }
+
+                checkAnswer(answer) {
+                    clearInterval(this.timerInterval);
+                    if (answer === this.currentNote.value) {
+                        this.roundWin();
+                    } else {
+                        this.gameOver("wrong");
+                    }
+                }
+
+                roundWin() {
+                    this.playWinSound();
+                    const winnings = this.currentBet * 2;
+                    this.credits += winnings;
+                    this.updateUI();
+                    this.showMessage("SALVAT!", "msg-win");
+                }
+
+                gameOver(reason) {
+                    clearInterval(this.timerInterval);
+
+                    // Ensure audio context is running for the explosion
+                    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+                        this.audioCtx.resume();
+                    }
+                    this.playExplosion();
+
+                    document.getElementById('game-table').classList.add('shake-anim');
+                    setTimeout(() => document.getElementById('game-table').classList.remove('shake-anim'), 500);
+
+                    this.lives--;
+                    this.updateUI();
+
+                    let msg = reason === "timeout" ? "TEMPS ESGOTAT!" : "EXPLOSIÓ!";
+                    this.showMessage(msg, "msg-lose");
+
+                    if (this.lives <= 0) {
+                        setTimeout(() => {
+                            alert("GAME OVER. Has perdut totes les vides.");
+                            location.reload();
+                        }, 2000);
+                    } else if (this.credits <= 0) {
+                        setTimeout(() => {
+                            alert("T'has quedat sense diners! GAME OVER.");
+                            location.reload();
+                        }, 2000);
+                    }
+                }
+
+                showMessage(text, className) {
+                    const overlay = document.getElementById('message-overlay');
+                    const msgText = document.getElementById('message-text');
+                    msgText.textContent = text;
+                    msgText.className = className;
+                    overlay.classList.add('visible');
+                }
+
+                resetRound() {
+                    if (this.credits <= 0) {
+                        alert("T'has quedat sense diners! GAME OVER.");
+                        location.reload();
+                        return;
+                    }
+                    document.getElementById('message-overlay').classList.remove('visible');
+                    document.getElementById('challenge-controls').classList.add('hidden');
+                    document.getElementById('timer-container').style.display = 'none';
+                    document.getElementById('bet-controls').classList.remove('hidden');
+                }
+            }
+
+            const game = new Game();
+
+            // Fix for start button
+            document.getElementById('btn-start-game').addEventListener('click', () => {
+                game.init();
+            });
+        </script>
+</body>
+
+</html>

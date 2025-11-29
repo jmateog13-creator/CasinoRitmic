@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bolera Rítmica</title>
+    <style>
+        :root {
+            --wood: #8b4513;
+            --wood-light: #d2691e;
+            --gold: #ffd700;
+            --bg: #1a0f0a;
+            --text: #f5e6d3;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: #000;
+            border: 10px solid var(--wood);
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        /* Lane */
+        #lane {
+            position: absolute;
+            bottom: 0;
+            left: 100px;
+            width: 600px;
+            height: 500px;
+            background: linear-gradient(to bottom, #5c2e0e, #8b4513);
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+
+        #lane::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(90deg, transparent 0, transparent 40px, rgba(0, 0, 0, 0.1) 40px, rgba(0, 0, 0, 0.1) 42px);
+        }
+
+        /* Pins Area */
+        #pins-area {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            height: 200px;
+        }
+
+        .pin {
+            position: absolute;
+            width: 40px;
+            height: 80px;
+            background: white;
+            border-radius: 10px 10px 5px 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s;
+        }
+
+        .pin img {
+            width: 30px;
+        }
+
+        .pin.knocked {
+            transform: rotate(90deg) translate(20px, 20px);
+            opacity: 0.5;
+        }
+
+        /* Ball */
+        #ball {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle at 30% 30%, #444, #000);
+            border-radius: 50%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        /* Controls */
+        #controls-area {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            /* Let clicks pass through if needed, but buttons need events */
+        }
+
+        #arrow {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            width: 4px;
+            height: 100px;
+            background: var(--gold);
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(0deg);
+            z-index: 5;
+            display: none;
+            /* Hidden until aiming */
+        }
+
+        #arrow::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -8px;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 15px solid var(--gold);
+        }
+
+        /* UI */
+        #ui-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: space-between;
+            box-sizing: border-box;
+            z-index: 20;
+        }
+
+        .stat-box {
+            color: var(--gold);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        #msg-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: var(--gold);
+            text-shadow: 0 0 10px #000;
+            display: none;
+            z-index: 30;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            font-weight: bold;
+            color: #3e2723;
+        }
+
+        button:hover {
+            background: #fff;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #2a0a10;
+            padding: 40px;
+            border: 4px double var(--gold);
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+            color: var(--text);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-top">
+        <div class="stat-box">OBJECTIU: <span id="target-score">0</span> TEMPS</div>
+        <div class="stat-box">SUMA: <span id="current-score">0</span></div>
+        <div class="stat-box">TIRADES: <span id="throws-left">3</span></div>
+    </div>
+
+    <div id="game-container">
+        <div id="lane">
+            <div id="pins-area">
+                <!-- Pins generated by JS -->
+            </div>
+            <div id="ball"></div>
+            <div id="arrow"></div>
+        </div>
+        <div id="msg-overlay">STRIKE!</div>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <button id="btn-action" onclick="handleAction()">TIRAR</button>
+        <a href="menu.html"><button style="background:#555; color:#fff; margin-left:10px;">SORTIR</button></a>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">HAS GUANYAT!</h2>
+            <p>Has aconseguit la suma exacta!</p>
+            <div style="font-size: 4rem;">🎳</div>
+            <p>"LA BATUTA DE MENDELSSOHN"</p>
+            <button onclick="nextLevel()">SEGÜENT NIVELL</button>
+        </div>
+    </div>
+
+    <!-- Lose Modal -->
+    <div id="lose-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: red;">GAME OVER</h2>
+            <p>No has aconseguit l'objectiu.</p>
+            <button onclick="location.reload()">TORNAR A PROVAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_bolera.mp3" loop></audio>
+
+    <script>
+        // Audio
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = 0.3;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'roll') {
+                osc.type = 'triangle'; // Low rumble
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 1);
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1);
+            } else if (type === 'hit') {
+                osc.type = 'square'; // Crash
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            }
+        }
+
+        // Game Logic
+        const NOTES = {
+            'rodona': { val: 4, img: 'images/rodona.jpg' },
+            'blanca': { val: 2, img: 'images/blanca.jpg' },
+            'negra': { val: 1, img: 'images/negra.jpg' },
+            'corxera': { val: 0.5, img: 'images/corxera.jpg' }
+        };
+
+        let level = 1;
+        let targetScore = 0;
+        let currentScore = 0;
+        let throwsLeft = 3;
+        let pins = [];
+        let state = 'AIM'; // AIM, ROLLING, RESULT
+        let aimAngle = 0;
+        let aimDir = 1;
+        let aimInterval = null;
+
+        function initLevel() {
+            // Setup Target
+            targetScore = 4 + (level * 2); // e.g. 6, 8, 10...
+            if (Math.random() > 0.5) targetScore += 0.5; // Add half beat sometimes
+
+            currentScore = 0;
+            throwsLeft = 3;
+            state = 'AIM';
+
+            updateUI();
+            setupPins();
+            startAiming();
+        }
+
+        function setupPins() {
+            const area = document.getElementById('pins-area');
+            area.innerHTML = '';
+            pins = [];
+
+            // Triangle setup: 1, 2, 3, 4 (10 pins)
+            const rows = 4;
+            const pinWidth = 40;
+            const pinHeight = 80;
+            const startX = 200; // Center of 400px area
+            const startY = 0;
+
+            let rowCount = 1;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < rowCount; c++) {
+                    // Random note
+                    const keys = Object.keys(NOTES);
+                    const key = keys[Math.floor(Math.random() * keys.length)];
+
+                    const p = document.createElement('div');
+                    p.className = 'pin';
+                    p.innerHTML = `<img src="${NOTES[key].img}">`;
+
+                    // Position
+                    // Row 0: 1 pin at center
+                    // Row 1: 2 pins centered
+                    const rowWidth = rowCount * (pinWidth + 10);
+                    const x = startX - (rowWidth / 2) + (c * (pinWidth + 10)) + (pinWidth / 2);
+                    const y = startY + (r * (pinHeight - 20));
+
+                    p.style.left = x + 'px';
+                    p.style.top = y + 'px';
+
+                    area.appendChild(p);
+
+                    pins.push({
+                        el: p,
+                        val: NOTES[key].val,
+                        x: x,
+                        y: y,
+                        knocked: false
+                    });
+                }
+                rowCount++;
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('target-score').textContent = targetScore;
+            document.getElementById('current-score').textContent = currentScore;
+            document.getElementById('throws-left').textContent = throwsLeft;
+
+            const btn = document.getElementById('btn-action');
+            if (state === 'AIM') btn.textContent = "TIRAR";
+            else btn.textContent = "...";
+        }
+
+        function startAiming() {
+            state = 'AIM';
+            document.getElementById('arrow').style.display = 'block';
+            document.getElementById('ball').style.left = '50%';
+            document.getElementById('ball').style.bottom = '20px';
+
+            if (aimInterval) clearInterval(aimInterval);
+            aimAngle = 0;
+            aimDir = 1;
+
+            aimInterval = setInterval(() => {
+                aimAngle += aimDir * 2;
+                if (aimAngle > 45) aimDir = -1;
+                if (aimAngle < -45) aimDir = 1;
+                document.getElementById('arrow').style.transform = `translateX(-50%) rotate(${aimAngle}deg)`;
+            }, 20);
+
+            updateUI();
+        }
+
+        function handleAction() {
+            if (state === 'AIM') {
+                shoot();
+            }
+        }
+
+        function shoot() {
+            state = 'ROLLING';
+            clearInterval(aimInterval);
+            document.getElementById('arrow').style.display = 'none';
+            playSound('roll');
+
+            // Animate Ball
+            const ball = document.getElementById('ball');
+            const startX = 400; // Center of 800px container? No, lane is 600px wide, left 100px.
+            // Ball is relative to lane? No, ball is child of lane.
+            // Lane width 600. Center 300.
+
+            let ballX = 300;
+            let ballY = 500; // Bottom (visual)
+
+            // Calculate trajectory
+            const rad = (aimAngle - 90) * (Math.PI / 180); // -90 because 0 is up? No, CSS rotate 0 is UP.
+            // Actually CSS rotate 0 is UP.
+            // Angle 0 -> Straight up.
+            // Angle 45 -> Right.
+            // Angle -45 -> Left.
+
+            // Vector
+            const speed = 10;
+            const vx = Math.sin(aimAngle * Math.PI / 180) * speed;
+            const vy = -Math.cos(aimAngle * Math.PI / 180) * speed;
+
+            const anim = setInterval(() => {
+                ballX += vx;
+                ballY += vy; // Moving UP (negative Y in CSS top terms? No, we used bottom for ball initially)
+                // Let's use Top for ball to be consistent with pins.
+                // Initial Bottom 20px -> Top approx 480px.
+
+                // Let's switch ball to Top positioning for easier collision
+                // Lane height 500.
+                // Start: Top 450.
+
+                // Actually, let's just use a simple progress.
+                // But we need collision detection.
+
+                ball.style.left = ballX + 'px';
+                // Convert Y to Top. 
+                // We are simulating "depth" but in 2D.
+                // Let's just move it "up" visually.
+                // We'll use a variable `dist` for distance traveled.
+            }, 20);
+
+            // Simplified Animation
+            // We just translate the ball div.
+            let dist = 0;
+            const maxDist = 500;
+
+            // Reset ball to use transform for smooth movement
+            ball.style.bottom = '20px';
+            ball.style.left = '50%';
+            ball.style.transform = 'translateX(-50%)';
+
+            const startTime = Date.now();
+
+            const rollInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const progress = elapsed / 1000; // 1 second to reach end
+
+                if (progress >= 1) {
+                    clearInterval(rollInterval);
+                    checkRoundEnd();
+                    return;
+                }
+
+                // Move Ball
+                // X offset based on angle
+                // Max Y is -450px (up)
+                const y = -450 * progress;
+                const x = (Math.tan(aimAngle * Math.PI / 180) * 450) * progress;
+
+                ball.style.transform = `translate(calc(-50% + ${x}px), ${y}px)`;
+
+                // Collision Check
+                // Ball rect vs Pin rects?
+                // Ball is at (300 + x, 500 + y) relative to lane.
+                // Pins are at (pin.x, pin.y).
+
+                // Current Ball Pos (relative to lane top-left)
+                const ballCX = 300 + x;
+                const ballCY = 450 + y; // 450 is start Y (bottom). y is negative.
+                // Wait, start is bottom 20px => Top 480px.
+                // y goes from 0 to -450.
+                // So current Y = 480 + y.
+
+                const curY = 480 + y;
+
+                pins.forEach(p => {
+                    if (!p.knocked) {
+                        // Simple distance check
+                        // Pin center
+                        const pinCX = p.x + 20;
+                        const pinCY = p.y + 40;
+
+                        const dx = ballCX - pinCX;
+                        const dy = curY - pinCY;
+                        const d = Math.sqrt(dx * dx + dy * dy);
+
+                        if (d < 30) { // Hit radius
+                            hitPin(p);
+                        }
+                    }
+                });
+
+            }, 16);
+        }
+
+        function hitPin(pin) {
+            pin.knocked = true;
+            pin.el.classList.add('knocked');
+            currentScore += pin.val;
+            updateUI();
+            playSound('hit');
+        }
+
+        function checkRoundEnd() {
+            throwsLeft--;
+            updateUI();
+
+            // Check Win
+            if (currentScore === targetScore) {
+                setTimeout(() => {
+                    document.getElementById('win-modal').style.display = 'flex';
+                }, 500);
+            } else if (currentScore > targetScore) {
+                showMsg("BUST!");
+                setTimeout(() => {
+                    if (throwsLeft > 0) resetBall();
+                    else gameOver();
+                }, 1000);
+            } else {
+                if (throwsLeft > 0) {
+                    resetBall();
+                } else {
+                    gameOver();
+                }
+            }
+        }
+
+        function showMsg(txt) {
+            const el = document.getElementById('msg-overlay');
+            el.textContent = txt;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 1000);
+        }
+
+        function resetBall() {
+            startAiming();
+        }
+
+        function gameOver() {
+            document.getElementById('lose-modal').style.display = 'flex';
+        }
+
+        function nextLevel() {
+            level++;
+            document.getElementById('win-modal').style.display = 'none';
+            initLevel();
+        }
+
+        // Init
+        initLevel();
+
+    </script>
+</body>
+
+</html>

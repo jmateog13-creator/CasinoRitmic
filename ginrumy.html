@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gin Rummy Rítmic</title>
+    <style>
+        :root {
+            --felt-green: #004d26;
+            --felt-dark: #002b15;
+            --gold: #ffd700;
+            --card-bg: #fff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: #fff;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 1000;
+            pointer-events: none;
+            /* Let clicks pass through to table if needed, but buttons need events */
+        }
+
+        #ui-bar>* {
+            pointer-events: auto;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+            transition: all 0.2s;
+        }
+
+        .btn-menu:hover {
+            background: var(--gold);
+            color: #000;
+        }
+
+        #table {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, var(--felt-green) 0%, var(--felt-dark) 100%);
+            box-shadow: inset 0 0 100px #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Opponent Area */
+        #opponent-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 150px;
+            position: relative;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: #333;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            margin-right: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        #opponent-hand {
+            display: flex;
+            gap: 10px;
+        }
+
+        .card-back {
+            width: 80px;
+            height: 120px;
+            background: repeating-linear-gradient(45deg, #8b0000, #8b0000 10px, #a52a2a 10px, #a52a2a 20px);
+            border: 2px solid #fff;
+            border-radius: 8px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Center Area (Deck & Discard) */
+        #center-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 50px;
+            height: 200px;
+        }
+
+        .pile {
+            position: relative;
+            width: 100px;
+            height: 150px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .pile:hover {
+            transform: scale(1.05);
+        }
+
+        #stock {
+            background: repeating-linear-gradient(45deg, #00008b, #00008b 10px, #4169e1 10px, #4169e1 20px);
+            border: 2px solid #fff;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        #discard {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-face {
+            width: 100%;
+            height: 100%;
+            background: var(--card-bg);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-face img {
+            width: 60px;
+            height: 60px;
+        }
+
+        /* Player Area */
+        #player-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 250px;
+        }
+
+        #player-hand {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .player-card {
+            width: 100px;
+            height: 150px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .player-card:hover {
+            transform: translateY(-20px);
+        }
+
+        .player-card.selected {
+            border: 3px solid var(--gold);
+            transform: translateY(-30px);
+            box-shadow: 0 0 20px var(--gold);
+        }
+
+        .card-val {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            color: #000;
+            font-weight: bold;
+        }
+
+        #status-bar {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 30px;
+            border-radius: 30px;
+            border: 2px solid var(--gold);
+            font-size: 1.2rem;
+            color: var(--gold);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        #actions {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 50px;
+            /* Move up */
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: linear-gradient(to bottom, #d4af37, #8b6914);
+            border: 1px solid #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .action-btn:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: #2a0a10;
+            padding: 40px;
+            border: 4px double var(--gold);
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+            color: #fff;
+            box-shadow: 0 0 50px var(--gold);
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+
+        /* Animations */
+        @keyframes deal {
+            from {
+                transform: translate(-500px, -500px) rotate(180deg);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .deal-anim {
+            animation: deal 0.5s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color:var(--gold);">
+        </div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="table">
+        <!-- Opponent -->
+        <div id="opponent-area">
+            <div class="avatar">🤖</div>
+            <div style="color: #ccc; margin-right: 20px;">
+                <div>SALIERI</div>
+                <div id="salieri-status" style="font-size: 0.8rem; font-style: italic;">Esperant...</div>
+            </div>
+            <div id="opponent-hand">
+                <div class="card-back"></div>
+                <div class="card-back"></div>
+                <div class="card-back"></div>
+                <div class="card-back"></div>
+            </div>
+        </div>
+
+        <!-- Center -->
+        <div id="center-area">
+            <div id="stock" class="pile" onclick="drawCard('stock')"></div>
+            <div id="discard" class="pile" onclick="drawCard('discard')">
+                <!-- Discard content -->
+            </div>
+        </div>
+
+        <!-- Player -->
+        <div id="player-area">
+            <div id="status-bar">
+                SUMA ACTUAL: <span id="current-sum">0</span> / 4.0
+                <br><span id="game-msg" style="font-size: 0.9rem; color: #fff;">Torn: ROBAR CARTA</span>
+            </div>
+
+            <div id="player-hand">
+                <!-- Player Cards -->
+            </div>
+
+            <div id="actions">
+                <button id="discard-btn" class="action-btn" onclick="discardSelected()" disabled>DESCARTAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Modal -->
+    <div id="start-modal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">GIN RUMMY RÍTMIC</h2>
+            <p>Objectiu: Aconseguir una mà de 4 cartes que sumi EXACTAMENT 4 TEMPS.</p>
+            <p>1. Roba una carta (del Maç o Descart).</p>
+            <p>2. Descarta la que et sobri.</p>
+            <p>Guanya 3 rondes a Salieri.</p>
+            <button class="action-btn" onclick="startGame()">SEURE A LA TAULA</button>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">CONCERT PER A CLARINET!</h2>
+            <div class="relic-icon">🎼</div>
+            <p style="font-size: 1.5rem; color: #dcb;">"EL CLARINET DE MOZART"</p>
+            <p>L'instrument per al qual Mozart va compondre el seu últim concert, una de les obres més belles de la
+                història.</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL CASINO</button>
+        </div>
+    </div>
+
+    <!-- Round Result Modal -->
+    <div id="round-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="round-title">GIN!</h2>
+            <p id="round-desc">Has completat el compàs de 4/4.</p>
+            <button class="action-btn" onclick="nextRound()">SEGÜENT RONDA</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_ginrumy.mp3" loop></audio>
+    <script>
+        // Background Music
+        document.body.addEventListener('click', () => {
+            const bgMusic = document.getElementById('bg-music');
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        const CARDS = [
+            { name: 'rodona', val: 4, img: 'images/rodona.jpg' },
+            { name: 'blanca', val: 2, img: 'images/blanca.jpg' },
+            { name: 'negra', val: 1, img: 'images/negra.jpg' },
+            { name: 'corxera', val: 0.5, img: 'images/corxera.jpg' },
+            { name: 'semicorxera', val: 0.25, img: 'images/semicorxera.jpg' }
+        ];
+
+        let deck = [];
+        let playerHand = [];
+        let opponentHand = [];
+        let discardPile = [];
+        let turn = 'player'; // player, opponent
+        let phase = 'draw'; // draw, discard
+        let wins = 0;
+        let selectedIndex = -1;
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'deal') {
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.05);
+            } else if (type === 'slide') {
+                // White noise burst for slide
+                const bufferSize = audioCtx.sampleRate * 0.1;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                noise.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                noise.start();
+            } else if (type === 'gin') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2);
+                osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1);
+            }
+        }
+
+        function startGame() {
+            document.getElementById('start-modal').style.display = 'none';
+            startRound();
+        }
+
+        function startRound() {
+            document.getElementById('round-modal').style.display = 'none';
+
+            // Build Deck
+            deck = [];
+            for (let i = 0; i < 10; i++) { // Multiple copies
+                CARDS.forEach(c => deck.push({ ...c }));
+            }
+            shuffle(deck);
+
+            discardPile = [deck.pop()];
+            playerHand = [];
+            opponentHand = [];
+
+            // Deal 4 cards each
+            for (let i = 0; i < 4; i++) {
+                playerHand.push(deck.pop());
+                opponentHand.push(deck.pop());
+            }
+
+            turn = 'player';
+            phase = 'draw';
+            updateUI();
+            playSound('deal');
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function updateUI() {
+            // Render Player Hand
+            const pContainer = document.getElementById('player-hand');
+            pContainer.innerHTML = '';
+            let sum = 0;
+            playerHand.forEach((card, idx) => {
+                sum += card.val;
+                const el = document.createElement('div');
+                el.className = `player-card ${idx === selectedIndex ? 'selected' : ''}`;
+                el.innerHTML = `<span class="card-val">${card.val}</span><img src="${card.img}" style="width:60px;height:60px;">`;
+                el.onclick = () => selectCard(idx);
+                pContainer.appendChild(el);
+            });
+
+            document.getElementById('current-sum').textContent = sum;
+            if (sum === 4 && playerHand.length === 4) {
+                // Auto Win Check
+                winRound('player');
+                return;
+            }
+
+            // Render Discard
+            const dContainer = document.getElementById('discard');
+            if (discardPile.length > 0) {
+                const top = discardPile[discardPile.length - 1];
+                dContainer.innerHTML = `<div class="card-face"><img src="${top.img}"></div>`;
+            } else {
+                dContainer.innerHTML = '';
+            }
+
+            // Status
+            const msg = document.getElementById('game-msg');
+            if (turn === 'player') {
+                if (phase === 'draw') msg.textContent = "Torn: ROBAR CARTA (Clica Maç o Descart)";
+                else msg.textContent = "Torn: DESCARTAR (Selecciona i prem Descartar)";
+            } else {
+                msg.textContent = "Torn de Salieri...";
+            }
+
+            // Buttons
+            document.getElementById('discard-btn').disabled = (turn !== 'player' || phase !== 'discard' || selectedIndex === -1);
+        }
+
+        function selectCard(idx) {
+            if (turn === 'player' && phase === 'discard') {
+                selectedIndex = idx;
+                updateUI();
+            }
+        }
+
+        function drawCard(source) {
+            if (turn !== 'player' || phase !== 'draw') return;
+
+            let card;
+            if (source === 'stock') {
+                if (deck.length === 0) recycleDeck();
+                card = deck.pop();
+            } else {
+                if (discardPile.length === 0) return;
+                card = discardPile.pop();
+            }
+
+            playerHand.push(card);
+            playSound('slide');
+            phase = 'discard';
+            updateUI();
+        }
+
+        function discardSelected() {
+            if (selectedIndex === -1) return;
+
+            const card = playerHand.splice(selectedIndex, 1)[0];
+            discardPile.push(card);
+            playSound('slide');
+
+            selectedIndex = -1;
+            phase = 'draw'; // Reset for next turn
+            turn = 'opponent';
+            updateUI();
+
+            setTimeout(opponentTurn, 1000);
+        }
+
+        function opponentTurn() {
+            document.getElementById('salieri-status').textContent = "Pensant...";
+
+            // AI Logic
+            // 1. Check if can win by drawing from discard
+            // 2. Else draw from stock
+            // 3. Discard card that brings sum closest to 4
+
+            // Simple AI: Always draw from stock unless discard is amazing (not implemented deep logic)
+            // Let's just draw from stock for simplicity or random
+            let card;
+            if (deck.length === 0) recycleDeck();
+            card = deck.pop();
+            opponentHand.push(card);
+
+            // Check win
+            let bestDiscardIdx = -1;
+            let bestDist = 999;
+
+            // Try removing each card to see which 4 remain closest to 4
+            for (let i = 0; i < opponentHand.length; i++) {
+                let currentSum = 0;
+                for (let j = 0; j < opponentHand.length; j++) {
+                    if (i !== j) currentSum += opponentHand[j].val;
+                }
+                let dist = Math.abs(4 - currentSum);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    bestDiscardIdx = i;
+                }
+            }
+
+            // Discard
+            setTimeout(() => {
+                const discarded = opponentHand.splice(bestDiscardIdx, 1)[0];
+                discardPile.push(discarded);
+                playSound('slide');
+                document.getElementById('salieri-status').textContent = "Ha descartat.";
+
+                // Check if AI won
+                let finalSum = 0;
+                opponentHand.forEach(c => finalSum += c.val);
+                if (finalSum === 4) {
+                    winRound('opponent');
+                } else {
+                    turn = 'player';
+                    phase = 'draw';
+                    updateUI();
+                }
+            }, 1000);
+        }
+
+        function recycleDeck() {
+            if (discardPile.length > 1) {
+                // Keep top card
+                const top = discardPile.pop();
+                deck = discardPile;
+                discardPile = [top];
+                shuffle(deck);
+            } else {
+                // Game stuck? Just add random cards
+                for (let i = 0; i < 5; i++) deck.push(CARDS[Math.floor(Math.random() * CARDS.length)]);
+            }
+        }
+
+        function winRound(winner) {
+            playSound('gin');
+            if (winner === 'player') {
+                wins++;
+                document.getElementById('round-title').textContent = "GIN! HAS GUANYAT!";
+                document.getElementById('round-desc').textContent = `Victòries: ${wins}/3`;
+            } else {
+                document.getElementById('round-title').textContent = "SALIERI FA GIN!";
+                document.getElementById('round-desc').textContent = "Has perdut la ronda.";
+            }
+
+            if (wins >= 3) {
+                // Save Reward
+                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                rewards['reward_ginrummy'] = true;
+                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                setTimeout(() => {
+                    document.getElementById('win-modal').style.display = 'flex';
+                }, 1000);
+            } else {
+                setTimeout(() => {
+                    document.getElementById('round-modal').style.display = 'flex';
+                }, 1000);
+            }
+        }
+
+        function nextRound() {
+            startRound();
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú - Casino Rítmic</title>
+    <style>
+        :root {
+            --felt-green: #2d5a27;
+            --felt-dark: #1a3c1a;
+            --wood-border: #5d4037;
+            --gold: #ffd700;
+            --text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            user-select: none;
+        }
+
+        #menu-container {
+            width: 95vw;
+            height: 90vh;
+            background: radial-gradient(circle at center, var(--felt-green), var(--felt-dark));
+            border: 20px solid var(--wood-border);
+            border-radius: 50px;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        /* Texture overlay */
+        #menu-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            border-radius: 30px;
+        }
+
+        h1 {
+            color: #ffd700;
+            font-size: 3em;
+            margin-top: 20px;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px black;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+            overflow-y: auto;
+            flex: 1;
+            /* Fill remaining space */
+            padding: 20px;
+            /* Padding for scrollbar space */
+            box-sizing: border-box;
+            /* Hide scrollbar for cleaner look but allow scroll */
+            scrollbar-width: thin;
+            scrollbar-color: var(--gold) var(--felt-dark);
+        }
+
+        /* Custom Scrollbar */
+        .game-grid::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .game-grid::-webkit-scrollbar-track {
+            background: var(--felt-dark);
+            border-radius: 5px;
+        }
+
+        .game-grid::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 5px;
+        }
+
+        .game-card {
+            background: #0f1f15;
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 30px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: #ffd700;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 180px;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            border-color: #ffd700;
+        }
+
+        .game-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .game-title {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        /* Gold Border for Completed Games */
+        .game-card.completed {
+            border: 3px solid #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            background: linear-gradient(145deg, #0f1f15, #1a3c1a);
+        }
+
+        .game-card.completed .game-title::after {
+            content: " 👑";
+        }
+
+        .btn-back {
+            margin-top: 50px;
+            padding: 10px 30px;
+            background: transparent;
+            border: 2px solid #fff;
+            color: #fff;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 1.1em;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="menu-container">
+        <h1>SELECCIÓ DE JOC</h1>
+
+        <div class="game-grid">
+            <a href="blackjack_ritmic.html" class="game-card" id="card-blackjack">
+                <div class="icon">🃏</div>
+                <h2>Blackjack Rítmic</h2>
+            </a>
+            <a href="ruleta.html" class="game-card" id="card-ruleta">
+                <div class="icon">🎡</div>
+                <h2>Ruleta Russa</h2>
+            </a>
+            <a href="triler.html" class="game-card" id="card-triler">
+                <div class="icon">🥤</div>
+                <h2>El Triler</h2>
+            </a>
+            <a href="simon.html" class="game-card" id="card-simon">
+                <div class="icon">🎹</div>
+                <h2>Simon Rítmic</h2>
+            </a>
+            <a href="slots.html" class="game-card" id="card-slots">
+                <div class="icon">🎰</div>
+                <h2>Slots Rítmics</h2>
+            </a>
+            <a href="memory.html" class="game-card" id="card-memory">
+                <div class="icon">🧠</div>
+                <h2>Memory Rítmic</h2>
+            </a>
+            <a href="texas.html" class="game-card" id="card-texas">
+                <div class="icon">🤠</div>
+                <h2>Texas Hold'em</h2>
+            </a>
+            <a href="daus.html" class="game-card" id="card-daus">
+                <div class="icon">🎲</div>
+                <h2>Daus Rítmics</h2>
+            </a>
+            <a href="bolera.html" class="game-card" id="card-bolera">
+                <div class="icon">🎳</div>
+                <h2>Bolera Rítmica</h2>
+            </a>
+            <a href="laberinto.html" class="game-card" id="card-laberinto">
+                <div class="icon">🧩</div>
+                <h2>Laberinto Rítmic</h2>
+            </a>
+            <a href="sudoku.html" class="game-card" id="card-sudoku">
+                <div class="icon">🔢</div>
+                <h2>Sudoku Rítmic</h2>
+            </a>
+            <a href="bomba.html" class="game-card" id="card-bomba">
+                <div class="icon">💣</div>
+                <h2>La Bomba</h2>
+            </a>
+            <a href="conecta4.html" class="game-card" id="card-conecta4">
+                <div class="icon">🔴</div>
+                <h2>Conecta 4</h2>
+            </a>
+            <a href="mahjong.html" class="game-card" id="card-mahjong">
+                <div class="icon">🀄</div>
+                <h2>Mahjong</h2>
+            </a>
+            <a href="solitario.html" class="game-card" id="card-solitario">
+                <div class="icon">🃏</div>
+                <h2>Solitario</h2>
+            </a>
+            <a href="cajaderitmos.html" class="game-card" id="card-cajaderitmos">
+                <div class="icon">🥁</div>
+                <h2>Caixa de Ritmes</h2>
+            </a>
+            <a href="tetris.html" class="game-card" id="card-tetris">
+                <div class="icon">🧱</div>
+                <h2>Tetris Rítmic</h2>
+            </a>
+            <a href="rodafortuna.html" class="game-card" id="card-roda">
+                <div class="icon">🎡</div>
+                <h2>Roda del Risc</h2>
+            </a>
+            <a href="jokerwild.html" class="game-card" id="card-joker">
+                <div class="icon">🃏</div>
+                <h2>Joker Wild</h2>
+            </a>
+            <a href="dauspirata.html" class="game-card" id="card-dauspirata">
+                <div class="icon">🏴‍☠️</div>
+                <h2>Daus Pirata</h2>
+            </a>
+            <a href="subasta.html" class="game-card" id="card-subasta">
+                <div class="icon">🔨</div>
+                <h2>La Subasta</h2>
+            </a>
+            <a href="prestamista.html" class="game-card" id="card-prestamista">
+                <div class="icon">⚖️</div>
+                <h2>El Prestamista</h2>
+            </a>
+            <a href="ginrumy.html" class="game-card" id="card-ginrumy">
+                <div class="icon">🃏</div>
+                <h2>Gin Rummy</h2>
+            </a>
+            <a href="polsintern.html" class="game-card" id="card-pols">
+                <div class="icon">💓</div>
+                <h2>Pols Intern</h2>
+            </a>
+            <a href="craps.html" class="game-card" id="card-craps">
+                <div class="icon">🎲</div>
+                <h2>Craps</h2>
+            </a>
+            <a href="cascada.html" class="game-card" id="card-cascada">
+                <div class="icon">🪙</div>
+                <h2>La Cascada</h2>
+            </a>
+            <a href="gancho.html" class="game-card" id="card-gancho">
+                <div class="icon">🏗️</div>
+                <h2>El Ganxo</h2>
+            </a>
+            <a href="keno.html" class="game-card" id="card-keno">
+                <div class="icon">🎫</div>
+                <h2>Keno</h2>
+            </a>
+            <a href="dardos.html" class="game-card" id="card-dardos">
+                <div class="icon">🎯</div>
+                <h2>Dards</h2>
+            </a>
+            <a href="derby.html" class="game-card" id="card-derby">
+                <div class="icon">🏇</div>
+                <h2>Derby</h2>
+            </a>
+            <a href="galeriatir.html" class="game-card" id="card-galeria">
+                <div class="icon">🔫</div>
+                <h2>Galeria de Tir</h2>
+            </a>
+            <a href="cabinavent.html" class="game-card" id="card-cabina">
+                <div class="icon">💨</div>
+                <h2>Cabina de Vent</h2>
+            </a>
+            <a href="batalla.html" class="game-card" id="card-batalla">
+                <div class="icon">🎻</div>
+                <h2>Batalla de Viena</h2>
+            </a>
+            <a href="escoba.html" class="game-card" id="card-escoba">
+                <div class="icon">🧹</div>
+                <h2>L'Escoba Rítmica</h2>
+            </a>
+            <a href="intervalritmic.html" class="game-card" id="card-interval">
+                <div class="icon">📏</div>
+                <h2>Red Dog Rítmic</h2>
+            </a>
+            <a href="speed.html" class="game-card" id="card-speed">
+                <div class="icon">⚡</div>
+                <h2>Speed Rítmic</h2>
+            </a>
+        </div>
+
+
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="music/background_music_main.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // Check Rewards
+        const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+
+        // Map game IDs to their reward keys (we will define these keys when updating the games)
+        const gameMap = {
+            'card-blackjack': 'reward_blackjack',
+            'card-ruleta': 'reward_ruleta',
+            'card-triler': 'reward_triler',
+            'card-simon': 'reward_simon',
+            'card-slots': 'reward_slots',
+            'card-memory': 'reward_memory',
+            'card-texas': 'reward_texas',
+            'card-daus': 'reward_daus',
+            'card-bolera': 'reward_bolera',
+            'card-laberinto': 'reward_laberinto',
+            'card-sudoku': 'reward_sudoku',
+            'card-bomba': 'reward_bomba',
+            'card-conecta4': 'reward_conecta4',
+            'card-mahjong': 'reward_mahjong',
+            'card-solitario': 'reward_solitario',
+            'card-cajaderitmos': 'reward_cajaderitmos',
+            'card-tetris': 'reward_tetris',
+            'card-roda': 'reward_roda',
+            'card-joker': 'reward_joker',
+            'card-dauspirata': 'reward_dauspirata',
+            'card-subasta': 'reward_subasta',
+            'card-prestamista': 'reward_prestamista',
+            'card-ginrumy': 'reward_ginrumy',
+            'card-pols': 'reward_pols',
+            'card-craps': 'reward_craps',
+            'card-cascada': 'reward_cascada',
+            'card-gancho': 'reward_gancho',
+            'card-keno': 'reward_keno',
+            'card-dardos': 'reward_dardos',
+            'card-derby': 'reward_derby',
+            'card-galeria': 'reward_galeria',
+            'card-cabina': 'reward_cabina',
+            'card-batalla': 'reward_batalla',
+            'card-escoba': 'reward_escoba'
+        };
+
+        for (const [cardId, rewardKey] of Object.entries(gameMap)) {
+            if (rewards[rewardKey]) {
+                document.getElementById(cardId).classList.add('completed');
+            }
+        }
+
+        // Auto-play music (browser policy might block it, but we try)
+        const audio = document.getElementById('bg-music');
+        audio.volume = 0.5;
+        document.body.addEventListener('click', () => {
+            if (audio.paused) audio.play();
+        }, { once: true });
+
+        // Try playing immediately
+        audio.play().catch(() => {
+            console.log("Autoplay blocked - waiting for interaction");
+        });
+
+    </script>
+</body>
+
+</html>

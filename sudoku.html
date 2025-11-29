@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Rítmic</title>
+    <style>
+        :root {
+            --paper: #fdf6e3;
+            --ink: #2c3e50;
+            --gold: #ffd700;
+            --felt: #004d00;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle, #1a0a00, #000);
+            color: var(--ink);
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 1000;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+            transition: all 0.2s;
+        }
+
+        .btn-menu:hover {
+            background: var(--gold);
+            color: #000;
+        }
+
+        #game-container {
+            background: var(--paper);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 50px var(--gold);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+            border: 5px solid var(--gold);
+        }
+
+        h1 {
+            margin: 0 0 20px 0;
+            color: #000;
+            text-align: center;
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(4, 80px);
+            grid-template-rows: repeat(4, 80px);
+            gap: 2px;
+            background: #000;
+            border: 5px solid #000;
+            margin-bottom: 30px;
+        }
+
+        .cell {
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .cell.fixed {
+            background: #ddd;
+            cursor: default;
+        }
+
+        .cell img {
+            width: 60px;
+            height: 60px;
+            pointer-events: none;
+        }
+
+        .cell.error {
+            background: #ffcccc;
+        }
+
+        #inventory {
+            display: flex;
+            gap: 15px;
+            background: #eee;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #999;
+        }
+
+        .inv-item {
+            width: 70px;
+            height: 70px;
+            background: #fff;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            transition: transform 0.1s;
+        }
+
+        .inv-item:hover {
+            transform: scale(1.1);
+        }
+
+        .inv-item:active {
+            cursor: grabbing;
+        }
+
+        .inv-item img {
+            width: 50px;
+            height: 50px;
+        }
+
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            color: #000;
+            border: 2px solid #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 40px;
+            border: 4px solid var(--gold);
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+            color: #000;
+            box-shadow: 0 0 50px var(--gold);
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color:var(--gold);">
+        </div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="game-container">
+        <h1>SUDOKU RÍTMIC (4x4)</h1>
+        <p>Cada fila i columna ha de sumar 4 TEMPS.</p>
+
+        <div id="grid">
+            <!-- Cells generated by JS -->
+        </div>
+
+        <div id="inventory">
+            <div class="inv-item" draggable="true" ondragstart="drag(event)" data-type="rodona" data-val="4"><img
+                    src="images/rodona.jpg"></div>
+            <div class="inv-item" draggable="true" ondragstart="drag(event)" data-type="blanca" data-val="2"><img
+                    src="images/blanca.jpg"></div>
+            <div class="inv-item" draggable="true" ondragstart="drag(event)" data-type="negra" data-val="1"><img
+                    src="images/negra.jpg"></div>
+            <div class="inv-item" draggable="true" ondragstart="drag(event)" data-type="corxera" data-val="0.5"><img
+                    src="images/corxera.jpg"></div>
+            <div class="inv-item" draggable="true" ondragstart="drag(event)" data-type="semicorxera" data-val="0.25">
+                <img src="images/semicorxera.jpg">
+            </div>
+        </div>
+
+        <div id="controls">
+            <button class="btn" onclick="checkSolution()">COMPROVAR</button>
+            <button class="btn" style="background: #95a5a6;" onclick="startGame(currentLevel)">REINICIAR</button>
+        </div>
+    </div>
+
+    <!-- Start Modal -->
+    <div id="start-modal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2 style="color: #b8860b;">SUDOKU RÍTMIC</h2>
+            <p>Omple la graella 4x4.</p>
+            <p>Cada fila i columna ha de sumar 4 TEMPS.</p>
+            <div style="display:flex; gap:20px; justify-content:center; margin-top:20px;">
+                <button class="btn" onclick="startGame(1)">NIVELL 1 (Fàcil)</button>
+                <button class="btn" onclick="startGame(2)">NIVELL 2 (Difícil)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">MESTRE DEL CONTRAPUNT!</h2>
+            <div class="relic-icon">📯</div>
+            <p style="font-size: 1.5rem;">"LA TROMPA DE CAÇA DE TELEMANN"</p>
+            <p>Georg Philipp Telemann va ser el compositor més prolífic de la història.</p>
+            <button class="btn" onclick="location.reload()">TORNAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_sudoku.mp3" loop></audio>
+    <script>
+        // Background Music
+        document.body.addEventListener('click', () => {
+            const bgMusic = document.getElementById('bg-music');
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const NOTES = {
+            'rodona': { val: 4, img: 'images/rodona.jpg' },
+            'blanca': { val: 2, img: 'images/blanca.jpg' },
+            'negra': { val: 1, img: 'images/negra.jpg' },
+            'corxera': { val: 0.5, img: 'images/corxera.jpg' },
+            'semicorxera': { val: 0.25, img: 'images/semicorxera.jpg' }
+        };
+
+        const SOLUTION = [
+            ['negra', 'negra', 'negra', 'negra'],
+            ['blanca', 'corxera', 'corxera', 'negra'],
+            ['corxera', 'blanca', 'corxera', 'negra'],
+            ['corxera', 'corxera', 'blanca', 'negra']
+        ];
+
+        // Level 1: More clues
+        const INITIAL_1 = [
+            [true, false, false, true],
+            [false, true, false, false],
+            [false, false, true, false],
+            [true, false, false, true]
+        ];
+
+        // Level 2: Fewer clues
+        const INITIAL_2 = [
+            [false, false, false, true],
+            [false, true, false, false],
+            [false, false, false, false],
+            [true, false, false, false]
+        ];
+
+        let gridState = [];
+        let currentLevel = 1;
+
+        function startGame(level) {
+            currentLevel = level;
+            document.getElementById('start-modal').style.display = 'none';
+            init(level === 1 ? INITIAL_1 : INITIAL_2);
+        }
+
+        function init(initialMap) {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            gridState = [];
+
+            // Create a temporary board to manage fixed cells
+            let tempBoard = Array(4).fill(0).map(() => Array(4).fill({ val: 0, fixed: false }));
+
+            // Initialize tempBoard based on initialMap
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    if (initialMap[r][c]) {
+                        tempBoard[r][c] = { val: NOTES[SOLUTION[r][c]].val, fixed: true };
+                    }
+                }
+            }
+
+            // Fill some cells (Make it easier: fill 8 cells instead of 5)
+            let filled = 0;
+            const targetFilled = currentLevel === 1 ? 8 : 5; // 8 for easy, 5 for difficult
+            while (filled < targetFilled) {
+                const r = Math.floor(Math.random() * 4);
+                const c = Math.floor(Math.random() * 4);
+                if (!tempBoard[r][c].fixed) { // Only fill if not already fixed by initialMap
+                    tempBoard[r][c] = { val: NOTES[SOLUTION[r][c]].val, fixed: true };
+                    filled++;
+                }
+            }
+
+            for (let r = 0; r < 4; r++) {
+                let row = [];
+                for (let c = 0; c < 4; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+                    cell.ondragover = allowDrop;
+                    cell.ondrop = drop;
+                    cell.onclick = clearCell;
+
+                    if (tempBoard[r][c].fixed) {
+                        cell.classList.add('fixed');
+                        const type = SOLUTION[r][c]; // Get the type from the solution
+                        cell.innerHTML = `<img src="${NOTES[type].img}">`;
+                        cell.dataset.val = NOTES[type].val;
+                        row.push(NOTES[type].val);
+                    } else {
+                        row.push(0);
+                    }
+                    grid.appendChild(cell);
+                }
+                gridState.push(row);
+            }
+        }
+
+        let draggedType = null;
+        let draggedVal = 0;
+
+        function drag(ev) {
+            draggedType = ev.currentTarget.dataset.type;
+            draggedVal = parseFloat(ev.currentTarget.dataset.val);
+            ev.dataTransfer.setData("text/plain", draggedType); // Required for Firefox/some browsers
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const cell = ev.currentTarget;
+            if (cell.classList.contains('fixed')) return;
+
+            cell.innerHTML = `<img src="${NOTES[draggedType].img}">`;
+            cell.dataset.val = draggedVal;
+
+            const r = parseInt(cell.dataset.r);
+            const c = parseInt(cell.dataset.c);
+            gridState[r][c] = draggedVal;
+
+            cell.classList.remove('error');
+        }
+
+        function clearCell(ev) {
+            const cell = ev.currentTarget;
+            if (cell.classList.contains('fixed')) return;
+            cell.innerHTML = '';
+            delete cell.dataset.val;
+            const r = parseInt(cell.dataset.r);
+            const c = parseInt(cell.dataset.c);
+            gridState[r][c] = 0;
+            cell.classList.remove('error');
+        }
+
+        function checkSolution() {
+            let correct = true;
+
+            // Check Rows
+            for (let r = 0; r < 4; r++) {
+                let sum = 0;
+                for (let c = 0; c < 4; c++) sum += gridState[r][c];
+                if (Math.abs(sum - 4) > 0.01) {
+                    correct = false;
+                    highlightRow(r);
+                }
+            }
+
+            // Check Cols
+            for (let c = 0; c < 4; c++) {
+                let sum = 0;
+                for (let r = 0; r < 4; r++) sum += gridState[r][c];
+                if (Math.abs(sum - 4) > 0.01) {
+                    correct = false;
+                    highlightCol(c);
+                }
+            }
+
+            if (correct) {
+                let full = true;
+                for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) if (gridState[r][c] === 0) full = false;
+
+                if (full) {
+                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_sudoku'] = true;
+                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    document.getElementById('win-modal').style.display = 'flex';
+                } else {
+                    alert("Encara queden caselles buides!");
+                }
+            }
+        }
+
+        function highlightRow(r) {
+            const cells = document.querySelectorAll(`.cell[data-r="${r}"]`);
+            cells.forEach(c => c.classList.add('error'));
+            setTimeout(() => cells.forEach(c => c.classList.remove('error')), 1000);
+        }
+
+        function highlightCol(c) {
+            const cells = document.querySelectorAll(`.cell[data-c="${c}"]`);
+            cells.forEach(c => c.classList.add('error'));
+            setTimeout(() => cells.forEach(c => c.classList.remove('error')), 1000);
+        }
+    </script>
+</body>
+
+</html>

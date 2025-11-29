@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Rítmic</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+        :root {
+            --felt: #1b5e20;
+            --line: #fff;
+            --btn: #d32f2f;
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Roboto Mono', monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* Table */
+        #table {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, var(--felt), #002200);
+            z-index: -1;
+        }
+
+        #mid-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%);
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            font-size: 2rem;
+        }
+
+        /* Game Areas */
+        .area {
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #cpu-area {
+            top: 0;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding-bottom: 50px;
+        }
+
+        #player-area {
+            bottom: 0;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding-top: 50px;
+        }
+
+        /* Cards */
+        .card-slot {
+            width: 220px;
+            height: 320px;
+            border: 4px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .card {
+            width: 220px;
+            height: 320px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #000;
+            position: absolute;
+            transition: transform 0.2s;
+        }
+
+        .card img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+        }
+
+        .card-val {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        /* Speed Button */
+        #btn-speed {
+            position: absolute;
+            top: 50%;
+            right: 50px;
+            /* Move to side */
+            transform: translateY(-50%);
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff5252, #b71c1c);
+            border: 8px solid #fff;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            z-index: 50;
+            transition: transform 0.1s;
+        }
+
+        #btn-speed:active {
+            transform: translateY(-50%) scale(0.9);
+        }
+
+        /* Avatars */
+        .avatar {
+            font-size: 3rem;
+            margin: 10px;
+            text-shadow: 0 0 10px #000;
+        }
+
+        /* Stats */
+        #stats {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            text-align: right;
+            font-size: 1.5rem;
+            color: var(--gold);
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .modal-content {
+            background: #000;
+            padding: 50px;
+            border: 4px solid var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .btn-action {
+            background: var(--gold);
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        /* Feedback */
+        #feedback {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            font-weight: bold;
+            text-shadow: 0 0 20px #000;
+            pointer-events: none;
+            display: none;
+            z-index: 60;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="table"></div>
+    <div id="mid-line"></div>
+
+    <div id="ui-bar">
+        <a href="menu.html" class="btn-menu">🏠</a>
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+    </div>
+
+    <div id="cpu-area" class="area">
+        <div class="avatar">🎼 Igor Stravinsky</div>
+        <div class="card-slot" id="slot-cpu"></div>
+    </div>
+
+    <div id="player-area" class="area">
+        <div class="card-slot" id="slot-player"></div>
+        <div class="avatar">👤 Tu</div>
+    </div>
+
+    <div id="btn-speed" onclick="playerHit()">SPEED!</div>
+
+    <div id="stats">
+        <div>PUNTS: <span id="score">0</span>/5</div>
+        <div>VIDES: <span id="lives">3</span></div>
+    </div>
+
+    <div id="feedback">MATCH!</div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">LA CONSAGRACIÓ DEL RITME!</h2>
+            <div class="relic-icon">⏱️</div>
+            <p style="font-size: 1.5rem; font-weight:bold;">"EL CRONÒMETRE D'IGOR STRAVINSKY"</p>
+            <p>Stravinsky estava obsessionat amb la precisió mecànica del temps. Deia que la música no és sentiment,
+                sinó ordre cronològic.</p>
+            <button class="btn-action" onclick="location.reload()">TORNAR A JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Lose Modal -->
+    <div id="lose-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: red;">HAS PERDUT EL RITME</h2>
+            <p>Stravinsky ha estat més ràpid.</p>
+            <button class="btn-action" onclick="location.reload()">REINTENTAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_speed.mp3" loop></audio>
+
+    <script>
+        // Audio
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        const bgMusic = document.getElementById('bg-music');
+
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        function playSound(type) {
+            const vol = document.getElementById('volume').value;
+            if (vol <= 0) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'swish') {
+                // White noise burst
+                const bufferSize = audioCtx.sampleRate * 0.1;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 1000;
+
+                noise.connect(filter);
+                filter.connect(gain);
+
+                gain.gain.setValueAtTime(vol * 0.5, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                noise.start();
+            } else if (type === 'ding') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1000, now);
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            } else if (type === 'buzzer') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(50, now + 0.3);
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start();
+                osc.stop(now + 0.3);
+            }
+        }
+
+        // Game Logic
+        const CARDS_DEF = [
+            { name: 'RODONA', val: 4, img: 'images/rodona.jpg' },
+            { name: 'SILENCI RODONA', val: 4, img: 'images/silencirodona.jpg' },
+            { name: 'BLANCA', val: 2, img: 'images/blanca.jpg' },
+            { name: 'SILENCI BLANCA', val: 2, img: 'images/silenciblanca.jpg' },
+            { name: 'NEGRA', val: 1, img: 'images/negra.jpg' },
+            { name: 'SILENCI NEGRA', val: 1, img: 'images/silencinegra.jpg' },
+            { name: 'CORXERA', val: 0.5, img: 'images/corxera.jpg' },
+            { name: 'SILENCI CORXERA', val: 0.5, img: 'images/silencicorxera.jpg' },
+            { name: 'SEMICORXERA', val: 0.25, img: 'images/semicorxera.jpg' },
+            { name: 'SILENCI SEMICORXERA', val: 0.25, img: 'images/silencisemicorxera.jpg' }
+        ];
+
+        let score = 0;
+        let lives = 3;
+        let pCard = null;
+        let cCard = null;
+        let gameLoop = null;
+        let canHit = false;
+        let isMatch = false;
+
+        function startGame() {
+            gameLoop = setInterval(flipCards, 2000);
+            flipCards();
+        }
+
+        function flipCards() {
+            canHit = true;
+            isMatch = false;
+
+            pCard = CARDS_DEF[Math.floor(Math.random() * CARDS_DEF.length)];
+            cCard = CARDS_DEF[Math.floor(Math.random() * CARDS_DEF.length)];
+
+            renderCard(pCard, 'slot-player');
+            renderCard(cCard, 'slot-cpu');
+            playSound('swish');
+
+            if (pCard.val === cCard.val) {
+                isMatch = true;
+                // CPU Reaction (Slower)
+                const reactionTime = 800 + Math.random() * 1000; // 800-1800ms
+                setTimeout(() => {
+                    if (isMatch && canHit) {
+                        // CPU hits
+                        cpuHit();
+                    }
+                }, reactionTime);
+            }
+        }
+
+        function renderCard(card, slotId) {
+            const slot = document.getElementById(slotId);
+            slot.innerHTML = '';
+            const el = document.createElement('div');
+            el.className = 'card';
+            el.innerHTML = `<img src="${card.img}"><div class="card-val">${card.val}</div>`;
+            slot.appendChild(el);
+
+            // Pop anim
+            el.style.transform = 'scale(0.8)';
+            setTimeout(() => el.style.transform = 'scale(1)', 50);
+        }
+
+        function playerHit() {
+            if (!canHit) return;
+
+            if (isMatch) {
+                // Success
+                score++;
+                showFeedback("CORRECTE!", "#0f0");
+                playSound('ding');
+                canHit = false;
+                checkWin();
+            } else {
+                // Fail
+                lives--;
+                showFeedback("FALTA!", "#f00");
+                playSound('buzzer');
+                canHit = false;
+                checkLose();
+            }
+            updateUI();
+        }
+
+        function cpuHit() {
+            if (!canHit) return;
+
+            // CPU wins the match
+            lives--;
+            showFeedback("LENT!", "#f00");
+            playSound('buzzer');
+            canHit = false;
+            checkLose();
+            updateUI();
+        }
+
+        function showFeedback(text, color) {
+            const el = document.getElementById('feedback');
+            el.textContent = text;
+            el.style.color = color;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 1000);
+        }
+
+        function checkWin() {
+            if (score >= 5) {
+                clearInterval(gameLoop);
+                // Save Reward
+                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                rewards['reward_speed'] = true;
+                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                setTimeout(() => {
+                    document.getElementById('win-modal').style.display = 'flex';
+                }, 1000);
+            }
+        }
+
+        function checkLose() {
+            if (lives <= 0) {
+                clearInterval(gameLoop);
+                setTimeout(() => {
+                    document.getElementById('lose-modal').style.display = 'flex';
+                }, 1000);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = lives;
+        }
+
+        // Key press
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') playerHit();
+        });
+
+        // Start
+        setTimeout(startGame, 1000);
+
+    </script>
+</body>
+
+</html>

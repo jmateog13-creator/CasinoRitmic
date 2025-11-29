@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Torneig de Dards Rítmics</title>
+    <style>
+        :root {
+            --wood: #3e2723;
+            --green-felt: #1b5e20;
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            font-family: 'Georgia', serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        /* Pub Frame */
+        #pub-frame {
+            width: 1000px;
+            height: 700px;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjM2UyNzIzIiBzdHJva2U9IiMyZTE3MTMiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==');
+            border: 20px solid #1a100e;
+            border-radius: 10px;
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Scoreboard */
+        #scoreboard {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 250px;
+            background: #000;
+            border: 4px solid #555;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #333;
+            padding-bottom: 5px;
+        }
+
+        .score-row.active {
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        .p-name {
+            font-size: 1rem;
+        }
+
+        .p-score {
+            font-size: 1.2rem;
+        }
+
+        /* Round Info */
+        #round-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border: 2px solid var(--gold);
+            text-align: center;
+        }
+
+        #target-val {
+            font-size: 2rem;
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        /* Canvas */
+        canvas {
+            border-radius: 50%;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            cursor: crosshair;
+        }
+
+        /* Controls */
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type=range] {
+            accent-color: var(--gold);
+        }
+
+        /* Floating Text */
+        .float-msg {
+            position: absolute;
+            font-weight: bold;
+            font-size: 1.5rem;
+            pointer-events: none;
+            animation: floatUp 1s forwards;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        @keyframes floatUp {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+
+        .modal-content {
+            background: #2e1713;
+            /* Dark wood */
+            padding: 40px;
+            border-radius: 10px;
+            border: 8px solid #8b4513;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 0 50px #000;
+            animation: popIn 0.5s;
+            font-family: 'Georgia', serif;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+
+        .action-btn {
+            background: linear-gradient(to bottom, #d4af37, #aa8822);
+            color: #000;
+            border: 2px solid #fff;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .action-btn:hover {
+            filter: brightness(1.2);
+        }
+
+        /* Round Modal */
+        #round-modal {
+            background: rgba(0, 0, 0, 0.85);
+        }
+
+        #round-modal .modal-content {
+            background: #111;
+            border-color: var(--gold);
+        }
+
+        /* Menu Button */
+        #btn-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #aaa;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+
+    <div id="pub-frame">
+        <div id="round-info">
+            <div>OBJECTIU</div>
+            <div id="target-val">2.0</div>
+            <div>TEMPS</div>
+            <div id="current-sum" style="font-size:1.2rem; color:#aaa;">Suma: 0</div>
+        </div>
+
+        <canvas id="dartboard" width="600" height="600"></canvas>
+
+        <div id="scoreboard">
+            <h3 style="margin-top:0; text-align:center; color:#aaa;">MARCADOR</h3>
+            <div class="score-row active" id="p1-row">
+                <span class="p-name">TU</span>
+                <span class="p-score" id="p1-score">0</span>
+            </div>
+            <div class="score-row" id="p2-row">
+                <span class="p-name">El Desafinat</span>
+                <span class="p-score" id="p2-score">0</span>
+            </div>
+            <div class="score-row" id="p3-row">
+                <span class="p-name">El Virtuós</span>
+                <span class="p-score" id="p3-score">0</span>
+            </div>
+        </div>
+
+        <div id="controls">
+            <span>🔊</span>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h1
+                style="color: var(--gold); font-family: 'Impact', sans-serif; letter-spacing: 2px; text-transform: uppercase;">
+                TORNEIG DE DARDS</h1>
+            <p style="font-size: 1.2rem; color: #ddd;">Competeix contra la IA en un ambient de Pub Clàssic.</p>
+            <p>Encerta la suma exacta de temps.</p>
+            <p>Si et passes, fas <span style="color:red; font-weight:bold;">BUST</span> (0 punts).</p>
+            <button class="action-btn" onclick="game.start()">INICIAR TORNEIG</button>
+        </div>
+    </div>
+
+    <!-- Round Change Modal -->
+    <div id="round-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold); font-size: 3rem;">RONDA FINALITZADA</h2>
+            <p id="round-msg" style="font-size: 1.5rem;">Propera Ronda...</p>
+            <button class="action-btn" onclick="game.nextRound()">CONTINUAR</button>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">L'ÈPICA DEL RIN!</h2>
+            <div class="relic-icon">💍</div>
+            <h3 style="color: var(--gold);">L'ANELL DEL NIBELUNG</h3>
+            <p style="font-style: italic; color: #aaa;">"L'anell daurat de Richard Wagner. Una òpera que dura 15 hores!
+                Has demostrat una resistència llegendària."</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR A JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Lose Modal -->
+    <div id="lose-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #ff4444;">SEGONA POSICIÓ...</h2>
+            <p>No has guanyat el torneig.</p>
+            <button class="action-btn" onclick="location.reload()">REINTENTAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_dardos.mp3" loop></audio>
+
+    <script>
+        // --- ASSETS ---
+        // Realistic Dartboard Colors
+        const SECTIONS = [
+            { val: 4, label: 'RODONA', color: '#8b0000' }, // Dark Red
+            { val: 2, label: 'BLANCA', color: '#eecfa1' }, // Beige/Biscuit
+            { val: 1, label: 'NEGRA', color: '#000000' }, // Black
+            { val: 0.5, label: 'CORXERA', color: '#8b0000' }, // Dark Red
+            { val: 0.25, label: 'SEMICORXERA', color: '#eecfa1' }, // Beige
+            { val: 0, label: 'MISS', color: '#1a1a1a' } // Dark Grey
+        ];
+
+        // --- AUDIO ENGINE ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        const bgMusic = document.getElementById('bg-music');
+
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume-slider').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume-slider').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        function playTone(freq, type, duration, vol = 0.1) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const masterVol = parseFloat(document.getElementById('volume-slider').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol * masterVol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playThud() {
+            playTone(100, 'square', 0.05, 0.5);
+        }
+        function playApplause() {
+            // Simulated noise
+            playTone(200, 'sawtooth', 0.5, 0.1);
+            setTimeout(() => playTone(150, 'sawtooth', 0.5, 0.1), 100);
+        }
+        function playBoo() {
+            playTone(100, 'sawtooth', 1.0, 0.2);
+        }
+
+        // --- GAME LOGIC ---
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('dartboard');
+                this.ctx = this.canvas.getContext('2d');
+                this.rotation = 0;
+                this.isRunning = false;
+                this.round = 1; // 1, 2, 3
+                this.targets = [2, 3, 4]; // Target sums for rounds
+                this.players = [
+                    { name: 'TU', score: 0, roundSum: 0, darts: 3, type: 'human' },
+                    { name: 'El Desafinat', score: 0, roundSum: 0, darts: 3, type: 'bot_bad' },
+                    { name: 'El Virtuós', score: 0, roundSum: 0, darts: 3, type: 'bot_good' }
+                ];
+                this.turn = 0; // Player index
+
+                this.canvas.addEventListener('mousedown', (e) => this.throwDart(e));
+            }
+
+            start() {
+                document.getElementById('start-screen').style.display = 'none';
+                this.startRound();
+                this.loop();
+            }
+
+            startRound() {
+                this.players.forEach(p => {
+                    p.roundSum = 0;
+                    p.darts = 3;
+                    p.bust = false;
+                });
+                this.turn = 0;
+                this.updateUI();
+                this.isRunning = true;
+
+                // If round 1 starts, human plays.
+                // If later rounds, maybe rotate start? Keeping simple: Human always starts.
+            }
+
+            updateUI() {
+                document.getElementById('target-val').textContent = this.targets[this.round - 1].toFixed(1);
+                document.getElementById('current-sum').textContent = `Suma: ${this.players[0].roundSum}`;
+
+                this.players.forEach((p, i) => {
+                    document.getElementById(`p${i + 1}-score`).textContent = p.score;
+                    const row = document.getElementById(`p${i + 1}-row`);
+                    if (i === this.turn) row.classList.add('active');
+                    else row.classList.remove('active');
+                });
+            }
+
+            loop() {
+                if (!this.isRunning) return;
+
+                this.ctx.clearRect(0, 0, 600, 600);
+                this.rotation += 0.02;
+
+                this.drawBoard();
+
+                requestAnimationFrame(() => this.loop());
+            }
+
+            drawBoard() {
+                const cx = 300, cy = 300, r = 280;
+                const numSec = 5; // Rodona, Blanca, Negra, Corxera, Semi
+                const arc = (Math.PI * 2) / numSec;
+
+                this.ctx.save();
+                this.ctx.translate(cx, cy);
+                this.ctx.rotate(this.rotation);
+
+                for (let i = 0; i < numSec; i++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, 0);
+                    this.ctx.arc(0, 0, r, i * arc, (i + 1) * arc);
+                    this.ctx.fillStyle = SECTIONS[i].color;
+                    this.ctx.fill();
+                    this.ctx.stroke();
+
+                    // Text
+                    this.ctx.save();
+                    this.ctx.rotate((i + 0.5) * arc);
+                    this.ctx.translate(r * 0.7, 0);
+                    this.ctx.rotate(Math.PI / 2);
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.font = 'bold 20px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(SECTIONS[i].label, 0, 0);
+                    this.ctx.restore();
+                }
+
+                // Bullseye
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, 30, 0, Math.PI * 2);
+                this.ctx.fillStyle = '#ff0000';
+                this.ctx.fill();
+                this.ctx.strokeStyle = '#fff';
+                this.ctx.stroke();
+
+                this.ctx.fillStyle = '#fff';
+                this.ctx.font = 'bold 12px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText("200", 0, 0);
+
+                this.ctx.restore();
+            }
+
+            throwDart(e) {
+                if (this.turn !== 0 || !this.isRunning) return;
+
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                this.processThrow(0, x, y);
+            }
+
+            processThrow(pIdx, x, y) {
+                const p = this.players[pIdx];
+                if (p.darts <= 0 || p.bust) {
+                    this.nextTurn();
+                    return;
+                }
+
+                playThud();
+                p.darts--;
+
+                // Calculate hit
+                const dx = x - 300;
+                const dy = y - 300;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                let val = 0;
+                let label = "MISS";
+                let points = 0;
+
+                if (dist < 30) {
+                    // Bullseye
+                    val = 0; // Doesn't add to round sum for "target time" logic? 
+                    // Wait, the game has two scores: Round Sum (for target time) and Total Score.
+                    // "si lo pones en el centro, directamente son 200 puntos."
+                    // Does it count for the round target? The user says "encerta la suma exacta".
+                    // If I hit bullseye, do I get 200 points immediately?
+                    // Let's assume Bullseye gives 200 points directly to p.score and doesn't affect roundSum (or maybe it counts as 0 time?).
+                    // Or maybe it's a bonus.
+                    // Let's add 200 to score.
+                    points = 200;
+                    label = "DIANA!";
+                    this.showFloatMsg(pIdx, `+200 PTS!`, 'red', x, y);
+                    p.score += 200;
+                } else if (dist < 280) {
+                    let angle = Math.atan2(dy, dx) - this.rotation;
+                    angle = angle % (Math.PI * 2);
+                    if (angle < 0) angle += Math.PI * 2;
+
+                    const numSec = 5;
+                    const secIdx = Math.floor(angle / ((Math.PI * 2) / numSec));
+                    val = SECTIONS[secIdx].val;
+                    label = SECTIONS[secIdx].label;
+
+                    p.roundSum += val;
+                    this.showFloatMsg(pIdx, `+${val}`, 'white', x, y);
+                } else {
+                    this.showFloatMsg(pIdx, "MISS", 'gray', x, y);
+                }
+
+                const target = this.targets[this.round - 1];
+                if (p.roundSum > target) {
+                    p.bust = true;
+                    p.roundSum = 0;
+                    this.showFloatMsg(pIdx, "BUST!", 'red', x, y);
+                    playBoo();
+                } else if (Math.abs(p.roundSum - target) < 0.01) {
+                    this.showFloatMsg(pIdx, "EXACTE!", 'gold', x, y);
+                    playApplause();
+                    p.darts = 0; // Stop
+                }
+
+                this.updateUI();
+                this.checkWinCondition();
+
+                if (p.darts === 0 || p.bust) {
+                    setTimeout(() => this.nextTurn(), 1000);
+                }
+            }
+
+            checkWinCondition() {
+                // Check if anyone reached 700
+                this.players.forEach(p => {
+                    if (p.score >= 700) {
+                        this.endGame(p);
+                    }
+                });
+            }
+
+            nextTurn() {
+                this.turn++;
+                if (this.turn >= this.players.length) {
+                    this.endRound();
+                } else {
+                    this.updateUI();
+                    if (this.players[this.turn].type !== 'human') {
+                        setTimeout(() => this.botPlay(this.turn), 1000);
+                    }
+                }
+            }
+
+            botPlay(pIdx) {
+                const p = this.players[pIdx];
+                const target = this.targets[this.round - 1];
+
+                // Simulate 3 throws quickly
+                let throws = 0;
+                const throwInterval = setInterval(() => {
+                    if (p.darts > 0 && !p.bust && p.roundSum < target) {
+                        // Logic
+                        let hitVal = 0;
+                        const needed = target - p.roundSum;
+
+                        // Bad bot: Random
+                        // Good bot: Tries to hit needed
+                        if (p.type === 'bot_good') {
+                            if (Math.random() > 0.3) hitVal = this.findBestVal(needed);
+                            else hitVal = this.randomVal();
+                        } else {
+                            hitVal = this.randomVal();
+                        }
+
+                        p.darts--;
+                        p.roundSum += hitVal;
+                        this.showFloatMsg(pIdx, `+${hitVal}`);
+                        playThud();
+
+                        if (p.roundSum > target) {
+                            p.bust = true;
+                            p.roundSum = 0;
+                            this.showFloatMsg(pIdx, "BUST!", 'red');
+                        }
+                        this.updateUI();
+                    } else {
+                        clearInterval(throwInterval);
+                        setTimeout(() => this.nextTurn(), 1000);
+                    }
+                }, 800);
+            }
+
+            findBestVal(needed) {
+                // Return a value <= needed
+                const opts = SECTIONS.filter(s => s.val <= needed && s.val > 0);
+                if (opts.length > 0) return opts[0].val;
+                return SECTIONS[Math.floor(Math.random() * 5)].val;
+            }
+
+            randomVal() {
+                return SECTIONS[Math.floor(Math.random() * 5)].val;
+            }
+
+            showFloatMsg(pIdx, text, color = 'white', x = null, y = null) {
+                const el = document.createElement('div');
+                el.className = 'float-msg';
+                el.textContent = text;
+                el.style.color = color;
+
+                if (x !== null && y !== null) {
+                    // Position at throw location
+                    const rect = this.canvas.getBoundingClientRect();
+                    el.style.left = `${rect.left + x}px`;
+                    el.style.top = `${rect.top + y}px`;
+                } else {
+                    // Fallback to scoreboard
+                    const row = document.getElementById(`p${pIdx + 1}-row`);
+                    const rect = row.getBoundingClientRect();
+                    el.style.top = `${rect.top}px`;
+                    el.style.left = `${rect.left - 100}px`;
+                }
+
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 1000);
+            }
+
+            endRound() {
+                // Calculate scores
+                const target = this.targets[this.round - 1];
+
+                // Winner is closest to target without bust
+                // Actually, standard darts is exact. Here we said "Closest without going over".
+                // Points: Sum achieved. Bonus for Exact.
+
+                this.players.forEach(p => {
+                    if (!p.bust) {
+                        p.score += p.roundSum * 10;
+                        if (p.roundSum === target) p.score += 50; // Bonus
+                    }
+                });
+
+                this.round++;
+                if (this.round > 3) {
+                    this.endGame();
+                } else {
+                    // Show Round Modal instead of Alert
+                    document.getElementById('round-msg').textContent = `PREPARA'T PER A LA RONDA ${this.round}. OBJECTIU: ${this.targets[this.round - 1]} TEMPS.`;
+                    document.getElementById('round-modal').style.display = 'flex';
+                }
+            }
+
+            nextRound() {
+                document.getElementById('round-modal').style.display = 'none';
+                this.startRound();
+            }
+
+            endGame(winner) {
+                this.isRunning = false;
+
+                if (winner && winner.type === 'human') {
+                    // Save Reward
+                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_dardos'] = true;
+                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                    document.getElementById('win-modal').style.display = 'flex';
+                } else {
+                    document.getElementById('lose-modal').style.display = 'flex';
+                }
+            }
+        }
+
+        const game = new Game();
+
+    </script>
+</body>
+
+</html>

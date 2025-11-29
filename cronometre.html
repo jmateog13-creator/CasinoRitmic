@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrono Bet</title>
+    <style>
+        :root {
+            --neon-blue: #00ffff;
+            --neon-pink: #ff00ff;
+            --bg-dark: #0a0a12;
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 10px solid var(--gold);
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        #score-board {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .score-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #333;
+            border: 2px solid #555;
+        }
+
+        .score-dot.active {
+            background: var(--gold);
+            box-shadow: 0 0 15px var(--gold);
+        }
+
+        #target-display {
+            font-size: 2rem;
+            color: #aaa;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        #target-img {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            background: #fff;
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 0 30px var(--neon-blue);
+        }
+
+        #timer-display {
+            font-size: 7rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 30px var(--neon-blue);
+            margin: 10px 0;
+            font-weight: bold;
+            font-family: 'Digital-7', monospace;
+            /* Fallback if not avail */
+        }
+
+        #controls {
+            display: flex;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 20px 80px;
+            font-size: 2.5rem;
+            background: transparent;
+            color: var(--neon-blue);
+            border: 4px solid var(--neon-blue);
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 20px var(--neon-blue);
+            transition: all 0.1s;
+            text-transform: uppercase;
+        }
+
+        .btn:active {
+            background: var(--neon-blue);
+            color: #000;
+            transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            border-color: #555;
+            color: #555;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        #results {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            height: 40px;
+            text-shadow: 1px 1px 0 #000;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: #111;
+            padding: 50px;
+            border: 4px solid var(--gold);
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            box-shadow: 0 0 50px var(--gold);
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-container">
+        <div id="score-board">
+            <div class="score-dot" id="dot-0"></div>
+            <div class="score-dot" id="dot-1"></div>
+            <div class="score-dot" id="dot-2"></div>
+            <div class="score-dot" id="dot-3"></div>
+        </div>
+
+        <div id="target-display">OBJECTIU: <span id="target-val"
+                style="color:var(--gold); font-weight:bold;">4.000</span> SEGONS</div>
+        <img id="target-img" src="images/rodona.jpg" alt="Nota">
+
+        <div id="timer-display">0.000</div>
+
+        <div id="controls">
+            <button id="action-btn" class="btn" onclick="toggleTimer()">START</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <!-- Start Modal -->
+    <div id="start-modal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">CHRONO BET</h2>
+            <p>Aposta pel temps exacte.</p>
+            <p>Atura el cronòmetre quan arribi al valor de la nota.</p>
+            <p>Tolerància: <strong>+/- 0.100 segons</strong>.</p>
+            <p>Necessites <strong>4 ENCERTS</strong> per guanyar.</p>
+            <button class="btn" onclick="startGame()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">TEMPS PERFECTE!</h2>
+            <div class="relic-icon">⏱️</div>
+            <p style="font-size: 1.5rem; color: #fff;">"EL METRÒNOM DE MAELZEL"</p>
+            <p>Has dominat el temps amb precisió suïssa.</p>
+            <button class="btn" onclick="location.reload()">TORNAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_cronometre.mp3" loop></audio>
+
+    <script>
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        const bgMusic = document.getElementById('bg-music');
+
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                // Default volume if no slider, or add slider?
+                // Cronometre doesn't have a volume slider in the code I saw!
+                // Let's check the code again.
+                // It has no volume slider in HTML.
+                // I should add one or just play at default volume.
+                // "No cambies nada" -> maybe I shouldn't add UI elements.
+                // But I need to play music.
+                bgMusic.volume = 0.3;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        let startTime = 0;
+        let timerInterval = null;
+        let running = false;
+        let target = 4.000;
+        let wins = 0;
+
+        // 4 Levels/Rounds. Can be random or fixed sequence.
+        // Let's do fixed sequence for variety: Rodona(4), Blanca(2), Negra(1), Blanca(2)
+        const LEVELS = [
+            { val: 4.000, img: 'images/rodona.jpg' },
+            { val: 2.000, img: 'images/blanca.jpg' },
+            { val: 1.000, img: 'images/negra.jpg' },
+            { val: 2.000, img: 'images/blanca.jpg' }
+        ];
+
+        let round = 0;
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'tick') {
+                osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.01);
+            } else if (type === 'stop') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'win') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        function startGame() {
+            document.getElementById('start-modal').style.display = 'none';
+            round = 0;
+            wins = 0;
+            updateDots();
+            setupRound();
+        }
+
+        function setupRound() {
+            if (round >= LEVELS.length) {
+                // Win Game
+                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                rewards['reward_cronometre'] = true;
+                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                document.getElementById('win-modal').style.display = 'flex';
+                return;
+            }
+
+            target = LEVELS[round].val;
+            document.getElementById('target-val').textContent = target.toFixed(3);
+            document.getElementById('target-img').src = LEVELS[round].img;
+
+            document.getElementById('timer-display').textContent = "0.000";
+            document.getElementById('timer-display').style.color = "var(--neon-blue)";
+            document.getElementById('results').textContent = "";
+            document.getElementById('action-btn').textContent = "START";
+            document.getElementById('action-btn').disabled = false;
+            running = false;
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('action-btn');
+
+            if (!running) {
+                // Start
+                running = true;
+                startTime = performance.now();
+                btn.textContent = "STOP";
+                playSound('tick');
+
+                timerInterval = requestAnimationFrame(updateTimer);
+            } else {
+                // Stop
+                running = false;
+                cancelAnimationFrame(timerInterval);
+                const endTime = performance.now();
+                const elapsed = (endTime - startTime) / 1000;
+                document.getElementById('timer-display').textContent = elapsed.toFixed(3);
+                playSound('stop');
+
+                checkResult(elapsed);
+            }
+        }
+
+        function updateTimer(time) {
+            if (!running) return;
+            const elapsed = (performance.now() - startTime) / 1000;
+            document.getElementById('timer-display').textContent = elapsed.toFixed(3);
+            requestAnimationFrame(updateTimer);
+        }
+
+        function checkResult(val) {
+            const diff = Math.abs(val - target);
+            const margin = 0.100; // 100ms tolerance
+
+            if (diff <= margin) {
+                document.getElementById('results').textContent = "ENCERT! (+/- " + diff.toFixed(3) + "s)";
+                document.getElementById('results').style.color = "#0f0";
+                document.getElementById('timer-display').style.color = "#0f0";
+                playSound('win');
+
+                // Mark dot
+                document.getElementById(`dot-${round}`).classList.add('active');
+
+                round++;
+                document.getElementById('action-btn').disabled = true;
+                setTimeout(setupRound, 2000);
+            } else {
+                document.getElementById('results').textContent = "FALLADA! (+/- " + diff.toFixed(3) + "s)";
+                document.getElementById('results').style.color = "#f00";
+                document.getElementById('timer-display').style.color = "#f00";
+                playSound('error');
+                // Retry same round
+                document.getElementById('action-btn').textContent = "RETRY";
+            }
+        }
+
+        function updateDots() {
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`dot-${i}`).classList.remove('active');
+            }
+        }
+    </script>
+</body>
+
+</html>

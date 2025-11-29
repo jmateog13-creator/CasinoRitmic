@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack Rítmic: El Casino de Beethoven</title>
+    <style>
+        :root {
+            --felt-green: #2d5a27;
+            --felt-dark: #1a3c1a;
+            --wood-border: #5d4037;
+            --gold: #ffd700;
+            --card-white: #f0f0f0;
+            --text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        #game-table {
+            width: 95vw;
+            height: 90vh;
+            background: radial-gradient(circle at center, var(--felt-green), var(--felt-dark));
+            border: 20px solid var(--wood-border);
+            border-radius: 50px;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Texture overlay */
+        #game-table::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            border-radius: 30px;
+        }
+
+        header {
+            text-align: center;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            color: var(--gold);
+            text-shadow: var(--text-shadow);
+            letter-spacing: 2px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            font-size: 1.2rem;
+            margin-top: 10px;
+            text-shadow: var(--text-shadow);
+        }
+
+        .area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            position: relative;
+            width: 100%;
+        }
+
+        .hand-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            min-height: 160px;
+            perspective: 1000px;
+            flex-wrap: wrap;
+            /* Allow cards to wrap */
+            width: 100%;
+            max-height: 320px;
+            /* Limit height to prevent overflow */
+            overflow-y: auto;
+            /* Scroll if absolutely necessary, though wrap should handle it */
+        }
+
+        .card {
+            width: 140px;
+            height: 196px;
+            background: var(--card-white);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4rem;
+            color: black;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+            position: relative;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.27);
+            transform-style: preserve-3d;
+            animation: dealCard 0.6s ease-out backwards;
+            user-select: none;
+            margin-bottom: 10px;
+            /* Space for wrapped rows */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .card img {
+            width: 80%;
+            height: auto;
+            pointer-events: none;
+        }
+
+        @keyframes dealCard {
+            from {
+                opacity: 0;
+                transform: translateY(-200px) rotateY(180deg) scale(0.5);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) rotateY(0) scale(1);
+            }
+        }
+
+        .card.hidden {
+            background: repeating-linear-gradient(45deg,
+                    #b71c1c,
+                    #b71c1c 10px,
+                    #d32f2f 10px,
+                    #d32f2f 20px);
+            color: transparent;
+        }
+
+        .card.hidden span {
+            display: none;
+        }
+
+        .score-display {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-top: 10px;
+            font-weight: bold;
+            border: 1px solid var(--gold);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            z-index: 10;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(to bottom, #ffd700, #b8860b);
+            border: 2px solid #fff;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s, filter 0.2s;
+            font-family: 'Georgia', serif;
+            color: #3e2723;
+        }
+
+        button:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            border-color: #444;
+            transform: none;
+        }
+
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 1rem;
+        }
+
+        .btn-reveal {
+            background: linear-gradient(to bottom, #9c27b0, #7b1fa2);
+            color: white;
+            border-color: #e1bee7;
+        }
+
+        #message-area {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: bold;
+            text-shadow: 0 0 20px black;
+            pointer-events: none;
+            z-index: 100;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #message-area.visible {
+            opacity: 1;
+        }
+
+        /* Shake effect for Bust */
+        @keyframes shake {
+            0% {
+                transform: translate(1px, 1px) rotate(0deg);
+            }
+
+            10% {
+                transform: translate(-1px, -2px) rotate(-1deg);
+            }
+
+            20% {
+                transform: translate(-3px, 0px) rotate(1deg);
+            }
+
+            30% {
+                transform: translate(3px, 2px) rotate(0deg);
+            }
+
+            40% {
+                transform: translate(1px, -1px) rotate(1deg);
+            }
+
+            50% {
+                transform: translate(-1px, 2px) rotate(-1deg);
+            }
+
+            60% {
+                transform: translate(-3px, 1px) rotate(0deg);
+            }
+
+            70% {
+                transform: translate(3px, 1px) rotate(-1deg);
+            }
+
+            80% {
+                transform: translate(-1px, -1px) rotate(1deg);
+            }
+
+            90% {
+                transform: translate(1px, 2px) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(1px, -2px) rotate(-1deg);
+            }
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .value-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 0.8rem;
+            color: #555;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal {
+            background: #222;
+            border: 5px solid var(--gold);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+        }
+
+        .modal h2 {
+            color: var(--gold);
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .modal p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .modal ul {
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        .bet-input-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .bet-input {
+            padding: 10px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            border: 2px solid var(--gold);
+            background: #333;
+            color: white;
+            width: 100px;
+            text-align: center;
+        }
+
+        .hidden-element {
+            display: none !important;
+        }
+
+        #btn-menu {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid #ffd700;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Georgia', serif;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        #btn-menu:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        /* Main Screen Styles */
+        #main-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a0000 0%, #000000 100%);
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #main-screen h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .instructions-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid var(--gold);
+            max-width: 800px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        .instructions-box h2 {
+            color: var(--gold);
+            margin-top: 0;
+        }
+
+        .instructions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .instruction-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .start-btn {
+            font-size: 2rem;
+            padding: 20px 60px;
+            background: linear-gradient(to bottom, #ffd700, #b8860b);
+            color: #3e2723;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.6);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 20px rgba(255, 215, 0, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+            }
+        }
+
+        /* Golden Button Styles */
+        #btn-claim-victory {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: #888;
+            border: 2px solid #555;
+            padding: 15px 25px;
+            border-radius: 15px;
+            cursor: not-allowed;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            z-index: 100;
+            transition: all 0.5s ease;
+            max-width: 250px;
+            text-align: left;
+            line-height: 1.2;
+        }
+
+        #btn-claim-victory.unlocked {
+            background: linear-gradient(to bottom, #ffd700, #b8860b);
+            color: #3e2723;
+            border-color: #fff;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            0% {
+                filter: brightness(1);
+            }
+
+            50% {
+                filter: brightness(1.3);
+            }
+
+            100% {
+                filter: brightness(1);
+            }
+        }
+
+        /* Volume Control */
+        .volume-control {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid var(--gold);
+        }
+
+        .volume-control span {
+            font-size: 1.5rem;
+        }
+
+        input[type=range] {
+            width: 100px;
+            accent-color: var(--gold);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Menu Button -->
+    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+
+    <!-- Main Screen -->
+    <div id="main-screen">
+        <h1>BLACKJACK RÍTMIC</h1>
+        <div class="instructions-box">
+            <h2>🎵 Com Jugar</h2>
+            <p>Benvingut al Casino de Beethoven. L'objectiu és sumar exactament <strong>10 TEMPS</strong>.</p>
+
+            <div class="instructions-grid">
+                <div class="instruction-item">
+                    <strong>𝅝 Redona</strong> = 4 temps
+                </div>
+                <div class="instruction-item">
+                    <strong>𝅗𝅥 Blanca</strong> = 2 temps
+                </div>
+                <div class="instruction-item">
+                    <strong>𝅘𝅥 Negra</strong> = 1 temps
+                </div>
+                <div class="instruction-item">
+                    <strong>𝅘𝅥𝅮 Corxera</strong> = 0.5 temps
+                </div>
+                <div class="instruction-item">
+                    <strong>𝅘𝅥𝅯 Semicorxera</strong> = 0.25 temps
+                </div>
+            </div>
+
+            <p>⚠️ <strong>ATENCIÓ:</strong> La suma és secreta! Hauràs de comptar mentalment. Si vols veure la teva
+                suma, et costarà <strong>500 Beethovens</strong>.</p>
+            <p>🏆 <strong>OBJECTIU FINAL:</strong> Guanya <strong>10,000 Beethovens</strong> per desbloquejar el botó
+                daurat i aconseguir la partitura inèdita!</p>
+        </div>
+        <button class="start-btn" onclick="game.closeWelcome()">ENTRAR AL CASINO</button>
+    </div>
+
+    <!-- Victory Modal -->
+    <div id="victory-modal" class="modal-overlay hidden-element">
+        <div class="modal" style="border-color: #00ff00; box-shadow: 0 0 50px rgba(0, 255, 0, 0.5);">
+            <h2>🎼 ENHORABONA MAESTRO! 🎼</h2>
+            <p>Has aconseguit 10,000 Beethovens!</p>
+            <p>Aquí tens la teva recompensa: La Partitura Inèdita de l'Himne de l'Alegria.</p>
+            <div style="font-size: 4rem; margin: 20px;">📜✨</div>
+            <p>Has demostrat ser un veritable virtuós del ritme.</p>
+            <button onclick="location.reload()">TORNAR A JUGAR</button>
+        </div>
+    </div>
+
+    <div id="game-table">
+        <canvas id="confetti-canvas"></canvas>
+
+        <!-- Golden Button -->
+        <!-- Golden Button -->
+        <button id="btn-claim-victory" onclick="game.claimVictory()">
+            <span style="font-size: 1.5rem;">🔒</span>
+            <span>Aconseguir la partitura inèdita de l'Himne de l'Alegria</span>
+        </button>
+
+        <!-- Volume Control -->
+        <div class="volume-control">
+            <span id="volume-icon">🔊</span>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5"
+                oninput="game.setVolume(this.value)">
+        </div>
+
+        <audio id="bg-music" src="music/background_music_blackjack.mp3" loop></audio>
+
+        <header>
+            <h1>BLACKJACK RÍTMIC</h1>
+            <div class="stats-bar">
+                <span id="attempts-display"
+                    style="position: absolute; left: 20px; top: 100px; font-size: 1.2rem; color: #aaa;">Intent: 1</span>
+                <span>Beethovens: <span id="wallet">1000</span> 💰</span>
+                <span>Aposta: <span id="bet-display">0</span></span>
+            </div>
+        </header>
+
+        <div class="area" id="dealer-area">
+            <div class="score-display">Banca: <span id="dealer-score">?</span> / 10</div>
+            <div class="hand-container" id="dealer-hand">
+                <!-- Dealer cards go here -->
+            </div>
+        </div>
+
+        <div id="message-area"></div>
+
+        <div class="area" id="player-area">
+            <div class="hand-container" id="player-hand">
+                <!-- Player cards go here -->
+            </div>
+            <div class="score-display">
+                Tu: <span id="player-score">???</span> / 10
+                <button id="btn-reveal" class="btn-small btn-reveal" onclick="game.revealScore()"
+                    style="margin-left: 10px;">Veure (500💰)</button>
+            </div>
+        </div>
+
+        <!-- Betting Controls -->
+        <div id="betting-controls" class="controls hidden-element">
+            <div class="bet-input-container">
+                <input type="number" id="bet-input" class="bet-input" value="100" min="25" step="25">
+                <button onclick="game.placeBet()">APOSTAR</button>
+            </div>
+            <div style="width: 100%; text-align: center; margin-top: 10px;">
+                <button class="btn-small" onclick="document.getElementById('bet-input').value=25">25</button>
+                <button class="btn-small" onclick="document.getElementById('bet-input').value=50">50</button>
+                <button class="btn-small" onclick="document.getElementById('bet-input').value=100">100</button>
+                <button class="btn-small" onclick="document.getElementById('bet-input').value=500">500</button>
+                <button class="btn-small" onclick="document.getElementById('bet-input').value=1000">ALL IN</button>
+            </div>
+        </div>
+
+        <!-- Game Controls -->
+        <div id="game-controls" class="controls hidden-element">
+            <button id="btn-hit" onclick="game.hit()">Demanar Figura (Hit)</button>
+            <button id="btn-stand" onclick="game.stand()">Plantar-se (Stand)</button>
+        </div>
+
+        <!-- Restart Control -->
+        <div id="restart-controls" class="controls hidden-element">
+            <button id="btn-restart" onclick="game.startBettingPhase()">Nova Partida</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓ ---
+        const CARD_TYPES = [
+            { name: "Redona", value: 4.0, img: "images/rodona.jpg" },
+            { name: "Blanca", value: 2.0, img: "images/blanca.jpg" },
+            { name: "Negra", value: 1.0, img: "images/negra.jpg" },
+            { name: "Corxera", value: 0.5, img: "images/corxera.jpg" },
+            { name: "Semicorxera", value: 0.25, img: "images/semicorxera.jpg" }
+        ];
+        const DECK_WEIGHTS = [1, 2, 4, 6, 8];
+        const TARGET_SCORE = 10.0;
+        const DEALER_STAND = 7.5;
+        const WIN_GOAL = 10000;
+
+        class Game {
+            constructor() {
+                this.wallet = 1000;
+                this.bet = 0;
+                this.deck = [];
+                this.playerHand = [];
+                this.dealerHand = [];
+                this.gameOver = false;
+                this.scoreRevealed = false;
+                this.attempts = 1;
+
+                this.ui = {
+                    wallet: document.getElementById('wallet'),
+                    betDisplay: document.getElementById('bet-display'),
+                    dealerHand: document.getElementById('dealer-hand'),
+                    playerHand: document.getElementById('player-hand'),
+                    dealerScore: document.getElementById('dealer-score'),
+                    playerScore: document.getElementById('player-score'),
+                    btnReveal: document.getElementById('btn-reveal'),
+                    message: document.getElementById('message-area'),
+                    table: document.getElementById('game-table'),
+                    mainScreen: document.getElementById('main-screen'),
+                    victoryModal: document.getElementById('victory-modal'),
+                    bettingControls: document.getElementById('betting-controls'),
+                    gameControls: document.getElementById('game-controls'),
+                    restartControls: document.getElementById('restart-controls'),
+                    betInput: document.getElementById('bet-input'),
+                    btnClaimVictory: document.getElementById('btn-claim-victory'),
+                    bgMusic: document.getElementById('bg-music'),
+                    volumeSlider: document.getElementById('volume-slider'),
+                    volumeIcon: document.getElementById('volume-icon'),
+                    attemptsDisplay: document.getElementById('attempts-display')
+                };
+
+                // Initialize volume
+                this.ui.bgMusic.volume = 0.5;
+
+                // Don't start automatically, wait for welcome modal
+            }
+
+            closeWelcome() {
+                this.ui.mainScreen.classList.add('hidden-element');
+                this.startBettingPhase();
+                this.playMusic();
+            }
+
+            playMusic() {
+                this.ui.bgMusic.play().catch(error => {
+                    console.log("Autoplay prevented:", error);
+                });
+            }
+
+            setVolume(value) {
+                this.ui.bgMusic.volume = value;
+                if (value == 0) {
+                    this.ui.volumeIcon.textContent = "🔇";
+                } else if (value < 0.5) {
+                    this.ui.volumeIcon.textContent = "🔉";
+                } else {
+                    this.ui.volumeIcon.textContent = "🔊";
+                }
+            }
+
+            startBettingPhase() {
+                this.gameOver = false;
+                this.scoreRevealed = false;
+                this.playerHand = [];
+                this.dealerHand = [];
+
+                // Reset UI
+                this.ui.playerHand.innerHTML = '';
+                this.ui.dealerHand.innerHTML = '';
+                this.ui.dealerScore.textContent = '?';
+                this.ui.playerScore.textContent = '???';
+                this.ui.message.className = '';
+                this.ui.message.textContent = '';
+                this.ui.table.classList.remove('shake');
+                this.ui.btnReveal.style.display = 'inline-block';
+                this.ui.btnReveal.disabled = false;
+
+                // Show Betting UI
+                if (this.wallet >= WIN_GOAL) {
+                    this.ui.message.textContent = "Has assolit l'objectiu! Reclama la teva recompensa.";
+                    this.ui.message.classList.add('visible');
+                    this.ui.bettingControls.classList.add('hidden-element');
+                } else {
+                    this.ui.bettingControls.classList.remove('hidden-element');
+                }
+
+                this.ui.gameControls.classList.add('hidden-element');
+                this.ui.restartControls.classList.add('hidden-element');
+
+                this.ui.betDisplay.textContent = "0";
+            }
+
+            placeBet() {
+                const amount = parseInt(this.ui.betInput.value);
+                if (isNaN(amount) || amount <= 0) {
+                    alert("Si us plau, introdueix una aposta vàlida.");
+                    return;
+                }
+                if (amount > this.wallet) {
+                    alert("No tens prou Beethovens!");
+                    return;
+                }
+
+                this.bet = amount;
+                this.wallet -= this.bet; // Deduct immediately
+                this.updateWalletUI();
+                this.ui.betDisplay.textContent = this.bet;
+                this.ui.bettingControls.classList.add('hidden-element');
+                this.startRound();
+            }
+
+            getRandomCard() {
+                const totalWeight = DECK_WEIGHTS.reduce((a, b) => a + b, 0);
+                let random = Math.random() * totalWeight;
+
+                for (let i = 0; i < CARD_TYPES.length; i++) {
+                    if (random < DECK_WEIGHTS[i]) {
+                        return { ...CARD_TYPES[i], id: Math.random().toString(36).substr(2, 9) };
+                    }
+                    random -= DECK_WEIGHTS[i];
+                }
+                return CARD_TYPES[CARD_TYPES.length - 1];
+            }
+
+            startRound() {
+                this.ui.gameControls.classList.remove('hidden-element');
+
+                // Deal initial cards
+                this.dealCard(this.playerHand, this.ui.playerHand, false);
+                this.dealCard(this.dealerHand, this.ui.dealerHand, false); // Dealer card visible
+
+                // Update internal scores but don't show player's yet
+                this.updateScores(false);
+            }
+
+            dealCard(handArray, containerElement, isHidden = false) {
+                const card = this.getRandomCard();
+                handArray.push(card);
+
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card';
+                if (isHidden) {
+                    cardEl.classList.add('hidden');
+                    cardEl.dataset.value = card.value;
+                } else {
+                    cardEl.innerHTML = `<img src="${card.img}" alt="${card.name}"><div class="value-badge">${card.value}</div>`;
+                }
+
+                setTimeout(() => containerElement.appendChild(cardEl), 100);
+            }
+
+            getScore(hand) {
+                let score = hand.reduce((sum, card) => sum + card.value, 0);
+                return Math.round(score * 100) / 100;
+            }
+
+            updateScores(showPlayer = false) {
+                const pScore = this.getScore(this.playerHand);
+                const dScore = this.getScore(this.dealerHand);
+
+                if (showPlayer || this.scoreRevealed) {
+                    this.ui.playerScore.textContent = pScore.toFixed(2);
+                } else {
+                    this.ui.playerScore.textContent = "???";
+                }
+
+                // Dealer score is visible for the visible cards (in this mode we show dealer score as they only have 1 card initially)
+                // But let's keep it simple: Show dealer score always for now as they play last.
+                this.ui.dealerScore.textContent = dScore.toFixed(2);
+                this.ui.wallet.textContent = this.wallet;
+
+                return { pScore, dScore };
+            }
+
+            revealScore() {
+                if (this.wallet >= 500) {
+                    this.wallet -= 500;
+                    this.updateWalletUI();
+                    this.scoreRevealed = true;
+                    this.ui.btnReveal.disabled = true;
+                    this.ui.btnReveal.textContent = "Revelat";
+                    this.updateScores(true);
+                } else {
+                    alert("No tens prou diners (500) per revelar la puntuació!");
+                }
+            }
+
+            hit() {
+                if (this.gameOver) return;
+                this.dealCard(this.playerHand, this.ui.playerHand);
+
+                setTimeout(() => {
+                    const { pScore } = this.updateScores();
+                    // Check bust even if hidden? Yes, game rules apply.
+                    if (pScore > TARGET_SCORE) {
+                        this.updateScores(true); // Reveal on bust
+                        this.endRound("BUST! T'has passat de temps!", 'lose');
+                    } else if (pScore === TARGET_SCORE) {
+                        this.stand();
+                    }
+                }, 200);
+            }
+
+            stand() {
+                if (this.gameOver) return;
+                this.ui.gameControls.classList.add('hidden-element');
+                this.updateScores(true); // Reveal score when standing
+                this.dealerTurn();
+            }
+
+            dealerTurn() {
+                const playDealer = () => {
+                    const dScore = this.getScore(this.dealerHand);
+
+                    if (dScore < DEALER_STAND) {
+                        this.dealCard(this.dealerHand, this.ui.dealerHand);
+                        this.updateScores(true);
+                        setTimeout(playDealer, 1000);
+                    } else {
+                        this.finalizeRound();
+                    }
+                };
+
+                playDealer();
+            }
+
+            finalizeRound() {
+                const pScore = this.getScore(this.playerHand);
+                const dScore = this.getScore(this.dealerHand);
+
+                let message = "";
+                let result = "";
+
+                if (dScore > TARGET_SCORE) {
+                    message = "La Banca s'ha passat! Guanyes!";
+                    result = 'win';
+                } else {
+                    if (pScore > dScore) {
+                        message = "Guanyes! Més ritme que la banca.";
+                        result = 'win';
+                    } else if (pScore < dScore) {
+                        message = "La Banca guanya. Millor sort la propera.";
+                        result = 'lose';
+                    } else {
+                        message = "Empat. Et tornem l'aposta.";
+                        result = 'push';
+                    }
+                }
+
+                this.endRound(message, result);
+            }
+
+            endRound(msg, result) {
+                this.gameOver = true;
+                this.ui.message.textContent = msg;
+                this.ui.message.classList.add('visible');
+                this.ui.message.style.color = result === 'win' ? '#ffd700' : '#ff5252';
+
+                if (result === 'win') {
+                    this.wallet += this.bet * 2; // Return bet + profit
+                    startConfetti();
+                } else if (result === 'push') {
+                    this.wallet += this.bet; // Return bet
+                } else {
+                    // Money already deducted
+                    this.ui.table.classList.add('shake');
+                }
+
+                this.updateWalletUI();
+                this.ui.restartControls.classList.remove('hidden-element');
+
+                // Check Victory Condition (Unlock button if applicable)
+                this.updateVictoryButtonState();
+
+                // Check Game Over (No money)
+                if (this.wallet <= 0) {
+                    setTimeout(() => {
+                        alert("Ja no tens prous diners! Torna a intentar-ho.");
+                        this.resetGame();
+                    }, 1000);
+                }
+            }
+
+            resetGame() {
+                this.attempts++;
+                this.wallet = 1000;
+                this.ui.attemptsDisplay.textContent = `Intent: ${this.attempts}`;
+                this.updateWalletUI();
+                this.ui.mainScreen.classList.remove('hidden-element');
+                this.ui.restartControls.classList.add('hidden-element');
+                this.ui.message.classList.remove('visible');
+            }
+
+            updateWalletUI() {
+                this.ui.wallet.textContent = this.wallet;
+                this.updateVictoryButtonState();
+            }
+
+            updateVictoryButtonState() {
+                if (this.wallet >= WIN_GOAL) {
+                    this.ui.btnClaimVictory.classList.add('unlocked');
+                    this.ui.btnClaimVictory.innerHTML = '<span style="font-size: 1.5rem;">🔓</span><span>ACONSEGUIR LA PARTITURA!</span>';
+                } else {
+                    this.ui.btnClaimVictory.classList.remove('unlocked');
+                    this.ui.btnClaimVictory.innerHTML = '<span style="font-size: 1.5rem;">🔒</span><span>Aconseguir la partitura inèdita de l\'Himne de l\'Alegria</span>';
+                }
+            }
+
+            claimVictory() {
+                if (this.wallet >= WIN_GOAL) {
+                    this.ui.victoryModal.classList.remove('hidden-element');
+                    startConfetti();
+
+                    // Save Reward
+                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_blackjack'] = true;
+                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                    // Redirect to menu after a short delay or on modal close
+                    // For now, let's change the modal behavior or add a button there.
+                    // But user asked: "cuando consigas ganar un juego que te lleve al menú principal"
+                    // So we can redirect after a few seconds or change the modal button.
+
+                    // Let's modify the modal content dynamically or just redirect after confetti.
+                    setTimeout(() => {
+                        window.location.href = 'menu.html';
+                    }, 4000); // 4 seconds to see confetti
+                } else {
+                    alert("Encara no tens 10,000 Beethovens!");
+                }
+            }
+        }
+
+        // --- CONFETTI SYSTEM ---
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let confettiParticles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function startConfetti() {
+            confettiParticles = [];
+            for (let i = 0; i < 100; i++) {
+                confettiParticles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    size: Math.random() * 10 + 5,
+                    speed: Math.random() * 5 + 2,
+                    angle: Math.random() * 6.28
+                });
+            }
+            requestAnimationFrame(updateConfetti);
+        }
+
+        function updateConfetti() {
+            if (confettiParticles.length === 0) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            confettiParticles.forEach((p, index) => {
+                p.y += p.speed;
+                p.x += Math.sin(p.angle) * 2;
+                p.angle += 0.1;
+
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+
+                if (p.y > canvas.height) {
+                    confettiParticles.splice(index, 1);
+                }
+            });
+
+            if (confettiParticles.length > 0) {
+                requestAnimationFrame(updateConfetti);
+            }
+        }
+
+        // --- INICIAR JOC ---
+        const game = new Game();
+
+    </script>
+</body>
+
+</html>

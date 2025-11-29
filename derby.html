@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Gran Derby Rítmic</title>
+    <style>
+        :root {
+            --felt-green: #2d5a27;
+            --wood-mahogany: #4a3728;
+            --gold: #ffd700;
+            --track-dirt: #8b5a2b;
+            --text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* Main Game Container */
+        #game-cabinet {
+            width: 95vw;
+            height: 90vh;
+            background: radial-gradient(circle at center, var(--felt-green), #1a3c1a);
+            border: 25px solid var(--wood-mahogany);
+            border-radius: 20px;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 0, 0, 0.6);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Wood Texture Overlay */
+        #game-cabinet::after {
+            content: "";
+            position: absolute;
+            top: -25px;
+            left: -25px;
+            right: -25px;
+            bottom: -25px;
+            border: 25px solid rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            border-bottom: 4px solid var(--gold);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+            color: var(--gold);
+            text-shadow: var(--text-shadow);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* Race Track */
+        #racetrack {
+            flex: 1;
+            background: repeating-linear-gradient(90deg,
+                    var(--felt-green),
+                    var(--felt-green) 100px,
+                    #3e7a36 100px,
+                    #3e7a36 200px);
+            border: 8px solid var(--wood-mahogany);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 20px 0;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .lane {
+            height: 80px;
+            border-bottom: 2px dashed rgba(255, 255, 255, 0.3);
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .lane:last-child {
+            border-bottom: none;
+        }
+
+        .horse {
+            width: 80px;
+            height: 60px;
+            position: absolute;
+            right: 10px;
+            /* Start from Right */
+            transition: right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            /* Animate Right */
+            font-size: 3rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5));
+            z-index: 10;
+            transform: scaleX(1);
+            /* Ensure facing left (default for emoji is usually left-ish or neutral, but let's check) */
+        }
+
+        /* 
+           Note: 🏇 Jockey usually faces Left in standard emoji sets. 
+           If it faced right, we'd need scaleX(-1). 
+           Since we want Right -> Left movement, default is likely correct.
+        */
+
+        .horse-label {
+            position: absolute;
+            top: -20px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        #finish-line {
+            position: absolute;
+            left: 50px;
+            /* Finish line on Left */
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            background: repeating-linear-gradient(0deg,
+                    #fff,
+                    #fff 10px,
+                    #000 10px,
+                    #000 20px);
+            z-index: 5;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Control Panel */
+        #control-panel {
+            background: var(--wood-mahogany);
+            border-top: 5px solid var(--gold);
+            padding: 20px;
+            border-radius: 0 0 15px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        #challenge-display {
+            background: #000;
+            color: var(--gold);
+            font-family: 'Courier New', monospace;
+            font-size: 2rem;
+            padding: 10px 30px;
+            border: 2px solid #555;
+            border-radius: 5px;
+            box-shadow: 0 0 15px var(--gold);
+            text-align: center;
+            min-width: 400px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 10px var(--gold);
+            }
+
+            50% {
+                box-shadow: 0 0 25px var(--gold);
+            }
+
+            100% {
+                box-shadow: 0 0 10px var(--gold);
+            }
+        }
+
+        #buttons-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .rhythm-btn {
+            width: 130px;
+            /* Increased size */
+            height: 130px;
+            /* Increased size */
+            background: #f0f0f0;
+            border: 5px solid #ccc;
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 0 #999, 0 10px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.1s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rhythm-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #999, 0 5px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .rhythm-btn img {
+            width: 90%;
+            /* Increased size */
+            height: 90%;
+            /* Increased size */
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .rhythm-btn.correct {
+            background: #4caf50;
+            border-color: #2e7d32;
+        }
+
+        .rhythm-btn.wrong {
+            background: #f44336;
+            border-color: #c62828;
+            animation: shake 0.3s;
+        }
+
+        /* Volume Control */
+        .volume-control {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid var(--gold);
+        }
+
+        input[type=range] {
+            width: 100px;
+            accent-color: var(--gold);
+        }
+
+        /* Start Screen */
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #start-btn {
+            font-size: 2rem;
+            padding: 20px 50px;
+            background: var(--gold);
+            color: #000;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 0 30px var(--gold);
+        }
+
+        /* Reward Button */
+        #btn-reward {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: #888;
+            border: 2px solid #555;
+            padding: 10px 20px;
+            border-radius: 15px;
+            cursor: not-allowed;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            z-index: 100;
+            transition: all 0.5s ease;
+        }
+
+        #btn-reward.unlocked {
+            background: linear-gradient(to bottom, #ffd700, #b8860b);
+            color: #3e2723;
+            border-color: #fff;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        @keyframes shine {
+            0% {
+                filter: brightness(1);
+            }
+
+            50% {
+                filter: brightness(1.3);
+            }
+
+            100% {
+                filter: brightness(1);
+            }
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #222;
+            border: 5px solid var(--gold);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="start-screen">
+        <h1 style="margin-bottom: 50px;">EL GRAN DERBY RÍTMIC</h1>
+        <button id="start-btn" onclick="game.init()">COMENÇAR LA CURSA</button>
+    </div>
+
+    <!-- Audio -->
+    <audio id="bg-music" src="music/background_music_camellos.mp3" loop></audio>
+
+    <div id="game-cabinet">
+        <!-- Volume -->
+        <div class="volume-control">
+            <span id="volume-icon">🔊</span>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5"
+                oninput="game.setVolume(this.value)">
+        </div>
+
+        <!-- Reward -->
+        <button id="btn-reward" onclick="game.claimReward()">
+            <span style="font-size: 1.5rem;">🎻</span>
+            <span>Aconseguir l'arc del violí de Vivaldi (5 Victòries)</span>
+        </button>
+
+        <header>
+            <h1>EL GRAN DERBY RÍTMIC</h1>
+            <div style="font-size: 1.2rem; color: #aaa;">VICTÒRIES: <span id="wins-display"
+                    style="color: var(--gold); font-weight: bold;">0</span> / 5</div>
+        </header>
+
+        <div id="racetrack">
+            <div id="finish-line"></div>
+
+            <!-- Player Lane -->
+            <div class="lane" id="lane-player">
+                <div class="horse" id="horse-player" style="right: 10px;">
+                    🏇
+                    <div class="horse-label" style="color: #4fc3f7;">TU</div>
+                </div>
+            </div>
+
+            <!-- House Lane -->
+            <div class="lane" id="lane-house">
+                <div class="horse" id="horse-house" style="right: 10px;">
+                    🤖
+                    <div class="horse-label" style="color: #ff5252;">LA CASA</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="control-panel">
+            <div id="challenge-display">PREPARAT...</div>
+            <div id="buttons-container">
+                <!-- Buttons generated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modal-title" style="color: var(--gold);">RESULTAT</h2>
+            <p id="modal-msg" style="font-size: 1.5rem;"></p>
+            <button onclick="game.resetRace()"
+                style="padding: 10px 30px; font-size: 1.2rem; margin-top: 20px; cursor: pointer;">SEGÜENT CURSA</button>
+        </div>
+    </div>
+
+    <div id="reward-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">🎻 MAGNÍFIC! 🎻</h2>
+            <p>Has demostrat ser un mestre del ritme.</p>
+            <p>Aquí tens la teva recompensa:</p>
+            <h3 style="font-size: 2rem; margin: 20px 0;">L'Arc del Violí de Vivaldi</h3>
+            <div style="font-size: 5rem;">🎻✨</div>
+            <button onclick="document.getElementById('reward-modal').style.display='none'"
+                style="padding: 10px 30px; margin-top: 20px;">GRÀCIES MESTRE</button>
+        </div>
+    </div>
+
+    <script>
+        const NOTES = [
+            { name: "Rodona", value: 4, img: "images/rodona.jpg" },
+            { name: "Blanca", value: 2, img: "images/blanca.jpg" },
+            { name: "Negra", value: 1, img: "images/negra.jpg" },
+            { name: "Corxera", value: 0.5, img: "images/corxera.jpg" },
+            { name: "Semicorxera", value: 0.25, img: "images/semicorxera.jpg" }
+        ];
+
+        const CHALLENGES = [4, 2, 1, 0.5, 0.25];
+
+        class Game {
+            constructor() {
+                this.wins = 0;
+                this.isPlaying = false;
+                this.audioCtx = null;
+                this.currentChallenge = 0;
+                this.playerPos = 10; // Distance from RIGHT
+                this.housePos = 10;  // Distance from RIGHT
+                this.finishLine = 0;
+                this.houseSpeed = 0.5;
+                this.houseInterval = null;
+                this.rewardUnlocked = false;
+                this.volume = 0.5;
+            }
+
+            init() {
+                document.getElementById('start-screen').style.display = 'none';
+                this.initAudio();
+                this.setVolume(this.volume);
+
+                // Play background music
+                const bgMusic = document.getElementById('bg-music');
+                bgMusic.volume = this.volume;
+                bgMusic.play().catch(e => console.log("Audio play failed", e));
+
+                this.resetRace();
+
+                const trackWidth = document.getElementById('racetrack').offsetWidth;
+                // Finish line is at left: 50px. 
+                // Total width - 50px (finish line left) - 80px (horse width) = Distance from right to finish
+                this.finishLine = trackWidth - 130;
+            }
+
+            initAudio() {
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            setVolume(val) {
+                this.volume = val;
+                const icon = document.getElementById('volume-icon');
+                const bgMusic = document.getElementById('bg-music');
+
+                if (bgMusic) bgMusic.volume = val;
+
+                if (val == 0) icon.textContent = "🔇";
+                else if (val < 0.5) icon.textContent = "🔉";
+                else icon.textContent = "🔊";
+            }
+
+            playTone(freq, type, duration) {
+                if (!this.audioCtx) return;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+                gain.gain.setValueAtTime(this.volume * 0.2, this.audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+                osc.start();
+                osc.stop(this.audioCtx.currentTime + duration);
+            }
+
+            playFanfare() {
+                [523, 659, 783, 1046].forEach((f, i) => {
+                    setTimeout(() => this.playTone(f, 'trumpet', 0.3), i * 150);
+                });
+            }
+
+            playGallop() {
+                if (!this.audioCtx) return;
+                const bufferSize = this.audioCtx.sampleRate * 0.1;
+                const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+                const noise = this.audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const gain = this.audioCtx.createGain();
+                gain.gain.value = this.volume * 0.3;
+                noise.connect(gain);
+                gain.connect(this.audioCtx.destination);
+                noise.start();
+            }
+
+            resetRace() {
+                document.getElementById('modal-overlay').style.display = 'none';
+                this.isPlaying = true;
+                this.playerPos = 10;
+                this.housePos = 10;
+                this.updatePositions();
+
+                const trackWidth = document.getElementById('racetrack').offsetWidth;
+                this.finishLine = trackWidth - 130;
+
+                this.playFanfare();
+                this.generateChallenge();
+                this.startHouseAI();
+            }
+
+            updatePositions() {
+                // Using 'right' property now
+                document.getElementById('horse-player').style.right = this.playerPos + 'px';
+                document.getElementById('horse-house').style.right = this.housePos + 'px';
+            }
+
+            startHouseAI() {
+                if (this.houseInterval) clearInterval(this.houseInterval);
+
+                // Difficulty Progression
+                // Level 0 (0 wins): Very slow, high mistake chance
+                // Level 5 (5 wins): Faster, low mistake chance
+                const baseSpeed = 0.3 + (this.wins * 0.1); // Starts at 0.3, max 0.8
+                const mistakeChance = Math.max(0.05, 0.3 - (this.wins * 0.05)); // Starts at 30%, min 5%
+
+                this.houseInterval = setInterval(() => {
+                    if (!this.isPlaying) return;
+
+                    // AI Mistake Logic
+                    if (Math.random() < mistakeChance) {
+                        // AI Stumbles (pauses for a bit)
+                        return;
+                    }
+
+                    // Random speed variation
+                    const speed = baseSpeed + (Math.random() * 0.5);
+                    this.housePos += speed;
+                    this.updatePositions();
+
+                    if (this.housePos >= this.finishLine) {
+                        this.endRace('house');
+                    }
+                }, 50);
+            }
+
+            generateChallenge() {
+                if (!this.isPlaying) return;
+
+                this.currentChallenge = CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)];
+                document.getElementById('challenge-display').textContent = `IMPULS NECESSARI: ${this.currentChallenge} TEMPS!`;
+
+                const container = document.getElementById('buttons-container');
+                container.innerHTML = '';
+
+                // Show ALL 5 notes, shuffled
+                let options = [...NOTES];
+                options.sort(() => Math.random() - 0.5);
+
+                options.forEach(note => {
+                    const btn = document.createElement('div');
+                    btn.className = 'rhythm-btn';
+                    btn.innerHTML = `<img src="${note.img}" alt="${note.name}">`;
+                    btn.onclick = () => this.checkAnswer(note, btn);
+                    container.appendChild(btn);
+                });
+            }
+
+            checkAnswer(note, btnElement) {
+                if (!this.isPlaying) return;
+
+                if (this.audioCtx && this.audioCtx.state === 'suspended') this.audioCtx.resume();
+
+                if (note.value === this.currentChallenge) {
+                    this.playGallop();
+                    this.playerPos += 50;
+                    this.updatePositions();
+                    btnElement.classList.add('correct');
+
+                    if (this.playerPos >= this.finishLine) {
+                        this.endRace('player');
+                    } else {
+                        setTimeout(() => this.generateChallenge(), 200);
+                    }
+                } else {
+                    this.playTone(150, 'sawtooth', 0.3);
+                    btnElement.classList.add('wrong');
+                    setTimeout(() => btnElement.classList.remove('wrong'), 300);
+                }
+            }
+
+            endRace(winner) {
+                this.isPlaying = false;
+                clearInterval(this.houseInterval);
+
+                const modal = document.getElementById('modal-overlay');
+                const title = document.getElementById('modal-title');
+                const msg = document.getElementById('modal-msg');
+
+                modal.style.display = 'flex';
+
+                if (winner === 'player') {
+                    this.playFanfare();
+                    title.textContent = "VICTÒRIA!";
+                    title.style.color = "#4caf50";
+                    msg.textContent = "El teu cavall ha creuat la meta primer!";
+                    this.wins++;
+                    this.updateWins();
+                } else {
+                    this.playTone(100, 'sawtooth', 1);
+                    title.textContent = "DERROTA...";
+                    title.style.color = "#f44336";
+                    msg.textContent = "La Casa t'ha guanyat aquesta vegada.";
+                }
+            }
+
+            updateWins() {
+                document.getElementById('wins-display').textContent = this.wins;
+
+                if (this.wins >= 5 && !this.rewardUnlocked) {
+                    this.rewardUnlocked = true;
+                    const btn = document.getElementById('btn-reward');
+                    btn.classList.add('unlocked');
+                    btn.onclick = () => document.getElementById('reward-modal').style.display = 'flex';
+                }
+            }
+
+            claimReward() {
+                if (this.rewardUnlocked) {
+                    document.getElementById('reward-modal').style.display = 'flex';
+                }
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

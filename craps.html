@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Craps Rítmic</title>
+    <style>
+        :root {
+            --felt: #006400;
+            --felt-light: #008000;
+            --white: #fff;
+            --red: #d00;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        #ui-bar>* {
+            pointer-events: auto;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: gold;
+            border: 1px solid gold;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+            transition: all 0.2s;
+        }
+
+        .btn-menu:hover {
+            background: gold;
+            color: #000;
+        }
+
+        #table {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: var(--felt);
+            border: 20px solid #4a2c15;
+            box-shadow: inset 0 0 100px #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Betting Zones */
+        #betting-area {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .zone {
+            width: 200px;
+            height: 150px;
+            border: 4px solid var(--white);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .zone:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .zone.selected {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: gold;
+            transform: scale(1.05);
+        }
+
+        .zone h2 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .zone p {
+            margin: 5px 0;
+            font-size: 1rem;
+            color: #ddd;
+        }
+
+        .payout {
+            font-weight: bold;
+            color: gold;
+        }
+
+        /* Dice Area */
+        #deck-area {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-direction: row-reverse;
+            /* Put Discard (first in DOM?) to left? No, let's reorder HTML or use order */
+        }
+
+        .die {
+            width: 100px;
+            height: 100px;
+            background: rgba(220, 20, 60, 0.8);
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            transition: transform 0.5s;
+        }
+
+        .die img {
+            width: 70px;
+            height: 70px;
+        }
+
+        /* UI */
+        #hud {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            font-size: 1.5rem;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 50px;
+        }
+
+        .btn {
+            padding: 20px 60px;
+            font-size: 2rem;
+            background: gold;
+            color: #000;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 0 #b8860b;
+        }
+
+        .btn:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+
+        .btn:disabled {
+            background: #555;
+            color: #888;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: #2a0a10;
+            padding: 40px;
+            border: 4px double gold;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+            color: #fff;
+            box-shadow: 0 0 50px gold;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+
+        @keyframes shake {
+            0% {
+                transform: rotate(0deg) translate(0, 0);
+            }
+
+            25% {
+                transform: rotate(10deg) translate(5px, 5px);
+            }
+
+            50% {
+                transform: rotate(-10deg) translate(-5px, -5px);
+            }
+
+            75% {
+                transform: rotate(5deg) translate(5px, -5px);
+            }
+
+            100% {
+                transform: rotate(0deg) translate(0, 0);
+            }
+        }
+
+        .shaking {
+            animation: shake 0.5s infinite;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:gold;">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color:gold;">
+        </div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="table">
+        <div id="hud">
+            <div>FITXES: <span id="chips">500</span></div>
+            <div>OBJECTIU: 2000</div>
+        </div>
+
+        <div id="betting-area">
+            <div class="zone" id="zone-a" onclick="selectZone('A')">
+                <h2>BAIXA</h2>
+                <p>
+                    < 1.5 Temps</p>
+                        <span class="payout">PAGA x2</span>
+            </div>
+            <div class="zone" id="zone-b" onclick="selectZone('B')">
+                <h2>MITJANA</h2>
+                <p>1.5 - 2.5 Temps</p>
+                <span class="payout">PAGA x3</span>
+            </div>
+            <div class="zone" id="zone-c" onclick="selectZone('C')">
+                <h2>ALTA</h2>
+                <p>> 2.5 Temps</p>
+                <span class="payout">PAGA x4</span>
+            </div>
+        </div>
+
+        <div id="deck-area">
+            <div id="deck" onclick="drawCard()">
+                <div class="card-back"></div>
+            </div>
+            <button id="discard-btn" onclick="discardCard()">DESCARTAR</button>
+            <div id="drawn-card"></div>
+        </div>
+
+        <div id="controls">
+            <button id="bonus-btn" class="btn" style="background: #ff4500; color: #fff; margin-right: 20px;"
+                onclick="openBonus()">BONUS</button>
+            <button id="roll-btn" class="btn" onclick="rollDice()" disabled>LLANÇAR!</button>
+        </div>
+    </div>
+
+    <!-- Start Modal -->
+    <div id="start-modal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2 style="color: gold;">CRAPS RÍTMIC</h2>
+            <p>Aposta a la suma total de les notes dels daus.</p>
+            <p>Arriba a 2000 fitxes per guanyar.</p>
+            <button class="btn" onclick="startGame()">ENTRAR</button>
+        </div>
+    </div>
+
+    <!-- Bonus Modal -->
+    <div id="bonus-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #ff4500;">PREGUNTA BONUS</h2>
+            <p id="bonus-q">...</p>
+            <div id="bonus-options" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Options -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: gold;">LA FORÇA DEL DESTÍ!</h2>
+            <div class="relic-icon">🎩</div>
+            <p style="font-size: 1.5rem; color: #dcb;">"EL BARRET DE COPA DE VERDI"</p>
+            <p>Giuseppe Verdi era un home d'elegància i poder. Símbol de l'època daurada de l'òpera.</p>
+            <button class="btn" onclick="location.reload()">TORNAR</button>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="result-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="res-title">...</h2>
+            <p id="res-msg">...</p>
+            <button class="btn" onclick="closeResult()">CONTINUAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_craps.mp3" loop></audio>
+    <script>
+        // Background Music
+        document.body.addEventListener('click', () => {
+            const bgMusic = document.getElementById('bg-music');
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        const FACES = [
+            { val: 0.25, img: 'images/semicorxera.jpg' },
+            { val: 0.5, img: 'images/corxera.jpg' },
+            { val: 0.5, img: 'images/corxera.jpg' }, // Weighted
+            { val: 1, img: 'images/negra.jpg' },
+            { val: 1, img: 'images/negra.jpg' }, // Weighted
+            { val: 2, img: 'images/blanca.jpg' }
+        ];
+
+        let chips = 500;
+        let selectedZone = null;
+        let betAmount = 100; // Fixed bet for simplicity
+        let currentMultiplier = 1; // Default 1x
+        let bonusActive = false;
+
+        const QUESTIONS = [
+            { q: "Quant val una Rodona?", a: ["4 Temps", "2 Temps", "1 Temps", "0.5 Temps"], correct: 0 },
+            { q: "Quant val una Blanca?", a: ["4 Temps", "2 Temps", "1 Temps", "0.5 Temps"], correct: 1 },
+            { q: "Quant val una Negra?", a: ["2 Temps", "1 Temps", "0.5 Temps", "0.25 Temps"], correct: 1 },
+            { q: "Quant val una Corxera?", a: ["1 Temps", "0.5 Temps", "0.25 Temps", "2 Temps"], correct: 1 },
+            { q: "Dues Negres sumen...", a: ["2 Temps", "1 Temps", "3 Temps", "4 Temps"], correct: 0 }
+        ];
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'shake') {
+                // Noise
+                const bufferSize = audioCtx.sampleRate * 0.5;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                noise.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                noise.start();
+            } else if (type === 'win') {
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            }
+        }
+
+        function startGame() {
+            document.getElementById('start-modal').style.display = 'none';
+        }
+
+        function selectZone(zone) {
+            if (chips < betAmount) {
+                alert("No tens prous fitxes!");
+                return;
+            }
+
+            // Deselect all
+            document.querySelectorAll('.zone').forEach(el => el.classList.remove('selected'));
+
+            selectedZone = zone;
+            document.getElementById(`zone-${zone.toLowerCase()}`).classList.add('selected');
+            document.getElementById('roll-btn').disabled = false;
+        }
+
+        function openBonus() {
+            if (bonusActive) return; // Already used
+            const q = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+            document.getElementById('bonus-q').textContent = q.q;
+            const opts = document.getElementById('bonus-options');
+            opts.innerHTML = '';
+
+            q.a.forEach((ans, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.style.fontSize = '1rem';
+                btn.style.padding = '10px';
+                btn.textContent = ans;
+                btn.onclick = () => checkBonus(idx === q.correct);
+                opts.appendChild(btn);
+            });
+
+            document.getElementById('bonus-modal').style.display = 'flex';
+        }
+
+        function checkBonus(correct) {
+            document.getElementById('bonus-modal').style.display = 'none';
+            if (correct) {
+                currentMultiplier = 2; // Double payout chance? Or just multiplier on win?
+                // User said: "se usa ul multiplicador que hace que haya mas posibilidades de salir lo que tu has apretado"
+                // This implies rigging the dice, not just payout multiplier.
+                // Let's implement "Lucky Dice": higher chance for the selected zone.
+                alert("CORRECTE! Daus de la sort activats (Major probabilitat)!");
+                bonusActive = true;
+                document.getElementById('bonus-btn').disabled = true;
+                document.getElementById('bonus-btn').style.background = '#555';
+            } else {
+                alert("INCORRECTE... Daus normals.");
+            }
+        }
+
+        function rollDice() {
+            chips -= betAmount;
+            document.getElementById('chips').textContent = chips;
+            document.getElementById('roll-btn').disabled = true;
+
+            const d1 = document.getElementById('die1');
+            const d2 = document.getElementById('die2');
+
+            d1.classList.add('shaking');
+            d2.classList.add('shaking');
+            playSound('shake');
+
+            setTimeout(() => {
+                d1.classList.remove('shaking');
+                d2.classList.remove('shaking');
+
+                let r1, r2;
+
+                if (bonusActive && selectedZone) {
+                    // Rigged Logic
+                    // Try 3 times to get a result that matches selectedZone
+                    for (let i = 0; i < 3; i++) {
+                        r1 = FACES[Math.floor(Math.random() * FACES.length)];
+                        r2 = FACES[Math.floor(Math.random() * FACES.length)];
+                        const sum = r1.val + r2.val;
+                        let matches = false;
+                        if (selectedZone === 'A' && sum < 1.5) matches = true;
+                        else if (selectedZone === 'B' && sum >= 1.5 && sum <= 2.5) matches = true;
+                        else if (selectedZone === 'C' && sum > 2.5) matches = true;
+
+                        if (matches) break; // Found a good roll
+                    }
+                    bonusActive = false; // Reset bonus
+                    document.getElementById('bonus-btn').disabled = false;
+                    document.getElementById('bonus-btn').style.background = '#ff4500';
+                } else {
+                    r1 = FACES[Math.floor(Math.random() * FACES.length)];
+                    r2 = FACES[Math.floor(Math.random() * FACES.length)];
+                }
+
+                d1.innerHTML = `<img src="${r1.img}">`;
+                d2.innerHTML = `<img src="${r2.img}">`;
+
+                checkResult(r1.val + r2.val);
+            }, 1000);
+        }
+
+        function checkResult(sum) {
+            let win = false;
+            let multiplier = 0;
+
+            if (selectedZone === 'A' && sum < 1.5) { win = true; multiplier = 2; }
+            else if (selectedZone === 'B' && sum >= 1.5 && sum <= 2.5) { win = true; multiplier = 3; }
+            else if (selectedZone === 'C' && sum > 2.5) { win = true; multiplier = 4; }
+
+            let msg = `Suma: ${sum} Temps.`;
+            if (win) {
+                const winnings = betAmount * multiplier;
+                chips += winnings;
+                msg += ` GUANYES ${winnings} fitxes!`;
+                playSound('win');
+                document.getElementById('res-title').textContent = "VICTÒRIA!";
+                document.getElementById('res-title').style.color = "gold";
+            } else {
+                msg += " Has perdut l'aposta.";
+                document.getElementById('res-title').textContent = "DERROTA";
+                document.getElementById('res-title').style.color = "red";
+            }
+
+            document.getElementById('chips').textContent = chips;
+            document.getElementById('res-msg').textContent = msg;
+
+            setTimeout(() => {
+                if (chips >= 2000) {
+                    // Save Reward
+                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_craps'] = true;
+                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    document.getElementById('win-modal').style.display = 'flex';
+                } else if (chips <= 0) {
+                    alert("Has perdut totes les fitxes! Reiniciant...");
+                    location.reload();
+                } else {
+                    document.getElementById('result-modal').style.display = 'flex';
+                }
+            }, 1000);
+        }
+
+        function closeResult() {
+            document.getElementById('result-modal').style.display = 'none';
+            document.querySelectorAll('.zone').forEach(el => el.classList.remove('selected'));
+            selectedZone = null;
+        }
+    </script>
+</body>
+
+</html>

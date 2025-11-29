@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Màquina de Ritmes</title>
+    <style>
+        :root {
+            --gold: #ffd700;
+            --leather: #1a1a1a;
+            --panel: #222;
+            --led-on-yellow: #ffff00;
+            --led-off-yellow: #555500;
+            --led-on-blue: #00ffff;
+            --led-off-blue: #005555;
+            --led-on-red: #ff0000;
+            --led-off-red: #550000;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+            background-image: radial-gradient(circle, #333, #000);
+        }
+
+        /* Header / UI Controls */
+        #ui-bar {
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid var(--gold);
+            z-index: 100;
+        }
+
+        .ui-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn-menu:hover {
+            background: var(--gold);
+            color: #000;
+        }
+
+        input[type=range] {
+            accent-color: var(--gold);
+        }
+
+        /* Main Machine */
+        #machine-container {
+            margin-top: 20px;
+            background: var(--leather);
+            border: 10px solid #444;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), inset 0 0 100px #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Score / Sheet Music */
+        #score-display {
+            background: #fff;
+            border: 5px solid var(--gold);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        #score-img {
+            height: 100px;
+            display: block;
+        }
+
+        /* Sequencer Grid */
+        #sequencer {
+            display: grid;
+            grid-template-columns: 80px repeat(16, 1fr);
+            gap: 5px;
+            background: #111;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #555;
+            position: relative;
+        }
+
+        .track-label {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            font-weight: bold;
+            color: #aaa;
+            font-size: 0.8rem;
+        }
+
+        .step {
+            width: 30px;
+            height: 40px;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: inset 0 0 5px #000;
+            transition: background 0.1s;
+        }
+
+        /* Step Colors */
+        .step.hihat.active {
+            background: var(--led-on-yellow);
+            box-shadow: 0 0 10px var(--led-on-yellow);
+        }
+
+        .step.snare.active {
+            background: var(--led-on-blue);
+            box-shadow: 0 0 10px var(--led-on-blue);
+        }
+
+        .step.kick.active {
+            background: var(--led-on-red);
+            box-shadow: 0 0 10px var(--led-on-red);
+        }
+
+        /* Beat Markers (every 4) */
+        .step:nth-child(4n + 2) {
+            margin-right: 5px;
+            /* Visual separation for beats */
+        }
+
+        /* Playhead */
+        #playhead {
+            position: absolute;
+            top: 0;
+            left: 85px;
+            /* Offset for labels */
+            width: 2px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+            display: none;
+        }
+
+        /* Controls */
+        #controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 30px;
+        }
+
+        .btn-control {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #555;
+            background: radial-gradient(circle, #444, #222);
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 10px #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            text-transform: uppercase;
+            transition: transform 0.1s;
+        }
+
+        .btn-control:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 5px #000;
+        }
+
+        .btn-play {
+            border-color: #0f0;
+            color: #0f0;
+        }
+
+        .btn-check {
+            border-color: var(--gold);
+            color: var(--gold);
+            width: 120px;
+            border-radius: 20px;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            padding: 50px;
+            border: 4px solid var(--gold);
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            box-shadow: 0 0 50px var(--gold);
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+
+        .btn-modal {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: var(--gold);
+            color: #000;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div class="ui-group">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5">
+        </div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="machine-container">
+        <div style="color:var(--gold); font-size:1.5rem; margin-bottom:10px; font-weight:bold;">ESTUDI DE GRAVACIÓ:
+            NIVELL <span id="level-display">1</span></div>
+
+        <div id="score-display">
+            <img id="score-img" src="images/bateria1.png" alt="Partitura">
+        </div>
+
+        <div id="sequencer">
+            <div id="playhead"></div>
+
+            <!-- Labels -->
+            <div class="track-label">HI-HAT</div>
+            <!-- 16 Steps HiHat -->
+            <!-- Generated by JS -->
+
+            <div class="track-label">CAIXA</div>
+            <!-- 16 Steps Snare -->
+
+            <div class="track-label">BOMBO</div>
+            <!-- 16 Steps Kick -->
+        </div>
+
+        <div id="controls">
+            <button class="btn-control btn-play" onclick="togglePlay()">▶ PLAY</button>
+            <button class="btn-control btn-check" onclick="checkPattern()">APOSTAR</button>
+        </div>
+    </div>
+
+    <!-- Start Modal -->
+    <div id="start-modal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">LA MÀQUINA DE RITMES</h2>
+            <p>Benvingut a l'Estudi de Gravació.</p>
+            <p>Llegeix la partitura i programa el ritme a la màquina.</p>
+            <p>Tens 5 NIVELLS per demostrar el teu talent.</p>
+            <button class="btn-modal" onclick="startGame()">ENTRAR</button>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">LA PERCUSSIÓ TOTAL!</h2>
+            <div class="relic-icon">🥁</div>
+            <p style="font-size: 1.5rem; color: var(--gold);">"LES TIMBALES D'HECTOR BERLIOZ"</p>
+            <p>Berlioz va ser un revolucionari del ritme. Al seu 'Rèquiem' demana 16 timbales tocant alhora!</p>
+            <button class="btn-modal" onclick="location.reload()">TORNAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_cajaderitmos.mp3" loop></audio>
+    <script>
+        // Background Music
+        document.body.addEventListener('click', () => {
+            const bgMusic = document.getElementById('bg-music');
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        // Game Data
+        const LEVELS = [
+            {
+                img: 'images/bateria1.png', // Ritme Bàsic
+                hihat: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0], // Corxeres
+                snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], // 2 i 4
+                kick: [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]  // 1 i 3
+            },
+            {
+                img: 'images/bateria2.png', // Variació Bombo
+                hihat: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+                snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                kick: [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]  // 1, 1-i, 3
+            },
+            {
+                img: 'images/bateria3.png', // Bombo a contratemps
+                hihat: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+                snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                kick: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]  // 1 i 3-i
+            },
+            {
+                img: 'images/bateria4.png', // Sincopa
+                hihat: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+                snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                kick: [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]  // 1, 2-i, 3
+            },
+            {
+                img: 'images/bateria5.png', // Doble Bombo
+                hihat: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+                snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                kick: [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0]  // 1, 1-i, 3, 3-i
+            }
+        ];
+
+        let currentLevel = 0;
+        let isPlaying = false;
+        let currentStep = 0;
+        let intervalId = null;
+        const BPM = 100;
+        const stepTime = (60 / BPM) / 4 * 1000; // 16th notes
+
+        // Grid State [row][col] (0=HiHat, 1=Snare, 2=Kick)
+        let grid = [
+            new Array(16).fill(0),
+            new Array(16).fill(0),
+            new Array(16).fill(0)
+        ];
+
+        function init() {
+            renderGrid();
+            loadLevel(0);
+        }
+
+        function renderGrid() {
+            const container = document.getElementById('sequencer');
+            // Clear existing steps (keep labels and playhead)
+            // Actually, simpler to rebuild structure or append.
+            // Let's assume structure is fixed: Label, 16 divs, Label, 16 divs...
+            // But CSS Grid is defined. We need to inject divs in correct order.
+
+            // Clear only step divs? No, let's rebuild innerHTML carefully or just append.
+            // We have 3 rows.
+            const rows = ['hihat', 'snare', 'kick'];
+
+            // Clear container but save playhead
+            container.innerHTML = '<div id="playhead"></div>';
+
+            rows.forEach((type, rowIdx) => {
+                // Label
+                const label = document.createElement('div');
+                label.className = 'track-label';
+                label.textContent = type.toUpperCase();
+                container.appendChild(label);
+
+                // 16 Steps
+                for (let i = 0; i < 16; i++) {
+                    const step = document.createElement('div');
+                    step.className = `step ${type}`;
+                    step.dataset.row = rowIdx;
+                    step.dataset.col = i;
+                    step.onclick = () => toggleStep(rowIdx, i, step);
+                    container.appendChild(step);
+                }
+            });
+        }
+
+        function toggleStep(r, c, el) {
+            grid[r][c] = grid[r][c] ? 0 : 1;
+            if (grid[r][c]) el.classList.add('active');
+            else el.classList.remove('active');
+
+            // Play sound immediately for feedback?
+            if (grid[r][c]) playSound(r);
+        }
+
+        function loadLevel(lvl) {
+            currentLevel = lvl;
+            document.getElementById('level-display').textContent = lvl + 1;
+            document.getElementById('score-img').src = LEVELS[lvl].img;
+
+            // Clear Grid
+            grid = [
+                new Array(16).fill(0),
+                new Array(16).fill(0),
+                new Array(16).fill(0)
+            ];
+            document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+        }
+
+        function startGame() {
+            document.getElementById('start-modal').style.display = 'none';
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        // --- AUDIO ENGINE ---
+        function playSound(row) {
+            const vol = document.getElementById('volume').value;
+            const t = audioCtx.currentTime;
+
+            if (row === 2) { // KICK
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.frequency.setValueAtTime(150, t);
+                osc.frequency.exponentialRampToValueAtTime(0.01, t + 0.5);
+                gain.gain.setValueAtTime(vol, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(t);
+                osc.stop(t + 0.5);
+            } else if (row === 1) { // SNARE
+                const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < noiseBuffer.length; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = noiseBuffer;
+                const noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'highpass';
+                noiseFilter.frequency.value = 1000;
+                const noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(vol, t);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                noise.start(t);
+            } else if (row === 0) { // HI-HAT
+                // High freq noise
+                const bufferSize = audioCtx.sampleRate * 0.05;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 5000;
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(vol * 0.3, t); // Lower vol
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                noise.start(t);
+            }
+        }
+
+        // --- SEQUENCER ---
+        function togglePlay() {
+            if (isPlaying) {
+                stop();
+            } else {
+                play();
+            }
+        }
+
+        function play() {
+            isPlaying = true;
+            document.querySelector('.btn-play').textContent = "⬛ STOP";
+            document.getElementById('playhead').style.display = 'block';
+            currentStep = 0;
+            scheduleNextStep();
+        }
+
+        function stop() {
+            isPlaying = false;
+            document.querySelector('.btn-play').textContent = "▶ PLAY";
+            document.getElementById('playhead').style.display = 'none';
+            clearTimeout(intervalId);
+        }
+
+        function scheduleNextStep() {
+            if (!isPlaying) return;
+
+            // Play sounds for current step
+            if (grid[0][currentStep]) playSound(0);
+            if (grid[1][currentStep]) playSound(1);
+            if (grid[2][currentStep]) playSound(2);
+
+            // Move Playhead (Visual)
+            // Grid is 80px label + 16 * (30px + 5px gap) = 80 + 560 = 640px total width approx.
+            // Grid template columns: 80px repeat(16, 1fr).
+            // We need to find the exact left position of column 'currentStep'.
+            // 80px (label) + currentStep * (width of 1fr + gap).
+            // Let's assume the grid fills the container width or has fixed width.
+            // Better: select the step element and get its position.
+            const stepEl = document.querySelector(`.step[data-col="${currentStep}"]`);
+            if (stepEl) {
+                const containerRect = document.getElementById('sequencer').getBoundingClientRect();
+                const stepRect = stepEl.getBoundingClientRect();
+                const relativeLeft = stepRect.left - containerRect.left;
+                document.getElementById('playhead').style.left = relativeLeft + 'px';
+                document.getElementById('playhead').style.width = stepRect.width + 'px'; // Highlight whole step
+            }
+
+            currentStep = (currentStep + 1) % 16;
+            intervalId = setTimeout(scheduleNextStep, stepTime);
+        }
+
+        // --- VALIDATION ---
+        function checkPattern() {
+            const target = LEVELS[currentLevel];
+
+            // Check HiHat
+            const hhOk = JSON.stringify(grid[0]) === JSON.stringify(target.hihat);
+            const snOk = JSON.stringify(grid[1]) === JSON.stringify(target.snare);
+            const kiOk = JSON.stringify(grid[2]) === JSON.stringify(target.kick);
+
+            if (hhOk && snOk && kiOk) {
+                // Win Level
+                stop();
+                // Play Win Sound
+                const osc = audioCtx.createOscillator();
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.5);
+                osc.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+
+                alert("JACKPOT! RITME CORRECTE!");
+
+                if (currentLevel < LEVELS.length - 1) {
+                    loadLevel(currentLevel + 1);
+                } else {
+                    // Game Win
+                    // Save Reward
+                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_cajaderitmos'] = true;
+                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    document.getElementById('win-modal').style.display = 'flex';
+                }
+            } else {
+                alert("Ritme incorrecte, torna-ho a intentar.");
+            }
+        }
+
+        // Init
+        init();
+
+    </script>
+</body>
+
+</html>
