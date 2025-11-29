@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Mesa del Vals</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
+
+        :root {
+            --felt-red: #800000;
+            --gold: #ffd700;
+            --card-w: 90px;
+            --card-h: 130px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a0505;
+            font-family: 'Dancing Script', cursive;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            font-size: 1.5rem;
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Table */
+        #table {
+            position: relative;
+            width: 90%;
+            height: 80%;
+            background: radial-gradient(circle, var(--felt-red), #3e0000);
+            border: 15px solid #5d4037;
+            border-radius: 50px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        /* Track */
+        #track {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 50px;
+        }
+
+        .track-cell {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            font-size: 1.2rem;
+            position: relative;
+        }
+
+        .track-cell.finish {
+            border-color: white;
+            background: repeating-linear-gradient(45deg, black, black 5px, white 5px, white 10px);
+        }
+
+        .piece {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            position: absolute;
+            transition: left 0.5s ease-in-out;
+            box-shadow: 0 0 10px black;
+        }
+
+        .piece.p1 {
+            background: #007bff;
+            top: -10px;
+            border: 2px solid white;
+        }
+
+        .piece.p2 {
+            background: #dc3545;
+            bottom: -10px;
+            border: 2px solid white;
+        }
+
+        /* Hand */
+        #hand-area {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            height: 150px;
+        }
+
+        .card {
+            width: var(--card-w);
+            height: var(--card-h);
+            background: white;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 3px solid transparent;
+        }
+
+        .card.selected {
+            border-color: var(--gold);
+            transform: translateY(-20px);
+        }
+
+        .card img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        /* Controls */
+        #controls {
+            text-align: center;
+        }
+
+        .action-btn {
+            padding: 10px 40px;
+            font-size: 1.5rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Dancing Script', cursive;
+            font-weight: bold;
+            color: #1a0505;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+        <div style="font-size:1.5rem;">SUMA: <span id="sum-display">0</span>/3.0</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="table">
+        <div id="track">
+            <!-- Injected -->
+        </div>
+
+        <div id="controls">
+            <button class="action-btn" onclick="game.playTurn()">BALLAR (DESCARTAR)</button>
+            <div style="margin-top:10px; color:#aaa;" id="status-msg">Selecciona cartes que sumin 3.0</div>
+        </div>
+
+        <div id="hand-area">
+            <!-- Cards -->
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR A "LA MESA DEL VALS"</h2>
+            <p>1. Arriba a la meta (Casella 20) abans que la IA.</p>
+            <p>2. Per avançar 3 caselles, has de descartar cartes que sumin <strong>EXACTAMENT 3.0 TEMPS</strong>.</p>
+            <p>3. Ex: Blanca (2) + Negra (1) = 3.0.</p>
+            <p>4. Si no pots sumar 3.0, descarta qualsevol carta per robar-ne de noves.</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">LA GRÀCIA DEL COMPÀS TERNARI!</h2>
+            <div class="relic-icon">🎼</div>
+            <h3 style="color: var(--gold);">LA PARTITURA DEL MINUET DE MOZART</h3>
+            <p style="font-style: italic; color: #aaa;">"La partitura d'un dels minuetos més famosos de Mozart. El
+                Minuet és el ball més elegant del compàs de tres temps."</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <!-- Lose Modal -->
+    <div id="lose-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: red;">HAS PERDUT!</h2>
+            <p>La IA ha arribat primer al final del ball.</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR A PROVAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'move') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(600, now + 0.2);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start();
+                osc.stop(now + 0.2);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(50, now + 0.2);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start();
+                osc.stop(now + 0.2);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        const CARDS = [
+            { val: 4, img: 'images/rodona.jpg' },
+            { val: 2, img: 'images/blanca.jpg' },
+            { val: 1, img: 'images/negra.jpg' },
+            { val: 0.5, img: 'images/corxera.jpg' },
+            { val: 0.25, img: 'images/semicorxera.jpg' },
+            { val: 4, img: 'images/silencirodona.jpg' },
+            { val: 2, img: 'images/silenciblanca.jpg' },
+            { val: 1, img: 'images/silencinegra.jpg' },
+            { val: 0.5, img: 'images/silencicorxera.jpg' }
+        ];
+
+        class Game {
+            constructor() {
+                this.deck = [];
+                this.pHand = [];
+                this.cHand = [];
+                this.pPos = 0;
+                this.cPos = 0;
+                this.selectedIndices = new Set();
+                this.gameOver = false;
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.initTrack();
+                this.createDeck();
+                this.deal();
+                this.render();
+            }
+
+            initTrack() {
+                const track = document.getElementById('track');
+                track.innerHTML = '';
+                for (let i = 0; i < 20; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'track-cell';
+                    if (i === 19) cell.classList.add('finish');
+                    cell.textContent = i + 1;
+
+                    if (i === 0) {
+                        cell.innerHTML += '<div class="piece p1" id="p1-piece"></div><div class="piece p2" id="p2-piece"></div>';
+                    }
+                    track.appendChild(cell);
+                }
+            }
+
+            createDeck() {
+                this.deck = [];
+                // 10 copies of each
+                CARDS.forEach(c => {
+                    for (let i = 0; i < 10; i++) this.deck.push({ ...c, uid: Math.random() });
+                });
+                this.deck.sort(() => Math.random() - 0.5);
+            }
+
+            deal() {
+                while (this.pHand.length < 5 && this.deck.length > 0) this.pHand.push(this.deck.pop());
+                while (this.cHand.length < 5 && this.deck.length > 0) this.cHand.push(this.deck.pop());
+            }
+
+            toggleCard(idx) {
+                if (this.selectedIndices.has(idx)) this.selectedIndices.delete(idx);
+                else this.selectedIndices.add(idx);
+                this.render();
+            }
+
+            playTurn() {
+                if (this.gameOver) return;
+
+                const selected = Array.from(this.selectedIndices).map(i => this.pHand[i]);
+                const sum = selected.reduce((a, b) => a + b.val, 0);
+
+                if (Math.abs(sum - 3.0) < 0.01) {
+                    // Success
+                    this.pPos += 3;
+                    if (this.pPos >= 19) this.pPos = 19;
+                    this.updatePieces();
+                    playSound('move');
+
+                    // Remove cards
+                    this.pHand = this.pHand.filter((_, i) => !this.selectedIndices.has(i));
+                    this.selectedIndices.clear();
+                    this.deal();
+                    this.render();
+
+                    if (this.pPos >= 19) {
+                        this.endGame(true);
+                        return;
+                    }
+                } else {
+                    // Fail or Discard
+                    if (selected.length > 0) {
+                        // Discard selected to draw new ones (Strategic discard)
+                        this.pHand = this.pHand.filter((_, i) => !this.selectedIndices.has(i));
+                        this.selectedIndices.clear();
+                        this.deal();
+                        this.render();
+                        playSound('error');
+                    } else {
+                        alert("Selecciona cartes!");
+                        return;
+                    }
+                }
+
+                setTimeout(() => this.cpuTurn(), 1000);
+            }
+
+            cpuTurn() {
+                if (this.gameOver) return;
+
+                // Find subset sum 3.0
+                let bestSubset = null;
+
+                // Brute force subsets (2^5 = 32, easy)
+                const n = this.cHand.length;
+                for (let i = 1; i < (1 << n); i++) {
+                    let subset = [];
+                    let indices = [];
+                    let sum = 0;
+                    for (let j = 0; j < n; j++) {
+                        if ((i >> j) & 1) {
+                            subset.push(this.cHand[j]);
+                            indices.push(j);
+                            sum += this.cHand[j].val;
+                        }
+                    }
+                    if (Math.abs(sum - 3.0) < 0.01) {
+                        bestSubset = indices;
+                        break;
+                    }
+                }
+
+                if (bestSubset) {
+                    this.cPos += 3;
+                    if (this.cPos >= 19) this.cPos = 19;
+                    this.updatePieces();
+
+                    // Remove
+                    const newHand = [];
+                    this.cHand.forEach((c, i) => {
+                        if (!bestSubset.includes(i)) newHand.push(c);
+                    });
+                    this.cHand = newHand;
+                } else {
+                    // Discard random
+                    this.cHand.pop();
+                }
+
+                this.deal();
+
+                if (this.cPos >= 19) {
+                    this.endGame(false);
+                }
+            }
+
+            updatePieces() {
+                const cells = document.querySelectorAll('.track-cell');
+                const p1 = document.getElementById('p1-piece');
+                const p2 = document.getElementById('p2-piece');
+
+                cells[this.pPos].appendChild(p1);
+                cells[this.cPos].appendChild(p2);
+            }
+
+            render() {
+                const container = document.getElementById('hand-area');
+                container.innerHTML = '';
+
+                let currentSum = 0;
+                this.selectedIndices.forEach(i => currentSum += this.pHand[i].val);
+                document.getElementById('sum-display').textContent = currentSum;
+
+                this.pHand.forEach((c, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'card';
+                    if (this.selectedIndices.has(i)) el.classList.add('selected');
+                    el.innerHTML = `<img src="${c.img}">`;
+                    el.onclick = () => this.toggleCard(i);
+                    container.appendChild(el);
+                });
+            }
+
+            endGame(win) {
+                this.gameOver = true;
+                if (win) {
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_vals'] = true;
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    document.getElementById('epic-modal').style.display = 'flex';
+                } else {
+                    document.getElementById('lose-modal').style.display = 'flex';
+                }
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

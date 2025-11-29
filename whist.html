@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whist Rítmic</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+
+        :root {
+            --felt-green: #2e7d32;
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #051e05;
+            font-family: 'Playfair Display', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            font-size: 1.2rem;
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Table */
+        #table {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, var(--felt-green), #051e05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Players */
+        .player-area {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #p1 {
+            bottom: 20px;
+        }
+
+        #p2 {
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%) rotate(90deg);
+        }
+
+        #p3 {
+            top: 20px;
+            transform: rotate(180deg);
+        }
+
+        #p4 {
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg);
+        }
+
+        .hand {
+            display: flex;
+            gap: 5px;
+        }
+
+        .card {
+            width: 70px;
+            height: 100px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .card img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        .card-back {
+            background: #b71c1c;
+            border: 2px solid white;
+        }
+
+        .card-back img {
+            display: none;
+        }
+
+        #p1 .card:hover {
+            transform: translateY(-20px);
+        }
+
+        /* Center */
+        #center {
+            width: 300px;
+            height: 300px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        #trump-display {
+            position: absolute;
+            top: -40px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+        }
+
+        .trick-card {
+            position: absolute;
+            width: 70px;
+            height: 100px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .trick-card img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        /* Positions for trick cards */
+        .tc-p1 {
+            bottom: 20px;
+        }
+
+        .tc-p2 {
+            left: 20px;
+        }
+
+        .tc-p3 {
+            top: 20px;
+        }
+
+        .tc-p4 {
+            right: 20px;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #051e05;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #051e05;
+            margin-top: 20px;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #051e05;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+        <div style="font-size:1.2rem;">RONDES GUANYADES: <span id="wins-display">0</span>/3</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="table">
+        <div id="center">
+            <div id="trump-display">ATUT: ...</div>
+            <!-- Trick Cards -->
+        </div>
+
+        <div class="player-area" id="p1">
+            <div class="hand" id="h1"></div>
+            <div>JUGADOR</div>
+        </div>
+        <div class="player-area" id="p2">
+            <div class="hand" id="h2"></div>
+            <div>IA 2</div>
+        </div>
+        <div class="player-area" id="p3">
+            <div class="hand" id="h3"></div>
+            <div>IA 3</div>
+        </div>
+        <div class="player-area" id="p4">
+            <div class="hand" id="h4"></div>
+            <div>IA 4</div>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">WHIST RÍTMIC</h2>
+            <p>1. Joc de bazes per parelles (Tu i IA2 vs IA3 i IA4).</p>
+            <p>2. Segueix el "pal" (durada de la nota).</p>
+            <p>3. L'Atut guanya a tot. Guanya 3 bazes per guanyar la ronda.</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">LA MÚSICA NASC!</h2>
+            <div class="relic-icon">🎶</div>
+            <h3 style="color: var(--gold);">LA PARTITURA D'ORFEU DE MONTEVERDI</h3>
+            <p style="font-style: italic; color: #aaa;">"La partitura de la primera òpera, Orfeu (1607). El naixement de
+                la música com a drama i art modern!"</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/Roll the Dice.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'slide') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                gain.gain.setValueAtTime(vol * 0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start();
+                osc.stop(now + 0.1);
+            } else if (type === 'fanfare') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523, now);
+                osc.frequency.setValueAtTime(659, now + 0.1);
+                osc.frequency.setValueAtTime(784, now + 0.2);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        const CARDS = [
+            { val: 4, name: 'Rodona', img: 'images/rodona.jpg' },
+            { val: 2, name: 'Blanca', img: 'images/blanca.jpg' },
+            { val: 1, name: 'Negra', img: 'images/negra.jpg' },
+            { val: 0.5, name: 'Corxera', img: 'images/corxera.jpg' },
+            { val: 0.25, name: 'Semicorxera', img: 'images/semicorxera.jpg' },
+            { val: 4, name: 'S.Rodona', img: 'images/silencirodona.jpg' },
+            { val: 2, name: 'S.Blanca', img: 'images/silenciblanca.jpg' },
+            { val: 1, name: 'S.Negra', img: 'images/silencinegra.jpg' },
+            { val: 0.5, name: 'S.Corxera', img: 'images/silencicorxera.jpg' },
+            { val: 0.25, name: 'S.Semicorxera', img: 'images/silencisemicorxera.jpg' }
+        ];
+
+        class Game {
+            constructor() {
+                this.wins = 0;
+                this.hands = [[], [], [], []];
+                this.trick = []; // {player: 0-3, card: obj}
+                this.trump = null;
+                this.turn = 0; // 0=Player
+                this.startPlayer = 0;
+                this.tricksWon = [0, 0]; // Team 1 (0+2), Team 2 (1+3)
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.newRound();
+            }
+
+            newRound() {
+                // Deal 5 cards each
+                const deck = [];
+                CARDS.forEach(c => {
+                    for (let i = 0; i < 4; i++) deck.push(c);
+                });
+                deck.sort(() => Math.random() - 0.5);
+
+                this.hands = [[], [], [], []];
+                for (let i = 0; i < 5; i++) {
+                    for (let p = 0; p < 4; p++) this.hands[p].push(deck.pop());
+                }
+
+                // Set Trump
+                this.trump = CARDS[Math.floor(Math.random() * CARDS.length)];
+                document.getElementById('trump-display').textContent = `ATUT: ${this.trump.name}`;
+
+                this.tricksWon = [0, 0];
+                this.trick = [];
+                this.startPlayer = 0; // Rotate? For now P1 starts
+                this.turn = 0;
+
+                this.render();
+            }
+
+            playCard(cardIdx) {
+                if (this.turn !== 0) return;
+
+                const card = this.hands[0][cardIdx];
+
+                // Validate follow suit (duration)
+                if (this.trick.length > 0) {
+                    const lead = this.trick[0].card;
+                    const leadVal = lead.val;
+                    const hasSuit = this.hands[0].some(c => c.val === leadVal);
+                    if (hasSuit && card.val !== leadVal) {
+                        alert(`Has de seguir el pal! (Durada: ${leadVal})`);
+                        return;
+                    }
+                }
+
+                this.hands[0].splice(cardIdx, 1);
+                this.addToTrick(0, card);
+
+                this.turn = 1;
+                this.render();
+                setTimeout(() => this.cpuTurn(), 1000);
+            }
+
+            addToTrick(player, card) {
+                this.trick.push({ player, card });
+                playSound('slide');
+
+                // Show card in center
+                const center = document.getElementById('center');
+                const div = document.createElement('div');
+                div.className = `trick-card tc-p${player + 1}`;
+                div.innerHTML = `<img src="${card.img}">`;
+                center.appendChild(div);
+
+                if (this.trick.length === 4) {
+                    setTimeout(() => this.resolveTrick(), 1500);
+                }
+            }
+
+            cpuTurn() {
+                if (this.turn === 0) return;
+
+                const hand = this.hands[this.turn];
+                let playIdx = 0;
+
+                if (this.trick.length > 0) {
+                    const leadVal = this.trick[0].card.val;
+                    const suitCards = hand.map((c, i) => ({ c, i })).filter(x => x.c.val === leadVal);
+                    if (suitCards.length > 0) {
+                        // Play highest suit? Or lowest if losing? Simple AI: Random valid
+                        playIdx = suitCards[Math.floor(Math.random() * suitCards.length)].i;
+                    } else {
+                        // Play trump?
+                        const trumps = hand.map((c, i) => ({ c, i })).filter(x => x.c.val === this.trump.val); // Trump is by duration too? Or specific card?
+                        // "L'Atut (Triumf)... tria una figura rítmica (ex: NEGRA)". So suit = duration.
+                        // So trump is just another duration that beats others.
+                        // Wait, if trump is Negra, and lead is Blanca.
+                        // If I have Blanca, I MUST play Blanca.
+                        // If I don't, I can play Negra (Trump) to win.
+                        if (trumps.length > 0) {
+                            playIdx = trumps[Math.floor(Math.random() * trumps.length)].i;
+                        } else {
+                            // Discard low
+                            playIdx = 0;
+                        }
+                    }
+                } else {
+                    // Lead
+                    playIdx = Math.floor(Math.random() * hand.length);
+                }
+
+                const card = hand[playIdx];
+                hand.splice(playIdx, 1);
+                this.addToTrick(this.turn, card);
+
+                this.turn = (this.turn + 1) % 4;
+                this.render(); // Update hands
+
+                if (this.trick.length < 4 && this.turn !== 0) {
+                    setTimeout(() => this.cpuTurn(), 1000);
+                }
+            }
+
+            resolveTrick() {
+                // Determine winner
+                const leadVal = this.trick[0].card.val;
+                const trumpVal = this.trump.val;
+
+                let winner = this.trick[0];
+
+                for (let i = 1; i < 4; i++) {
+                    const curr = this.trick[i];
+                    const winCard = winner.card;
+                    const currCard = curr.card;
+
+                    // Logic:
+                    // 1. If curr is Trump and winner not, curr wins.
+                    // 2. If both Trump, higher rank? (Wait, duration IS rank? Or just suit?)
+                    // "La carta de l'ATUT més alta guanya... si no hi ha Atut, guanya la carta de la durada més alta."
+                    // But duration IS the suit.
+                    // So if Trump is Negra (1.0).
+                    // If multiple Negras played?
+                    // "Figures: Rodona(4)... Semicorxera(0.25)".
+                    // If Trump is Negra.
+                    // If I play Negra, and you play Negra. Who wins?
+                    // Maybe standard Whist rank? But cards are just durations.
+                    // Let's assume standard rank: Rodona > Blanca > Negra...
+                    // But if Trump is Negra, Negra beats Rodona?
+                    // No, Trump is a Suit.
+                    // So if Trump is "Silenci" type? Or just "Negra"?
+                    // Prompt says: "tria una figura rítmica (ex: NEGRA) com a ATUT".
+                    // This implies the VALUE is the suit.
+                    // So if Trump is 1.0.
+                    // Then any 1.0 card is a Trump.
+                    // But if multiple 1.0s?
+                    // We need a secondary rank. Maybe Note > Silence?
+                    // Or just first played wins?
+                    // Let's say Note > Silence. If equal, first played wins.
+
+                    const isTrump = (c) => c.val === trumpVal;
+                    const isLead = (c) => c.val === leadVal;
+
+                    if (isTrump(currCard) && !isTrump(winCard)) {
+                        winner = curr;
+                    } else if (isTrump(currCard) && isTrump(winCard)) {
+                        // Compare secondary (Note > Silence)
+                        if (currCard.name.startsWith('S.') && !winCard.name.startsWith('S.')) { /* lose */ }
+                        else if (!currCard.name.startsWith('S.') && winCard.name.startsWith('S.')) { winner = curr; }
+                    } else if (!isTrump(currCard) && !isTrump(winCard)) {
+                        if (isLead(currCard)) {
+                            // If winner is also lead (it must be, or it would have lost to trump)
+                            // Compare secondary
+                            if (!currCard.name.startsWith('S.') && winCard.name.startsWith('S.')) { winner = curr; }
+                        }
+                    }
+                }
+
+                const winPlayer = winner.player;
+                const team = (winPlayer === 0 || winPlayer === 2) ? 0 : 1;
+                this.tricksWon[team]++;
+
+                // Clear trick
+                this.trick = [];
+                document.querySelectorAll('.trick-card').forEach(e => e.remove());
+
+                // Next lead
+                this.turn = winPlayer;
+
+                if (this.hands[0].length === 0) {
+                    this.endRound();
+                } else {
+                    if (this.turn !== 0) setTimeout(() => this.cpuTurn(), 1000);
+                }
+            }
+
+            endRound() {
+                if (this.tricksWon[0] >= 3) {
+                    this.wins++;
+                    document.getElementById('wins-display').textContent = this.wins;
+                    if (this.wins >= 3) {
+                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                        rewards['reward_whist'] = true;
+                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                        playSound('fanfare');
+                        document.getElementById('epic-modal').style.display = 'flex';
+                    } else {
+                        alert("Has guanyat la ronda!");
+                        this.newRound();
+                    }
+                } else {
+                    alert("Has perdut la ronda.");
+                    this.newRound();
+                }
+            }
+
+            render() {
+                // Render hands
+                // P1 (Visible)
+                const h1 = document.getElementById('h1');
+                h1.innerHTML = '';
+                this.hands[0].forEach((c, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = `<img src="${c.img}">`;
+                    div.onclick = () => this.playCard(i);
+                    h1.appendChild(div);
+                });
+
+                // Others (Backs)
+                [1, 2, 3].forEach(p => {
+                    const h = document.getElementById('h' + (p + 1));
+                    h.innerHTML = '';
+                    this.hands[p].forEach(() => {
+                        const div = document.createElement('div');
+                        div.className = 'card card-back';
+                        h.appendChild(div);
+                    });
+                });
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

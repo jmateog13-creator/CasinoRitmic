@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dominó Rítmic</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+        :root {
+            --wood-dark: #3e2723;
+            --wood-light: #5d4037;
+            --gold: #ffd700;
+            --tile-w: 60px;
+            --tile-h: 120px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a0505;
+            font-family: 'Playfair Display', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            font-size: 1.2rem;
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Table */
+        #table {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #5d4037, #3e2723);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 60px 20px 20px 20px;
+            box-sizing: border-box;
+        }
+
+        /* Board Area (Scrollable) */
+        #board-area {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            overflow: auto;
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #board-content {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 0 auto;
+            /* Center */
+        }
+
+        /* Hand Area */
+        .hand-area {
+            height: 140px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            gap: 10px;
+            overflow-x: auto;
+        }
+
+        #player-hand {
+            border: 2px solid var(--gold);
+        }
+
+        /* Tile */
+        .tile {
+            width: var(--tile-w);
+            height: var(--tile-h);
+            background: #fff8e1;
+            /* Ivory */
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+
+        .tile:hover {
+            transform: translateY(-10px);
+        }
+
+        .tile.horizontal {
+            width: var(--tile-h);
+            height: var(--tile-w);
+            flex-direction: row;
+        }
+
+        .tile-half {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            position: relative;
+        }
+
+        .tile.horizontal .tile-half {
+            border-bottom: none;
+            border-right: 1px solid #333;
+        }
+
+        .tile-half img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        .dot {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 6px;
+            height: 6px;
+            background: black;
+            border-radius: 50%;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+        <div style="font-size:1.2rem;">VICTÒRIES: <span id="wins-display">0</span>/2</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="table">
+        <div class="hand-area" id="cpu-hand" style="justify-content: center; color: #aaa;">
+            CPU (7 Fitxes)
+        </div>
+
+        <div id="board-area">
+            <div id="board-content">
+                <!-- Placed Tiles -->
+            </div>
+        </div>
+
+        <div class="hand-area" id="player-hand">
+            <!-- Player Tiles -->
+        </div>
+
+        <div style="text-align: center; margin-top: 10px;">
+            <button class="action-btn" onclick="game.drawTile()">ROBAR FITXA</button>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR A "DOMINÓ RÍTMIC"</h2>
+            <p>1. Connecta les fitxes fent coincidir el valor de temps.</p>
+            <p>2. Valors: Corxera (0.5), Negra (1), Negra amb punt (1.5), Blanca (2).</p>
+            <p>3. Guanya qui es quedi sense fitxes primer.</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">RITME OBSESSIU!</h2>
+            <div class="relic-icon">🥁</div>
+            <h3 style="color: var(--gold);">LA CAIXA DEL BOLERO DE RAVEL</h3>
+            <p style="font-style: italic; color: #aaa;">"El marc original de la caixa que toca el mateix patró rítmic
+                durant 15 minuts. Símbol de la constància rítmica!"</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="result-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="result-title">RESULTAT</h2>
+            <button class="action-btn" onclick="game.reset()">CONTINUAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'clack') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.05);
+                gain.gain.setValueAtTime(vol * 0.5, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.05);
+                osc.start();
+                osc.stop(now + 0.05);
+            } else if (type === 'win') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(880, now + 0.2);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1);
+                osc.start();
+                osc.stop(now + 1);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        const VALUES = [0.5, 1.0, 1.5, 2.0];
+        const IMAGES = {
+            0.5: 'images/corxera.jpg',
+            1.0: 'images/negra.jpg',
+            1.5: 'images/negra.jpg', // Will add dot
+            2.0: 'images/blanca.jpg'
+        };
+
+        class Game {
+            constructor() {
+                this.wins = 0;
+                this.deck = [];
+                this.pHand = [];
+                this.cHand = [];
+                this.board = []; // Array of { tile, orientation }
+                this.leftEnd = null;
+                this.rightEnd = null;
+                this.turn = 'player';
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.reset();
+            }
+
+            reset() {
+                document.getElementById('result-modal').style.display = 'none';
+                this.createDeck();
+                this.deal();
+                this.board = [];
+                this.leftEnd = null;
+                this.rightEnd = null;
+
+                // Start with one tile
+                const startTile = this.deck.pop();
+                this.board.push(startTile);
+                this.leftEnd = startTile.v1;
+                this.rightEnd = startTile.v2;
+
+                this.render();
+            }
+
+            createDeck() {
+                this.deck = [];
+                // Create all pairs
+                for (let i = 0; i < VALUES.length; i++) {
+                    for (let j = i; j < VALUES.length; j++) {
+                        this.deck.push({ v1: VALUES[i], v2: VALUES[j], uid: Math.random() });
+                    }
+                }
+                // Duplicate deck to have more tiles? Standard domino is 28 tiles. 4 values -> 10 tiles. Too few.
+                // Let's duplicate 3 times -> 30 tiles.
+                const baseDeck = [...this.deck];
+                this.deck = [...baseDeck, ...baseDeck, ...baseDeck];
+
+                this.deck.sort(() => Math.random() - 0.5);
+            }
+
+            deal() {
+                this.pHand = [];
+                this.cHand = [];
+                for (let i = 0; i < 7; i++) {
+                    this.pHand.push(this.deck.pop());
+                    this.cHand.push(this.deck.pop());
+                }
+            }
+
+            drawTile() {
+                if (this.turn !== 'player') return;
+                if (this.deck.length > 0) {
+                    this.pHand.push(this.deck.pop());
+                    this.render();
+                    playSound('clack');
+                }
+            }
+
+            playTile(tileIdx, side) {
+                if (this.turn !== 'player') return;
+
+                const tile = this.pHand[tileIdx];
+                let played = false;
+
+                if (side === 'left') {
+                    if (tile.v1 === this.leftEnd) {
+                        // Flip needed? No, v1 matches leftEnd.
+                        // Board: [v1|v2] ...
+                        // New: [v2|v1] -> [v1|v2]
+                        // Wait, standard domino:
+                        // Board: [1|2]
+                        // Left End is 1. Right End is 2.
+                        // To play on left, need tile with 1.
+                        // If tile is [1|3]. We place it as [3|1]-[1|2].
+                        // New Left End is 3.
+                        this.board.unshift({ ...tile, flipped: true }); // v2 becomes new left
+                        this.leftEnd = tile.v2;
+                        played = true;
+                    } else if (tile.v2 === this.leftEnd) {
+                        this.board.unshift({ ...tile, flipped: false }); // v1 becomes new left
+                        this.leftEnd = tile.v1;
+                        played = true;
+                    }
+                } else if (side === 'right') {
+                    if (tile.v1 === this.rightEnd) {
+                        this.board.push({ ...tile, flipped: false }); // v2 becomes new right
+                        this.rightEnd = tile.v2;
+                        played = true;
+                    } else if (tile.v2 === this.rightEnd) {
+                        this.board.push({ ...tile, flipped: true }); // v1 becomes new right
+                        this.rightEnd = tile.v1;
+                        played = true;
+                    }
+                }
+
+                if (played) {
+                    this.pHand.splice(tileIdx, 1);
+                    playSound('clack');
+                    this.render();
+                    this.checkWin();
+                    if (!this.pHand.length) return;
+                    this.turn = 'cpu';
+                    setTimeout(() => this.cpuTurn(), 1000);
+                }
+            }
+
+            cpuTurn() {
+                // Find playable tile
+                let move = null;
+
+                for (let i = 0; i < this.cHand.length; i++) {
+                    const t = this.cHand[i];
+                    if (t.v1 === this.leftEnd || t.v2 === this.leftEnd) {
+                        move = { idx: i, side: 'left' };
+                        break;
+                    }
+                    if (t.v1 === this.rightEnd || t.v2 === this.rightEnd) {
+                        move = { idx: i, side: 'right' };
+                        break;
+                    }
+                }
+
+                if (move) {
+                    const tile = this.cHand[move.idx];
+                    // Logic to update board state same as player
+                    if (move.side === 'left') {
+                        if (tile.v1 === this.leftEnd) {
+                            this.board.unshift({ ...tile, flipped: true });
+                            this.leftEnd = tile.v2;
+                        } else {
+                            this.board.unshift({ ...tile, flipped: false });
+                            this.leftEnd = tile.v1;
+                        }
+                    } else {
+                        if (tile.v1 === this.rightEnd) {
+                            this.board.push({ ...tile, flipped: false });
+                            this.rightEnd = tile.v2;
+                        } else {
+                            this.board.push({ ...tile, flipped: true });
+                            this.rightEnd = tile.v1;
+                        }
+                    }
+                    this.cHand.splice(move.idx, 1);
+                    playSound('clack');
+                    this.render();
+                    this.checkWin();
+                    if (!this.cHand.length) return;
+                    this.turn = 'player';
+                } else {
+                    // Draw
+                    if (this.deck.length > 0) {
+                        this.cHand.push(this.deck.pop());
+                        document.getElementById('cpu-hand').textContent = `CPU (${this.cHand.length} Fitxes)`;
+                        setTimeout(() => this.cpuTurn(), 1000);
+                    } else {
+                        // Pass
+                        this.turn = 'player';
+                    }
+                }
+            }
+
+            checkWin() {
+                if (this.pHand.length === 0) {
+                    this.wins++;
+                    document.getElementById('wins-display').textContent = this.wins;
+                    if (this.wins >= 2) {
+                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                        rewards['reward_domino'] = true;
+                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                        playSound('win');
+                        document.getElementById('epic-modal').style.display = 'flex';
+                    } else {
+                        document.getElementById('result-title').textContent = "HAS GUANYAT LA RONDA!";
+                        document.getElementById('result-modal').style.display = 'flex';
+                    }
+                } else if (this.cHand.length === 0) {
+                    document.getElementById('result-title').textContent = "LA CPU GUANYA!";
+                    document.getElementById('result-modal').style.display = 'flex';
+                }
+            }
+
+            render() {
+                // CPU Hand
+                document.getElementById('cpu-hand').textContent = `CPU (${this.cHand.length} Fitxes)`;
+
+                // Player Hand
+                const pContainer = document.getElementById('player-hand');
+                pContainer.innerHTML = '';
+                this.pHand.forEach((t, i) => {
+                    const el = this.createTileEl(t);
+                    // Check playability
+                    const canLeft = t.v1 === this.leftEnd || t.v2 === this.leftEnd;
+                    const canRight = t.v1 === this.rightEnd || t.v2 === this.rightEnd;
+
+                    if (canLeft) {
+                        const btn = document.createElement('div');
+                        btn.textContent = '◀';
+                        btn.style.cssText = 'position:absolute; left:0; top:0; width:20px; height:100%; background:rgba(0,255,0,0.3); display:flex; align-items:center; justify-content:center;';
+                        btn.onclick = (e) => { e.stopPropagation(); this.playTile(i, 'left'); };
+                        el.appendChild(btn);
+                    }
+                    if (canRight) {
+                        const btn = document.createElement('div');
+                        btn.textContent = '▶';
+                        btn.style.cssText = 'position:absolute; right:0; top:0; width:20px; height:100%; background:rgba(0,255,0,0.3); display:flex; align-items:center; justify-content:center;';
+                        btn.onclick = (e) => { e.stopPropagation(); this.playTile(i, 'right'); };
+                        el.appendChild(btn);
+                    }
+
+                    pContainer.appendChild(el);
+                });
+
+                // Board
+                const bContainer = document.getElementById('board-content');
+                bContainer.innerHTML = '';
+                this.board.forEach(t => {
+                    const el = this.createTileEl(t);
+                    // If horizontal (all board tiles are horizontal for simplicity in this view)
+                    el.classList.add('horizontal');
+                    // If flipped, swap content visually
+                    if (t.flipped) {
+                        el.style.flexDirection = 'row-reverse';
+                    }
+                    bContainer.appendChild(el);
+                });
+            }
+
+            createTileEl(t) {
+                const el = document.createElement('div');
+                el.className = 'tile';
+
+                const h1 = document.createElement('div');
+                h1.className = 'tile-half';
+                h1.innerHTML = `<img src="${IMAGES[t.v1]}">`;
+                if (t.v1 === 1.5) h1.innerHTML += '<div class="dot"></div>';
+
+                const h2 = document.createElement('div');
+                h2.className = 'tile-half';
+                h2.innerHTML = `<img src="${IMAGES[t.v2]}">`;
+                if (t.v2 === 1.5) h2.innerHTML += '<div class="dot"></div>';
+
+                el.appendChild(h1);
+                el.appendChild(h2);
+                return el;
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

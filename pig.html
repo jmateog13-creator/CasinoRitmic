@@ -12,8 +12,54 @@
             --wood: #3e2723;
             --wood-light: #5d4037;
             --felt: #1b5e20;
-            --gold: #ffc107;
+            --pig-pink: #ffc0cb;
+            --gold: #ffd700;
             --text: #efebe9;
+        }
+
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
         }
 
         body {
@@ -272,7 +318,7 @@
         <a href="menu.html" class="btn-menu">🏠</a>
         <h1 style="color:var(--gold); margin:0; font-size:1.5rem;">L'AVARÍCIA TRENCA EL SAC</h1>
         <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
-            <span>🔊</span>
+            <button id="mute-btn" style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">🔊</button>
             <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
         </div>
     </div>
@@ -312,7 +358,20 @@
 
     <p style="color:#aaa; margin-top:10px;">Arriba a 50 punts. El Silenci (0) et fa perdre els punts de la ronda.</p>
 
-    <!-- Win Modal -->
+    <p style="color:#aaa; margin-top:10px;">Arriba a 50 punts. El Silenci (0) et fa perdre els punts de la ronda.</p>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">L'AVARÍCIA TRENCA EL SAC</h2>
+            <p>Acumula punts llançant el dau.</p>
+            <p>Si surt un SILENCI (0), perds els punts de la ronda.</p>
+            <p>Pots plantar-te per guardar els punts.</p>
+            <p>El primer en arribar a 50 guanya.</p>
+            <button class="modal-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">COMENÇAR</button>
+        </div>
+    </div>
     <div id="win-modal" class="modal">
         <div class="modal-content">
             <h2 style="color: var(--gold);">MESTRE DE LA VIOLA!</h2>
@@ -337,16 +396,37 @@
 
     <script>
         // Audio
+        // Audio
         const bgMusic = document.getElementById('bg-music');
+        const muteBtn = document.getElementById('mute-btn');
+        let isMuted = false;
+        let previousVolume = 0.5;
+
         document.body.addEventListener('click', () => {
-            if (bgMusic.paused) {
+            if (bgMusic.paused && !isMuted) {
                 bgMusic.volume = document.getElementById('volume').value * 0.5;
                 bgMusic.play().catch(e => console.log(e));
             }
         }, { once: true });
 
         document.getElementById('volume').addEventListener('input', (e) => {
+            if (isMuted) {
+                isMuted = false;
+                muteBtn.textContent = '🔊';
+            }
             bgMusic.volume = e.target.value * 0.5;
+        });
+
+        muteBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            if (isMuted) {
+                previousVolume = bgMusic.volume;
+                bgMusic.volume = 0;
+                muteBtn.textContent = '🔇';
+            } else {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                muteBtn.textContent = '🔊';
+            }
         });
 
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -478,9 +558,9 @@
                 if (activePlayer === 0) {
                     // Win
                     // Save Reward
-                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
                     rewards['reward_pig'] = true;
-                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
                     setTimeout(() => document.getElementById('win-modal').style.display = 'flex', 500);
                 } else {
                     // Lose

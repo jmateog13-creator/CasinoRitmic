@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pai Gow Rítmic</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+
+        :root {
+            --felt-red: #4a0e0e;
+            --felt-dark: #2a0505;
+            --gold: #ffd700;
+            --tile-w: 60px;
+            --tile-h: 100px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            font-family: 'Cinzel', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--gold);
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 100;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            font-size: 1.5rem;
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Table */
+        #table {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, var(--felt-red), var(--felt-dark));
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Zones */
+        .zone-label {
+            font-size: 1.2rem;
+            opacity: 0.5;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .hand-area {
+            border: 2px dashed rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            min-height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            transition: background 0.3s;
+        }
+
+        .hand-area.drag-over {
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        #banker-area {
+            opacity: 0.8;
+        }
+
+        #player-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        #player-hand {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Tiles */
+        .tile {
+            width: var(--tile-w);
+            height: var(--tile-h);
+            background: #fff;
+            /* Bone/Ivory color */
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .tile:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+            z-index: 100;
+        }
+
+        .tile img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        .tile-back {
+            background: #000;
+            border: 2px solid var(--gold);
+        }
+
+        /* Controls */
+        #controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        button.action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            color: #2a0505;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        button.action-btn:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #2a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: var(--gold);
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        /* Result Overlay */
+        #result-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: bold;
+            text-shadow: 0 0 20px #000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 500;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+        <div style="font-size:1.2rem;">VICTÒRIES: <span id="wins">0</span>/3</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="table">
+        <!-- Banker -->
+        <div id="banker-area">
+            <div class="zone-label">BANCA (MÀ ALTA + MÀ BAIXA)</div>
+            <div class="hand-area" id="banker-hand">
+                <!-- Tiles hidden -->
+            </div>
+        </div>
+
+        <div id="result-overlay">VICTÒRIA!</div>
+
+        <!-- Player -->
+        <div id="player-area">
+            <div>
+                <div class="zone-label">MÀ ALTA (Objectiu: 4.0)</div>
+                <div class="hand-area drop-zone" id="high-hand" data-zone="high"></div>
+            </div>
+            <div>
+                <div class="zone-label">MÀ BAIXA (Objectiu: 1.0)</div>
+                <div class="hand-area drop-zone" id="low-hand" data-zone="low"></div>
+            </div>
+            <div>
+                <div class="zone-label">FITXES DISPONIBLES</div>
+                <div class="hand-area drop-zone" id="deck-hand" data-zone="deck"></div>
+            </div>
+        </div>
+
+        <div id="controls">
+            <button class="action-btn" id="btn-play" onclick="game.playHands()">JUGAR MANS</button>
+            <button class="action-btn" onclick="game.reset()">REINICIAR</button>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2>COM JUGAR A "PAI GOW RÍTMIC"</h2>
+            <p>1. Reps <strong>7 Fitxes</strong>.</p>
+            <p>2. Divideix-les en dues mans:</p>
+            <ul style="text-align:left; display:inline-block;">
+                <li><strong>MÀ ALTA (Darrere):</strong> Ha de sumar <strong>4 TEMPS</strong>.</li>
+                <li><strong>MÀ BAIXA (Davant):</strong> Ha de sumar <strong>1 TEMPS</strong>.</li>
+            </ul>
+            <p>3. Arrossega les fitxes a les zones corresponents.</p>
+            <p>4. Guanya a la Banca per aconseguir l'Arpa Reial!</p>
+            <button class="action-btn" onclick="game.start()">REPARTIR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2>ELEGÀNCIA REIAL!</h2>
+            <div class="relic-icon">🎻</div>
+            <h3>L'ARPA DE MARIANTÒNIA</h3>
+            <p style="font-style: italic; color: #aaa;">"L'arpa de la reina Maria Antonieta (alumna de Gluck). Un
+                instrument que va sobreviure a la Revolució Francesa gràcies a la seva bellesa."</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(vol * 0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start();
+                osc.stop(now + 0.05);
+            } else if (type === 'gong') {
+                // Pentatonic chord
+                [261.63, 329.63, 392.00].forEach(f => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.connect(g);
+                    g.connect(audioCtx.destination);
+                    o.type = 'sine';
+                    o.frequency.value = f;
+                    g.gain.setValueAtTime(vol * 0.3, now);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + 2);
+                    o.start();
+                    o.stop(now + 2);
+                });
+            } else if (type === 'wind') {
+                const bufferSize = audioCtx.sampleRate * 1;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(400, now);
+                filter.frequency.linearRampToValueAtTime(100, now + 1);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.gain.setValueAtTime(vol * 0.5, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1);
+                noise.start();
+            }
+        }
+
+        // --- GAME LOGIC ---
+        const TILES = [
+            { id: 'rodona', val: 4, img: 'images/rodona.jpg' },
+            { id: 'blanca', val: 2, img: 'images/blanca.jpg' },
+            { id: 'negra', val: 1, img: 'images/negra.jpg' },
+            { id: 'corxera', val: 0.5, img: 'images/corxera.jpg' },
+            { id: 'semicorxera', val: 0.25, img: 'images/semicorxera.jpg' }
+        ];
+
+        class Game {
+            constructor() {
+                this.wins = 0;
+                this.draggedTile = null;
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.deal();
+            }
+
+            reset() {
+                this.deal();
+                document.getElementById('result-overlay').style.opacity = 0;
+            }
+
+            deal() {
+                // Clear Zones
+                document.getElementById('high-hand').innerHTML = '';
+                document.getElementById('low-hand').innerHTML = '';
+                document.getElementById('deck-hand').innerHTML = '';
+                document.getElementById('banker-hand').innerHTML = '';
+
+                // Generate Solvable Hand (Player)
+                // Group 1: Sum 4
+                const group4 = this.generateGroup(4);
+                // Group 2: Sum 1
+                const group1 = this.generateGroup(1);
+
+                // Combine and shuffle
+                let playerTiles = [...group4, ...group1];
+                // Add random extra? No, Pai Gow is usually 7 tiles. 
+                // If group4 has 1 tile (Rodona) and group1 has 1 tile (Negra), that's 2 tiles.
+                // We need 7 tiles total.
+                // Let's fill the rest with random junk or make groups larger?
+                // Strategy: Generate groups that use more tiles, or fill with "Junk" that doesn't fit?
+                // If we fill with junk, the player might get confused.
+                // Let's just give the solvable tiles + random fillers up to 7.
+
+                while (playerTiles.length < 7) {
+                    playerTiles.push(TILES[Math.floor(Math.random() * TILES.length)]);
+                }
+                playerTiles.sort(() => Math.random() - 0.5);
+
+                // Render Player Tiles
+                const deckContainer = document.getElementById('deck-hand');
+                playerTiles.forEach((t, i) => {
+                    const el = this.createTileElement(t);
+                    deckContainer.appendChild(el);
+                });
+
+                // Generate Banker Hand (Hidden, Solvable)
+                const bGroup4 = this.generateGroup(4);
+                const bGroup1 = this.generateGroup(1);
+                this.bankerHand = { high: bGroup4, low: bGroup1 };
+
+                // Render Banker Backs (7 tiles visual)
+                const bankerContainer = document.getElementById('banker-hand');
+                for (let i = 0; i < 7; i++) {
+                    const el = document.createElement('div');
+                    el.className = 'tile tile-back';
+                    bankerContainer.appendChild(el);
+                }
+            }
+
+            generateGroup(targetSum) {
+                // Simple recursive finder or pre-defined patterns
+                // Patterns for 4: [Rodona], [2 Blancas], [4 Negras], [Blanca, 2 Negras]...
+                // Patterns for 1: [Negra], [2 Corxeras], [4 Semicorxeras]...
+
+                const patterns4 = [
+                    ['rodona'],
+                    ['blanca', 'blanca'],
+                    ['blanca', 'negra', 'negra'],
+                    ['negra', 'negra', 'negra', 'negra'],
+                    ['blanca', 'negra', 'corxera', 'corxera']
+                ];
+                const patterns1 = [
+                    ['negra'],
+                    ['corxera', 'corxera'],
+                    ['corxera', 'semicorxera', 'semicorxera'],
+                    ['semicorxera', 'semicorxera', 'semicorxera', 'semicorxera']
+                ];
+
+                const pool = targetSum === 4 ? patterns4 : patterns1;
+                const pattern = pool[Math.floor(Math.random() * pool.length)];
+
+                return pattern.map(id => TILES.find(t => t.id === id));
+            }
+
+            createTileElement(tileData) {
+                const el = document.createElement('div');
+                el.className = 'tile';
+                el.draggable = true;
+                el.dataset.val = tileData.val;
+                el.innerHTML = `<img src="${tileData.img}">`;
+
+                // Drag Events
+                el.addEventListener('dragstart', (e) => {
+                    this.draggedTile = el;
+                    e.dataTransfer.effectAllowed = 'move';
+                    setTimeout(() => el.style.opacity = '0.5', 0);
+                    playSound('click');
+                });
+                el.addEventListener('dragend', () => {
+                    this.draggedTile = null;
+                    el.style.opacity = '1';
+                });
+
+                // Touch Support (Basic)
+                el.addEventListener('touchstart', (e) => {
+                    // Complex to implement full drag drop with touch without library
+                    // Simple tap-to-move logic?
+                    // Tap tile -> Select. Tap Zone -> Move.
+                    if (this.selectedTile) this.selectedTile.style.border = 'none';
+                    this.selectedTile = el;
+                    el.style.border = '2px solid red';
+                });
+
+                return el;
+            }
+
+            setupDropZones() {
+                const zones = document.querySelectorAll('.drop-zone');
+                zones.forEach(zone => {
+                    zone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        zone.classList.add('drag-over');
+                    });
+                    zone.addEventListener('dragleave', () => {
+                        zone.classList.remove('drag-over');
+                    });
+                    zone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        zone.classList.remove('drag-over');
+                        if (this.draggedTile) {
+                            zone.appendChild(this.draggedTile);
+                            playSound('click');
+                        }
+                    });
+
+                    // Touch Move Target
+                    zone.addEventListener('click', () => {
+                        if (this.selectedTile) {
+                            zone.appendChild(this.selectedTile);
+                            this.selectedTile.style.border = 'none';
+                            this.selectedTile = null;
+                            playSound('click');
+                        }
+                    });
+                });
+            }
+
+            playHands() {
+                // Calculate Sums
+                const highSum = this.calculateSum('high-hand');
+                const lowSum = this.calculateSum('low-hand');
+
+                // Reveal Banker
+                this.revealBanker();
+
+                // Compare
+                // Banker always has 4 and 1.
+                // Player needs 4 and 1.
+
+                let highWin = (highSum === 4);
+                let lowWin = (lowSum === 1);
+
+                let msg = "";
+                let color = "";
+
+                if (highWin && lowWin) {
+                    msg = "VICTÒRIA!";
+                    color = "#ffd700";
+                    this.wins++;
+                    document.getElementById('wins').textContent = this.wins;
+                    playSound('gong');
+
+                    if (this.wins >= 3) {
+                        // Save Reward
+                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                        rewards['reward_paigow'] = true;
+                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                        setTimeout(() => document.getElementById('epic-modal').style.display = 'flex', 1000);
+                    }
+                } else if (highWin || lowWin) {
+                    msg = "EMPAT (PUSH)";
+                    color = "#aaa";
+                    playSound('wind');
+                } else {
+                    msg = "DERROTA";
+                    color = "red";
+                    playSound('wind');
+                }
+
+                const overlay = document.getElementById('result-overlay');
+                overlay.textContent = msg;
+                overlay.style.color = color;
+                overlay.style.opacity = 1;
+            }
+
+            calculateSum(zoneId) {
+                const zone = document.getElementById(zoneId);
+                let sum = 0;
+                Array.from(zone.children).forEach(el => {
+                    sum += parseFloat(el.dataset.val);
+                });
+                return sum;
+            }
+
+            revealBanker() {
+                const container = document.getElementById('banker-hand');
+                container.innerHTML = '';
+
+                // Show High Hand
+                const highDiv = document.createElement('div');
+                highDiv.style.border = "1px solid gold";
+                highDiv.style.padding = "5px";
+                highDiv.innerHTML = "<small>ALTA (4)</small><br>";
+                this.bankerHand.high.forEach(t => {
+                    highDiv.innerHTML += `<img src="${t.img}" style="width:30px;">`;
+                });
+                container.appendChild(highDiv);
+
+                // Show Low Hand
+                const lowDiv = document.createElement('div');
+                lowDiv.style.border = "1px solid gold";
+                lowDiv.style.padding = "5px";
+                lowDiv.innerHTML = "<small>BAIXA (1)</small><br>";
+                this.bankerHand.low.forEach(t => {
+                    lowDiv.innerHTML += `<img src="${t.img}" style="width:30px;">`;
+                });
+                container.appendChild(lowDiv);
+            }
+        }
+
+        const game = new Game();
+        game.setupDropZones();
+        // Start handled by modal
+    </script>
+</body>
+
+</html>

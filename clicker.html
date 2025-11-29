@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Clicker del Crupier</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+        :root {
+            --led-red: #ff0000;
+            --led-green: #00ff00;
+            --led-gold: #ffd700;
+            --dark-bg: #050505;
+            --panel-bg: #111;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--dark-bg);
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--led-gold);
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid #333;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--led-gold);
+            font-size: 1rem;
+            border: 1px solid var(--led-gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Main Game Area */
+        #game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            gap: 30px;
+        }
+
+        /* Displays */
+        #displays {
+            display: flex;
+            gap: 40px;
+            text-align: center;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 4px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+            min-width: 200px;
+        }
+
+        .panel h2 {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+            color: #888;
+        }
+
+        .digital-val {
+            font-size: 2.5rem;
+            color: var(--led-red);
+            text-shadow: 0 0 10px var(--led-red);
+        }
+
+        #target-val {
+            color: var(--led-green);
+            text-shadow: 0 0 10px var(--led-green);
+        }
+
+        /* Clicker Button */
+        #clicker-btn {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, #333, #000);
+            border: 5px solid var(--led-gold);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 0 30px var(--led-gold);
+        }
+
+        #clicker-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 10px var(--led-gold);
+        }
+
+        #clicker-btn img {
+            width: 60%;
+            height: 60%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        /* Upgrades */
+        #upgrades {
+            display: flex;
+            gap: 20px;
+        }
+
+        .upgrade-card {
+            background: #1a1a1a;
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 15px;
+            width: 150px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0.5;
+        }
+
+        .upgrade-card.affordable {
+            opacity: 1;
+            border-color: var(--led-green);
+            box-shadow: 0 0 10px var(--led-green);
+        }
+
+        .upgrade-card img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+
+        .cost {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #111;
+            padding: 40px;
+            border: 4px solid var(--led-gold);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+            box-shadow: 0 0 50px var(--led-gold);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--led-gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--led-gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+            font-family: 'Orbitron', sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5"
+                style="accent-color: var(--led-gold);">
+        </div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="game-area">
+        <div id="displays">
+            <div class="panel">
+                <h2>PUNTS ACUMULATS</h2>
+                <div class="digital-val" id="score">0.00</div>
+            </div>
+            <div class="panel">
+                <h2>OBJECTIU DEL CRUPIER</h2>
+                <div class="digital-val" id="target-val">20</div>
+            </div>
+        </div>
+
+        <div id="clicker-btn" onclick="game.click()">
+            <img src="images/semicorxera.jpg" alt="Click">
+        </div>
+
+        <div style="color: #888;">GENERACIÓ: <span id="gps">0.0</span> TEMPS/SEGON</div>
+
+        <div id="upgrades">
+            <div class="upgrade-card" id="upg-1" onclick="game.buy(1)">
+                <img src="images/negra.jpg">
+                <div>NEGRA</div>
+                <div class="cost">10 TEMPS</div>
+                <div style="font-size:0.8rem; color:#0f0;">+1.0/s</div>
+            </div>
+            <div class="upgrade-card" id="upg-2" onclick="game.buy(2)">
+                <img src="images/blanca.jpg">
+                <div>BLANCA</div>
+                <div class="cost">50 TEMPS</div>
+                <div style="font-size:0.8rem; color:#0f0;">+2.0/s</div>
+            </div>
+            <div class="upgrade-card" id="upg-3" onclick="game.buy(3)">
+                <img src="images/rodona.jpg">
+                <div>RODONA</div>
+                <div class="cost">200 TEMPS</div>
+                <div style="font-size:0.8rem; color:#0f0;">+4.0/s</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--led-gold);">EL CLICKER DEL CRUPIER</h2>
+            <p>1. Clica la Semicorxera per guanyar temps (+0.25).</p>
+            <p>2. Compra millores per generar temps automàticament.</p>
+            <p>3. Arriba als objectius del Crupier per avançar.</p>
+            <p>4. Objectiu Final: 2000 Temps Totals.</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--led-gold);">LA REVOLUCIÓ DEL TECLAT!</h2>
+            <div class="relic-icon">🎹</div>
+            <h3 style="color: var(--led-gold);">EL PRIMER PIANOFORTE DE CRISTOFORI</h3>
+            <p style="font-style: italic; color: #aaa;">"Bartolomeo Cristofori va inventar el piano el 1700, superant el
+                clavicèmbal. La teva fàbrica de ritmes ha evolucionat!"</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/Roll the Dice-3.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        // Using oscillator for hum
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        let humOsc = null;
+
+        function startHum() {
+            if (humOsc) return;
+            const vol = parseFloat(document.getElementById('volume').value);
+            humOsc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            humOsc.type = 'sawtooth';
+            humOsc.frequency.value = 50; // Low hum
+            gain.gain.value = vol * 0.05;
+
+            // LFO for rhythmic feel
+            const lfo = audioCtx.createOscillator();
+            lfo.frequency.value = 2; // 2 Hz pulse
+            const lfoGain = audioCtx.createGain();
+            lfoGain.gain.value = 50; // Modulate filter freq
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 200;
+
+            humOsc.connect(filter);
+            lfo.connect(lfoGain);
+            lfoGain.connect(filter.frequency);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            humOsc.start();
+            lfo.start();
+        }
+
+        document.body.addEventListener('click', () => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            startHum();
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            // Update gain if we had a reference, but for simplicity just global logic
+        });
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
+                gain.gain.setValueAtTime(vol * 0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.05);
+                osc.start();
+                osc.stop(now + 0.05);
+            } else if (type === 'cash') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.setValueAtTime(1600, now + 0.1);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start();
+                osc.stop(now + 0.3);
+            } else if (type === 'win') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(880, now + 0.2);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1);
+                osc.start();
+                osc.stop(now + 1);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        class Game {
+            constructor() {
+                this.score = 0;
+                this.totalScore = 0;
+                this.gps = 0; // Gen per sec
+                this.target = 20;
+                this.lastTime = performance.now();
+                this.lastUIUpdate = 0;
+                this.upgrades = {
+                    1: { cost: 10, val: 1 },
+                    2: { cost: 50, val: 2 },
+                    3: { cost: 200, val: 4 }
+                };
+                this.targets = [20, 50, 100, 250, 500, 1000, 2000];
+                this.targetIdx = 0;
+                this.running = false;
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.running = true;
+                this.loop();
+            }
+
+            click() {
+                this.addScore(0.25);
+                playSound('click');
+                this.updateUI(); // Immediate update for clicks
+
+                // Visual feedback
+                const btn = document.getElementById('clicker-btn');
+                btn.style.transform = 'scale(0.9)';
+                setTimeout(() => btn.style.transform = 'scale(1)', 50);
+            }
+
+            addScore(amount) {
+                this.score += amount;
+                this.totalScore += amount;
+                this.checkTarget();
+                // Removed automatic updateUI call from here to avoid spamming from loop
+            }
+
+            buy(id) {
+                const u = this.upgrades[id];
+                if (this.score >= u.cost) {
+                    this.score -= u.cost;
+                    this.gps += u.val;
+                    u.cost = Math.floor(u.cost * 1.5); // Price increase
+                    playSound('cash');
+                    this.updateUI();
+                }
+            }
+
+            checkTarget() {
+                if (this.totalScore >= this.target) {
+                    // Level up
+                    this.targetIdx++;
+                    if (this.targetIdx >= this.targets.length) {
+                        // Win
+                        this.running = false;
+                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                        rewards['reward_clicker'] = true;
+                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                        playSound('win');
+                        document.getElementById('epic-modal').style.display = 'flex';
+                    } else {
+                        this.target = this.targets[this.targetIdx];
+                        // Bonus? Maybe just visual flash
+                        document.getElementById('target-val').style.color = 'white';
+                        setTimeout(() => document.getElementById('target-val').style.color = 'var(--led-green)', 200);
+                    }
+                }
+            }
+
+            updateUI() {
+                document.getElementById('score').textContent = this.score.toFixed(2);
+                document.getElementById('target-val').textContent = this.target;
+                document.getElementById('gps').textContent = this.gps.toFixed(1);
+
+                // Update upgrades
+                for (let i = 1; i <= 3; i++) {
+                    const el = document.getElementById('upg-' + i);
+                    const u = this.upgrades[i];
+                    el.querySelector('.cost').textContent = u.cost + " TEMPS";
+                    if (this.score >= u.cost) el.classList.add('affordable');
+                    else el.classList.remove('affordable');
+                }
+            }
+
+            loop() {
+                if (!this.running) return;
+                const now = performance.now();
+                const dt = (now - this.lastTime) / 1000;
+                this.lastTime = now;
+
+                if (this.gps > 0) {
+                    this.addScore(this.gps * dt);
+                }
+
+                // Throttle UI updates to ~10fps (100ms)
+                if (now - this.lastUIUpdate > 100) {
+                    this.updateUI();
+                    this.lastUIUpdate = now;
+                }
+
+                requestAnimationFrame(() => this.loop());
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

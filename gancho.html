@@ -14,6 +14,51 @@
             --gold: #ffd700;
         }
 
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -265,8 +310,22 @@
 
 <body>
 
-    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+    <div id="ui-bar">
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
 
+    <!-- Instructions Modal -->
+    <div id="instructions-modal">
+        <div class="instr-content">
+            <span class="instr-close"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Mou el ganxo per atrapar la figura musical que se't demana.</p>
+            <p>Tens un temps límit per aconseguir-ho!</p>
+            <button class="instr-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+        </div>
+    </div>
     <div id="cabinet">
         <div id="marquee">
             <h1>EL GANXO DEL VIRTUÓS</h1>
@@ -300,7 +359,8 @@
     </div>
 
     <div class="volume-control">
-        <span id="volume-icon">🔊</span>
+        <button id="mute-btn" onclick="game.toggleMute()"
+            style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">🔊</button>
         <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
     </div>
 
@@ -375,7 +435,8 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             // Get current volume from slider
-            const masterVolume = parseFloat(document.getElementById('volume-slider').value);
+            let masterVolume = parseFloat(document.getElementById('volume-slider').value);
+            if (game.isMuted) masterVolume = 0;
 
             osc.type = type;
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
@@ -399,7 +460,8 @@
             // Low hum
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            const masterVolume = parseFloat(document.getElementById('volume-slider').value);
+            let masterVolume = parseFloat(document.getElementById('volume-slider').value);
+            if (game.isMuted) masterVolume = 0;
 
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(50, audioCtx.currentTime);
@@ -553,8 +615,8 @@
                             const dist = Math.sqrt(dx * dx + dy * dy);
 
                             if (dist < ball.r) { // Physical Collision Check
-                                // Precision Grab Check: Only grab if hitting the visual "meat" (80% of radius)
-                                if (dist < ball.r * 0.8) {
+                                // Precision Grab Check: Relaxed to full radius
+                                if (dist < ball.r) {
                                     this.grabbedBall = ball;
                                     ball.isGrabbed = true;
                                     this.state = 'GRABBING';
@@ -657,6 +719,8 @@
                 this.timerInterval = null;
                 this.isRunning = false;
                 this.motorSound = null;
+                this.isMuted = false;
+                this.previousVolume = 0.5;
 
                 this.setupInputs();
                 this.setupVolume();
@@ -691,17 +755,51 @@
             }
 
             setGlobalVolume(val) {
-                const icon = document.getElementById('volume-icon');
+                const icon = document.getElementById('mute-btn');
+
+                if (this.isMuted) {
+                    this.isMuted = false;
+                    icon.textContent = "🔊";
+                }
+
                 const volume = val || 0.5;
-                if (volume == 0) icon.textContent = "🔇";
-                else if (volume < 0.5) icon.textContent = "🔉";
-                else icon.textContent = "🔊";
+                this.updateMuteIcon(volume);
 
                 // Update motor gain if running
                 if (this.motorSound) {
                     this.motorSound.gain.gain.setValueAtTime(0.05 * volume, audioCtx.currentTime);
                 }
-                // (Note: Other sound functions need to use the slider value too)
+            }
+
+            toggleMute() {
+                this.isMuted = !this.isMuted;
+                const icon = document.getElementById('mute-btn');
+                const slider = document.getElementById('volume-slider');
+
+                if (this.isMuted) {
+                    this.previousVolume = parseFloat(slider.value);
+                    // We don't change slider, just internal volume logic or mute the context/gain
+                    // But here we rely on setGlobalVolume being called by slider.
+                    // Let's just mute the bgMusic and future sounds.
+                    bgMusic.volume = 0;
+                    icon.textContent = "🔇";
+                    if (this.motorSound) {
+                        this.motorSound.gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                    }
+                } else {
+                    bgMusic.volume = slider.value * 0.5;
+                    this.updateMuteIcon(parseFloat(slider.value));
+                    if (this.motorSound) {
+                        this.motorSound.gain.gain.setValueAtTime(0.05 * parseFloat(slider.value), audioCtx.currentTime);
+                    }
+                }
+            }
+
+            updateMuteIcon(val) {
+                const icon = document.getElementById('mute-btn');
+                if (val == 0) icon.textContent = "🔇";
+                else if (val < 0.5) icon.textContent = "🔉";
+                else icon.textContent = "🔊";
             }
 
 
@@ -718,7 +816,7 @@
                     this.balls.push(new Ball(
                         Math.random() * 800 + 50, // New width
                         Math.random() * 200 + 300, // Start lower
-                        45, // Increased from 25 to 45
+                        60, // Increased to 60 for better visibility
                         data
                     ));
                 }
@@ -760,9 +858,9 @@
                 clearInterval(this.timerInterval);
 
                 // Save Reward (Placeholder logic)
-                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
                 rewards['reward_gancho'] = true;
-                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
 
                 document.getElementById('win-modal').style.display = 'flex';
                 playWinSound();
@@ -852,24 +950,6 @@
                             b1.vy *= 0.99;
                             b2.vx *= 0.99;
                             b2.vy *= 0.99;
-                        }
-                    }
-                }
-
-                // Claw-Ball Collision (Grabbing)
-                if (this.claw.state === 'GRABBING' && !this.claw.grabbedBall) {
-                    const clawX = this.claw.x;
-                    const clawY = this.claw.y + this.claw.cableLength + 40; // Tip
-
-                    for (let ball of this.balls) {
-                        const dx = ball.x - clawX;
-                        const dy = ball.y - clawY;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-
-                        if (dist < ball.r * 0.8) { // Precision grab only
-                            this.claw.grabbedBall = ball;
-                            ball.isGrabbed = true;
-                            break; // Only grab one
                         }
                     }
                 }

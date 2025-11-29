@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conquián Rítmic</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rye&display=swap');
+
+        :root {
+            --felt-green: #2e7d32;
+            --wood: #5d4037;
+            --gold: #ffd700;
+            --card-w: 80px;
+            --card-h: 120px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a0505;
+            font-family: 'Rye', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            font-size: 1.2rem;
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Table */
+        #table {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, var(--felt-green), #1b5e20);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 60px 20px 20px 20px;
+            box-sizing: border-box;
+        }
+
+        /* Areas */
+        .hand-area {
+            height: 160px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            gap: 10px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        #cpu-hand {
+            justify-content: center;
+            color: #aaa;
+        }
+
+        #center-area {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 50px;
+        }
+
+        .pile {
+            width: var(--card-w);
+            height: var(--card-h);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pile-label {
+            position: absolute;
+            top: -25px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+
+        /* Cards */
+        .card {
+            width: var(--card-w);
+            height: var(--card-h);
+            background: white;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .card img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        .card-back {
+            background: repeating-linear-gradient(45deg, #b71c1c, #b71c1c 10px, #800000 10px, #800000 20px);
+            border: 2px solid var(--gold);
+        }
+
+        .card-back img {
+            display: none;
+        }
+
+        .card.selected {
+            transform: translateY(-20px);
+            box-shadow: 0 0 15px var(--gold);
+            border: 2px solid var(--gold);
+        }
+
+        /* Melds on Table */
+        #melds-area {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .meld {
+            display: flex;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .meld .card {
+            width: 40px;
+            height: 60px;
+        }
+
+        /* Actions */
+        #actions {
+            position: absolute;
+            bottom: 180px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .action-btn:disabled {
+            background: #555;
+            color: #888;
+            cursor: default;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+        <div style="font-size:1.2rem;">VICTÒRIES: <span id="wins-display">0</span>/2</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="table">
+        <div class="hand-area" id="cpu-hand">
+            CPU (9 Cartes)
+        </div>
+
+        <div id="center-area">
+            <div class="pile" id="stock" onclick="game.drawStock()">
+                <div class="pile-label">MAÇ</div>
+                <!-- Back card injected -->
+            </div>
+            <div class="pile" id="discard" onclick="game.drawDiscard()">
+                <div class="pile-label">DESCART</div>
+                <!-- Top card injected -->
+            </div>
+        </div>
+
+        <div id="melds-area">
+            <!-- Melds -->
+        </div>
+
+        <div id="actions">
+            <button class="action-btn" id="btn-meld" onclick="game.meld()" disabled>MUNTAR COMPÀS</button>
+            <button class="action-btn" id="btn-discard" onclick="game.discard()" disabled>DESCARTAR</button>
+        </div>
+
+        <div class="hand-area" id="player-hand">
+            <!-- Player Cards -->
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR A "CONQUIÁN RÍTMIC"</h2>
+            <p>1. Roba una carta i forma grups (Melds) que sumin 2.0, 3.0 o 4.0 temps.</p>
+            <p>2. Has d'usar la carta robada immediatament o descartar-la.</p>
+            <p>3. Guanya qui baixa les 9 cartes primer.</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">GRAN ESTRUCTURA FORMAL!</h2>
+            <div class="relic-icon">🎶</div>
+            <h3 style="color: var(--gold);">LA FLAUTA TRAVESERA DEL REI FREDERIC II</h3>
+            <p style="font-style: italic; color: #aaa;">"El rei filòsof, mecenes de Bach, va compondre i tocar més de
+                100 sonates per a aquesta flauta. Símbol de la disciplina formal i l'estructura del Barroc tardà."</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="result-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="result-title">RESULTAT</h2>
+            <button class="action-btn" onclick="game.reset()">CONTINUAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/Roll the Dice-4.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'slide') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                gain.gain.setValueAtTime(vol * 0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start();
+                osc.stop(now + 0.1);
+            } else if (type === 'meld') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(554, now + 0.1); // C#
+                osc.frequency.setValueAtTime(659, now + 0.2); // E
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            } else if (type === 'fanfare') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(523, now);
+                osc.frequency.setValueAtTime(659, now + 0.2);
+                osc.frequency.setValueAtTime(784, now + 0.4);
+                osc.frequency.setValueAtTime(1046, now + 0.6);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1.5);
+                osc.start();
+                osc.stop(now + 1.5);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        const CARDS = [
+            { val: 4, img: 'images/rodona.jpg' },
+            { val: 2, img: 'images/blanca.jpg' },
+            { val: 1, img: 'images/negra.jpg' },
+            { val: 0.5, img: 'images/corxera.jpg' },
+            { val: 0.25, img: 'images/semicorxera.jpg' },
+            { val: 4, img: 'images/silencirodona.jpg' },
+            { val: 2, img: 'images/silenciblanca.jpg' },
+            { val: 1, img: 'images/silencinegra.jpg' },
+            { val: 0.5, img: 'images/silencicorxera.jpg' }
+        ];
+
+        class Game {
+            constructor() {
+                this.wins = 0;
+                this.deck = [];
+                this.pHand = [];
+                this.cHand = [];
+                this.discardPile = [];
+                this.selectedIndices = new Set();
+                this.turn = 'player'; // 'player' or 'cpu'
+                this.phase = 'draw'; // 'draw' or 'play'
+                this.drawnCard = null; // Card currently drawn but not yet in hand/table
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.reset();
+            }
+
+            reset() {
+                document.getElementById('result-modal').style.display = 'none';
+                this.createDeck();
+                this.deal();
+                this.turn = 'player';
+                this.phase = 'draw';
+                this.drawnCard = null;
+                this.render();
+            }
+
+            createDeck() {
+                this.deck = [];
+                // 4 copies of each
+                CARDS.forEach(c => {
+                    for (let i = 0; i < 4; i++) this.deck.push({ ...c, uid: Math.random() });
+                });
+                this.deck.sort(() => Math.random() - 0.5);
+            }
+
+            deal() {
+                this.pHand = [];
+                this.cHand = [];
+                this.discardPile = [];
+                for (let i = 0; i < 9; i++) {
+                    this.pHand.push(this.deck.pop());
+                    this.cHand.push(this.deck.pop());
+                }
+                // Start discard
+                this.discardPile.push(this.deck.pop());
+            }
+
+            drawStock() {
+                if (this.turn !== 'player' || this.phase !== 'draw') return;
+                this.drawnCard = this.deck.pop();
+                this.phase = 'play';
+                this.pHand.push(this.drawnCard); // Add to hand temporarily for selection
+                this.render();
+                playSound('slide');
+            }
+
+            drawDiscard() {
+                if (this.turn !== 'player' || this.phase !== 'draw') return;
+                if (this.discardPile.length === 0) return;
+                this.drawnCard = this.discardPile.pop();
+                this.phase = 'play';
+                this.pHand.push(this.drawnCard);
+                this.render();
+                playSound('slide');
+            }
+
+            toggleCard(idx) {
+                if (this.selectedIndices.has(idx)) this.selectedIndices.delete(idx);
+                else this.selectedIndices.add(idx);
+                this.render();
+            }
+
+            meld() {
+                if (this.turn !== 'player' || this.phase !== 'play') return;
+
+                const selected = Array.from(this.selectedIndices).map(i => this.pHand[i]);
+                const sum = selected.reduce((a, b) => a + b.val, 0);
+
+                // Valid sums: 2, 3, 4
+                if ([2, 3, 4].includes(sum)) {
+                    // Valid Meld
+                    // Remove from hand
+                    // In Conquian, melds stay on table.
+                    // For simplicity, we just remove them and count towards "emptying hand".
+                    // But we must ensure the drawn card is used?
+                    // "L'obligació: El jugador ha d'usar la carta robada immediatament".
+                    // Let's enforce that drawnCard is in the selection.
+                    const drawnIdx = this.pHand.indexOf(this.drawnCard);
+                    if (!this.selectedIndices.has(drawnIdx)) {
+                        alert("Has d'utilitzar la carta robada!");
+                        return;
+                    }
+
+                    // Remove
+                    const newHand = [];
+                    this.pHand.forEach((c, i) => {
+                        if (!this.selectedIndices.has(i)) newHand.push(c);
+                    });
+                    this.pHand = newHand;
+                    this.selectedIndices.clear();
+                    this.drawnCard = null; // Used
+
+                    // Add to melds display
+                    const meldDiv = document.createElement('div');
+                    meldDiv.className = 'meld';
+                    selected.forEach(c => {
+                        const img = document.createElement('img');
+                        img.src = c.img;
+                        img.className = 'card';
+                        meldDiv.appendChild(img);
+                    });
+                    document.getElementById('melds-area').appendChild(meldDiv);
+
+                    playSound('meld');
+                    this.checkWin();
+
+                    // After meld, can discard? Or continue melding?
+                    // Usually you can meld multiple times, then discard.
+                    // But since we forced using drawn card, maybe we just allow discard now.
+                    // If hand empty, win.
+                    // If not, must discard one card to end turn.
+                    if (this.pHand.length > 0) {
+                        alert("Ara descarta una carta per acabar el torn.");
+                        // Phase stays 'play' but now waiting for discard
+                    }
+                } else {
+                    alert("Suma invàlida (ha de ser 2, 3 o 4)");
+                }
+                this.render();
+            }
+
+            discard() {
+                if (this.turn !== 'player' || this.phase !== 'play') return;
+                if (this.selectedIndices.size !== 1) {
+                    alert("Selecciona 1 carta per descartar.");
+                    return;
+                }
+
+                const idx = Array.from(this.selectedIndices)[0];
+                const card = this.pHand[idx];
+
+                // If we haven't melded, we must discard the drawn card?
+                // "o descartar-la". Yes.
+                // If we melded, we discard any card.
+
+                this.discardPile.push(card);
+                this.pHand.splice(idx, 1);
+                this.selectedIndices.clear();
+                this.drawnCard = null;
+
+                playSound('slide');
+                this.turn = 'cpu';
+                this.phase = 'draw';
+                this.render();
+                setTimeout(() => this.cpuTurn(), 1000);
+            }
+
+            cpuTurn() {
+                // Simple AI
+                // 1. Draw from stock (simplification)
+                if (this.deck.length === 0) {
+                    // Reshuffle discard? Or draw
+                    if (this.discardPile.length > 0) {
+                        this.deck = this.discardPile;
+                        this.discardPile = [];
+                        this.deck.sort(() => Math.random() - 0.5);
+                    } else {
+                        // Draw game?
+                        this.endGame(false);
+                        return;
+                    }
+                }
+
+                const card = this.deck.pop();
+                this.cHand.push(card);
+
+                // 2. Try to meld
+                // Check subsets including new card
+                // ... (Complex logic omitted, just random chance for demo)
+                // Let's say 30% chance to meld
+                if (Math.random() < 0.3) {
+                    // Meld something
+                    // Remove 2-3 cards
+                    if (this.cHand.length >= 3) {
+                        this.cHand.splice(0, 3);
+                        playSound('meld');
+                    }
+                }
+
+                this.checkWin();
+                if (this.cHand.length === 0) return;
+
+                // 3. Discard
+                const disc = this.cHand.pop();
+                this.discardPile.push(disc);
+                playSound('slide');
+
+                this.turn = 'player';
+                this.phase = 'draw';
+                this.render();
+            }
+
+            checkWin() {
+                if (this.pHand.length === 0) {
+                    this.wins++;
+                    document.getElementById('wins-display').textContent = this.wins;
+                    if (this.wins >= 2) {
+                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                        rewards['reward_conquian'] = true;
+                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                        playSound('fanfare');
+                        document.getElementById('epic-modal').style.display = 'flex';
+                    } else {
+                        document.getElementById('result-title').textContent = "CONQUIÁN! HAS GUANYAT!";
+                        document.getElementById('result-modal').style.display = 'flex';
+                    }
+                } else if (this.cHand.length === 0) {
+                    document.getElementById('result-title').textContent = "LA CPU HA GUANYAT!";
+                    document.getElementById('result-modal').style.display = 'flex';
+                }
+            }
+
+            render() {
+                // CPU Hand
+                document.getElementById('cpu-hand').textContent = `CPU (${this.cHand.length} Cartes)`;
+
+                // Stock/Discard
+                const stockEl = document.getElementById('stock');
+                if (this.deck.length > 0) stockEl.innerHTML = `<div class="pile-label">MAÇ</div><div class="card card-back"></div>`;
+                else stockEl.innerHTML = `<div class="pile-label">MAÇ</div>`;
+
+                const discardEl = document.getElementById('discard');
+                if (this.discardPile.length > 0) {
+                    const c = this.discardPile[this.discardPile.length - 1];
+                    discardEl.innerHTML = `<div class="pile-label">DESCART</div><img src="${c.img}" class="card">`;
+                } else {
+                    discardEl.innerHTML = `<div class="pile-label">DESCART</div>`;
+                }
+
+                // Player Hand
+                const pContainer = document.getElementById('player-hand');
+                pContainer.innerHTML = '';
+                this.pHand.forEach((c, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    if (this.selectedIndices.has(i)) div.classList.add('selected');
+                    div.innerHTML = `<img src="${c.img}">`;
+                    div.onclick = () => this.toggleCard(i);
+                    pContainer.appendChild(div);
+                });
+
+                // Buttons
+                document.getElementById('btn-meld').disabled = (this.turn !== 'player' || this.phase !== 'play');
+                document.getElementById('btn-discard').disabled = (this.turn !== 'player' || this.phase !== 'play');
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

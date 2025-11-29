@@ -10,12 +10,57 @@
             --board: #004d00;
             /* Felt Green */
             --slot: #002200;
-            --p1: #ff0000;
-            /* Red Chips */
-            --p2: #ffd700;
-            /* Gold Chips */
+            --p1: #222;
+            /* Black Chips */
+            --p2: #f0f0f0;
+            /* White Chips */
             --gold: #ffd700;
             --wood: #4a2c0f;
+        }
+
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
         }
 
         body {
@@ -247,6 +292,20 @@
         <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
     </div>
 
+    <!-- Instructions Modal -->
+    <div id="instructions-modal">
+        <div class="instr-content">
+            <span class="instr-close"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Connecta 4 fitxes del teu color en línia (horitzontal, vertical o diagonal).
+            </p>
+            <p>Per col·locar fitxa, has de respondre una pregunta d'equivalències.</p>
+            <button class="instr-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+        </div>
+    </div>
+
     <div id="status">Torn: JUGADOR (Negres)</div>
 
     <!-- Selector Removed -->
@@ -305,8 +364,9 @@
         const COLS = 7;
         let board = [];
         let turn = 1; // 1 = Player, 2 = AI
-        let selectedVal = 1;
-        let selectedType = 'negra';
+        let playerWins = 0;
+        let aiWins = 0;
+        const WIN_SCORE = 1; // Single game win for relic, can be increased
 
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -357,11 +417,29 @@
         }
 
         // Fixed Types
+        // Player = Black (Negra image or just black?) User said "Black figures".
+        // AI = White (Rhythmic figures).
+        // Let's use specific images if available, or just colors + generic note.
+        // Assuming images/negra.jpg and images/blanca.jpg exist.
         const PLAYER_TYPE = { t: 'negra', v: 1 };
         const AI_TYPE = { t: 'blanca', v: 2 };
 
-        function selectNote(type, val) {
-            // No selection needed anymore, but keep function to avoid errors if called
+        function placeToken(r, c, player, type, val) {
+            board[r][c] = { player, type, val };
+            const slot = document.querySelector(`.slot[data-r='${r}'][data-c='${c}']`);
+
+            const token = document.createElement('div');
+            token.className = `token p${player}`;
+
+            const img = document.createElement('img');
+            // Use specific images based on player
+            if (player === 1) img.src = 'images/negra.jpg'; // Player gets Negra
+            else img.src = 'images/blanca.jpg'; // AI gets Blanca
+
+            token.appendChild(img);
+
+            slot.appendChild(token);
+            playSound('drop');
         }
 
         function dropToken(col) {
@@ -387,10 +465,6 @@
 
         function aiTurn() {
             // Simple AI: Block or Win
-            // 1. Check if AI can win
-            // 2. Check if Player can win (block)
-            // 3. Random valid
-
             let bestMove = -1;
 
             // Helper to simulate drop
@@ -440,7 +514,6 @@
 
             // Fallback if full (draw?)
             if (bestMove === -1) {
-                // Check draw or just return
                 return;
             }
 
@@ -453,12 +526,11 @@
                 winGame(2);
             } else {
                 turn = 1;
-                document.getElementById('status').textContent = `Torn: JUGADOR (Negres) - Ronda ${playerWins + aiWins + 1}`;
+                document.getElementById('status').textContent = `Torn: JUGADOR (Negres)`;
             }
         }
 
         function checkWin(player) {
-            // Only check for 4 identical player tokens
             function checkLine(cells) {
                 if (cells.some(c => c === null || c.player !== player)) return false;
                 return true;
@@ -494,11 +566,11 @@
         function winGame(winner) {
             if (winner === 1) {
                 playerWins++;
-                document.getElementById('status').textContent = `JUGADOR GUANYA LA RONDA! (${playerWins}/${WIN_SCORE})`;
+                document.getElementById('status').textContent = `JUGADOR GUANYA!`;
                 document.getElementById('status').style.color = "#39ff14";
             } else {
                 aiWins++;
-                document.getElementById('status').textContent = `IA GUANYA LA RONDA! (${aiWins}/${WIN_SCORE})`;
+                document.getElementById('status').textContent = `IA GUANYA!`;
                 document.getElementById('status').style.color = "#ff003c";
             }
 
@@ -506,116 +578,24 @@
 
             if (playerWins >= WIN_SCORE) {
                 // Match Win
-                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
                 rewards['reward_conecta4'] = true;
-                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
                 setTimeout(() => {
                     document.getElementById('win-modal').style.display = 'flex';
                 }, 1500);
             } else if (aiWins >= WIN_SCORE) {
                 // Match Lose
                 setTimeout(() => {
-                    alert("LA IA HA GUANYAT EL TORNEIG! Torna-ho a provar.");
+                    alert("LA IA HA GUANYAT! Torna-ho a provar.");
                     location.reload();
                 }, 1500);
-            } else {
-                // Next Round
-                setTimeout(() => {
-                    initBoard();
-                    turn = 1;
-                    document.getElementById('status').textContent = `Torn: JUGADOR (Vermell) - Ronda ${playerWins + aiWins + 1}`;
-                    document.getElementById('status').style.color = "var(--gold)";
-                }, 2000);
             }
         }
 
-        function aiTurn() {
-            // Simple Heuristic AI
-            // 1. Check if can win
-            // 2. Check if player can win next (block)
-            // 3. Pick center/random
 
-            const opts = [
-                { t: 'negra', v: 1 }, { t: 'blanca', v: 2 }, { t: 'corxera', v: 0.5 }
-            ];
-
-            // Helper to simulate drop
-            function simulate(c, p, t, v) {
-                let r = ROWS - 1;
-                while (r >= 0 && board[r][c] !== null) r--;
-                if (r < 0) return false;
-                board[r][c] = { player: p, type: t, val: v };
-                const win = checkWin(p);
-                board[r][c] = null; // Undo
-                return win;
-            }
-
-            let bestMove = null;
-
-            // 1. Try to win
-            for (let c = 0; c < COLS; c++) {
-                for (let opt of opts) {
-                    if (simulate(c, 2, opt.t, opt.v)) {
-                        bestMove = { c, t: opt.t, v: opt.v };
-                        break;
-                    }
-                }
-                if (bestMove) break;
-            }
-
-            // 2. Block player
-            if (!bestMove) {
-                for (let c = 0; c < COLS; c++) {
-                    // Assume player uses 'negra' (most common) or check all?
-                    // Checking all player options is expensive. Let's check 'negra' and 'blanca'.
-                    if (simulate(c, 1, 'negra', 1) || simulate(c, 1, 'blanca', 2)) {
-                        bestMove = { c, t: 'negra', v: 1 }; // Block with default
-                        break;
-                    }
-                }
-            }
-
-            // 3. Random valid
-            if (!bestMove) {
-                let col = Math.floor(Math.random() * COLS);
-                let attempts = 0;
-                while (board[0][col] !== null && attempts < 100) {
-                    col = Math.floor(Math.random() * COLS);
-                    attempts++;
-                }
-                if (attempts < 100) {
-                    const choice = opts[Math.floor(Math.random() * opts.length)];
-                    bestMove = { c: col, t: choice.t, v: choice.v };
-                }
-            }
-
-            if (bestMove) {
-                let r = ROWS - 1;
-                while (r >= 0 && board[r][bestMove.c] !== null) r--;
-                placeToken(r, bestMove.c, 2, bestMove.t, bestMove.v);
-
-                if (checkWin(2)) {
-                    winGame(2);
-                } else {
-                    turn = 1;
-                    document.getElementById('status').textContent = `Torn: JUGADOR (Vermell) - Ronda ${playerWins + aiWins + 1}`;
-                }
-            }
-        }
-
-        function winGame(player) {
-            if (player === 1) {
-                playSound('win');
-                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
-                rewards['reward_conecta4'] = true;
-                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
-                document.getElementById('win-modal').style.display = 'flex';
-            } else {
-                alert("Ha guanyat la IA!");
-                location.reload();
-            }
-        }
     </script>
 </body>
 
 </html>
+```

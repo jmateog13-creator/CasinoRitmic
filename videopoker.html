@@ -11,6 +11,53 @@
             --neon-pink: #f0f;
             --screen-bg: #000033;
             --btn-color: #ffcc00;
+            --felt-blue: #00008b;
+            --gold: #ffd700;
+        }
+
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
         }
 
         body {
@@ -256,8 +303,22 @@
 
 <body>
 
-    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+    <div id="ui-bar">
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
 
+    <!-- Instructions Modal -->
+    <div id="instructions-modal">
+        <div class="instr-content">
+            <span class="instr-close"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Forma la millor mà de pòquer possible amb 5 cartes.</p>
+            <p>Busca combinacions com Parelles, Trios o Escales!</p>
+            <button class="instr-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+        </div>
+    </div>
     <div id="machine">
         <div id="screen">
             <div id="info-panel">
@@ -488,9 +549,9 @@
 
                 if (this.wins >= 5) {
                     // Save Reward
-                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
                     rewards['reward_poker'] = true;
-                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
 
                     setTimeout(() => {
                         document.getElementById('win-modal').style.display = 'flex';

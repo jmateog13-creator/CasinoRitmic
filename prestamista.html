@@ -12,6 +12,86 @@
             --dark-gold: #b8860b;
             --bg: #1a0f0a;
             --text: #f5e6d3;
+            --felt-green: #2d5a27;
+        }
+
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+            border-radius: 10px;
+            box-shadow: 0 0 50px var(--gold);
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s;
+        }
+
+        .instr-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+            transition: background 0.2s;
+        }
+
+        .btn-menu:hover {
+            background: rgba(0, 0, 0, 0.7);
         }
 
         body {
@@ -285,12 +365,10 @@
             <h1>LA BALANÇA DEL PRESTAMISTA</h1>
             <div class="stats">NIVELL: <span id="level">1</span>/5</div>
             <div style="display:flex; align-items:center; gap:10px;">
-                <span style="font-size:1.2rem">🔊</span>
+                <button id="mute-btn"
+                    style="background:none; border:none; font-size: 1.2rem; cursor: pointer;">🔊</button>
                 <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5"
                     style="width: 100px; accent-color:var(--gold);">
-                <a href="menu.html"
-                    style="text-decoration:none; color:var(--gold); border:1px solid var(--gold); padding:5px 15px; border-radius:5px; font-weight:bold; background:rgba(0,0,0,0.5);">🏠
-                    MENÚ</a>
             </div>
         </header>
 
@@ -331,9 +409,26 @@
             </div>
         </div>
 
+        <div id="ui-bar">
+            <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+        </div>
+
         <div id="controls">
             <button class="btn" onclick="resetPlate()">BUIDAR PLAT</button>
             <button class="btn" onclick="checkBalance()">PESAR</button>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal">
+        <div class="instr-content">
+            <span class="instr-close"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Demana un préstec i torna'l amb interessos musicals.</p>
+            <p>Calcula bé per no quedar-te en fallida!</p>
+            <button class="instr-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
         </div>
     </div>
 
@@ -372,17 +467,37 @@
     <audio id="bg-music" src="music/background_music_prestamista.mp3" loop></audio>
     <script>
         // Background Music
+        // Background Music
+        const bgMusic = document.getElementById('bg-music');
+        const muteBtn = document.getElementById('mute-btn');
+        let isMuted = false;
+        let previousVolume = 0.5;
+
         document.body.addEventListener('click', () => {
-            const bgMusic = document.getElementById('bg-music');
-            if (bgMusic.paused) {
+            if (bgMusic.paused && !isMuted) {
                 bgMusic.volume = document.getElementById('volume').value * 0.5;
                 bgMusic.play().catch(e => console.log(e));
             }
         }, { once: true });
 
         document.getElementById('volume').addEventListener('input', (e) => {
-            const bgMusic = document.getElementById('bg-music');
+            if (isMuted) {
+                isMuted = false;
+                muteBtn.textContent = '🔊';
+            }
             bgMusic.volume = e.target.value * 0.5;
+        });
+
+        muteBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            if (isMuted) {
+                previousVolume = bgMusic.volume;
+                bgMusic.volume = 0;
+                muteBtn.textContent = '🔇';
+            } else {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                muteBtn.textContent = '🔊';
+            }
         });
 
         // Audio Context
@@ -566,9 +681,9 @@
                     loadLevel();
                 } else {
                     // Game Win
-                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
                     rewards['reward_prestamista'] = true;
-                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
                     document.getElementById('win-modal').style.display = 'flex';
                 }
             } else {

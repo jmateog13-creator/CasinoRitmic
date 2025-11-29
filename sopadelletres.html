@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sopa de Lletres Rítmica</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+        :root {
+            --bg-color: #121212;
+            --text-col: #e0e0e0;
+            --highlight: #00e676;
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            font-family: 'Roboto Mono', monospace;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-col);
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid var(--gold);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            font-size: 1.2rem;
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Game Area */
+        #game-area {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            gap: 40px;
+            padding-top: 60px;
+        }
+
+        /* Grid */
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(15, 30px);
+            grid-template-rows: repeat(15, 30px);
+            gap: 2px;
+            background: #222;
+            padding: 10px;
+            border: 2px solid #444;
+            user-select: none;
+        }
+
+        .cell {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #333;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .cell:hover {
+            background: #444;
+        }
+
+        .cell.selected {
+            background: #555;
+            color: white;
+        }
+
+        .cell.found {
+            background: var(--highlight);
+            color: black;
+        }
+
+        /* Word List */
+        #word-list {
+            width: 200px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .word-item {
+            padding: 5px;
+            border-bottom: 1px solid #444;
+        }
+
+        .word-item.found {
+            color: var(--highlight);
+            text-decoration: line-through;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--bg-color);
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="game-area">
+        <div id="grid" onmousedown="game.startSelect(event)" onmouseover="game.overSelect(event)"
+            onmouseup="game.endSelect()">
+            <!-- Grid generated by JS -->
+        </div>
+
+        <div id="word-list">
+            <!-- Words generated by JS -->
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">SOPA DE LLETRES RÍTMICA</h2>
+            <p>1. Troba les 15 paraules amagades.</p>
+            <p>2. Arrossega el ratolí per seleccionar.</p>
+            <p>3. Completa la llista per guanyar.</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">LÒGICA PERFECTA!</h2>
+            <div class="relic-icon">📜</div>
+            <h3 style="color: var(--gold);">EL MANUSCRIT DE LA FUGA DE BACH</h3>
+            <p style="font-style: italic; color: #aaa;">"Una pàgina original de les fugues de Bach, l'apogeu de la
+                lògica musical i el contrapunt."</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/High Stakes Heart.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'ding') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1000, now);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            } else if (type === 'buzz') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start();
+                osc.stop(now + 0.2);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        const WORDS = [
+            "RITME", "NEGRA", "BLANCA", "RODONA", "CORCHEA",
+            "FUSA", "POLS", "COMPAS", "VALOR", "DURACION",
+            "SILENCI", "TERC", "TEMPS", "PENTAGRAMA", "SUBDIVISIO"
+        ]; // Normalized (no accents for grid simplicity)
+
+        class Game {
+            constructor() {
+                this.gridSize = 15;
+                this.grid = [];
+                this.foundCount = 0;
+                this.selecting = false;
+                this.startCell = null;
+                this.currentSelection = [];
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.generateGrid();
+                this.render();
+            }
+
+            generateGrid() {
+                // Init empty
+                this.grid = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(''));
+
+                // Place words
+                WORDS.forEach(word => {
+                    let placed = false;
+                    while (!placed) {
+                        const dir = Math.floor(Math.random() * 3); // 0: H, 1: V, 2: D
+                        const r = Math.floor(Math.random() * this.gridSize);
+                        const c = Math.floor(Math.random() * this.gridSize);
+
+                        // Check bounds and overlap
+                        if (this.canPlace(word, r, c, dir)) {
+                            this.place(word, r, c, dir);
+                            placed = true;
+                        }
+                    }
+                });
+
+                // Fill random
+                const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                for (let r = 0; r < this.gridSize; r++) {
+                    for (let c = 0; c < this.gridSize; c++) {
+                        if (this.grid[r][c] === '') {
+                            this.grid[r][c] = chars[Math.floor(Math.random() * chars.length)];
+                        }
+                    }
+                }
+            }
+
+            canPlace(word, r, c, dir) {
+                const len = word.length;
+                if (dir === 0) { // H
+                    if (c + len > this.gridSize) return false;
+                    for (let i = 0; i < len; i++) if (this.grid[r][c + i] !== '' && this.grid[r][c + i] !== word[i]) return false;
+                } else if (dir === 1) { // V
+                    if (r + len > this.gridSize) return false;
+                    for (let i = 0; i < len; i++) if (this.grid[r + i][c] !== '' && this.grid[r + i][c] !== word[i]) return false;
+                } else { // D
+                    if (r + len > this.gridSize || c + len > this.gridSize) return false;
+                    for (let i = 0; i < len; i++) if (this.grid[r + i][c + i] !== '' && this.grid[r + i][c + i] !== word[i]) return false;
+                }
+                return true;
+            }
+
+            place(word, r, c, dir) {
+                for (let i = 0; i < word.length; i++) {
+                    if (dir === 0) this.grid[r][c + i] = word[i];
+                    else if (dir === 1) this.grid[r + i][c] = word[i];
+                    else this.grid[r + i][c + i] = word[i];
+                }
+            }
+
+            render() {
+                const gridEl = document.getElementById('grid');
+                gridEl.innerHTML = '';
+                for (let r = 0; r < this.gridSize; r++) {
+                    for (let c = 0; c < this.gridSize; c++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.textContent = this.grid[r][c];
+                        cell.dataset.r = r;
+                        cell.dataset.c = c;
+                        cell.id = `cell-${r}-${c}`;
+                        gridEl.appendChild(cell);
+                    }
+                }
+
+                const listEl = document.getElementById('word-list');
+                listEl.innerHTML = '';
+                WORDS.forEach(w => {
+                    const item = document.createElement('div');
+                    item.className = 'word-item';
+                    item.textContent = w;
+                    item.id = `word-${w}`;
+                    listEl.appendChild(item);
+                });
+            }
+
+            startSelect(e) {
+                if (!e.target.classList.contains('cell')) return;
+                this.selecting = true;
+                this.startCell = { r: parseInt(e.target.dataset.r), c: parseInt(e.target.dataset.c) };
+                this.updateSelection(this.startCell);
+            }
+
+            overSelect(e) {
+                if (!this.selecting || !e.target.classList.contains('cell')) return;
+                const curr = { r: parseInt(e.target.dataset.r), c: parseInt(e.target.dataset.c) };
+                this.updateSelection(curr);
+            }
+
+            endSelect() {
+                if (!this.selecting) return;
+                this.selecting = false;
+
+                // Check word
+                const word = this.currentSelection.map(pos => this.grid[pos.r][pos.c]).join('');
+                const rev = word.split('').reverse().join('');
+
+                if (WORDS.includes(word) || WORDS.includes(rev)) {
+                    const found = WORDS.includes(word) ? word : rev;
+                    if (!document.getElementById(`word-${found}`).classList.contains('found')) {
+                        playSound('ding');
+                        document.getElementById(`word-${found}`).classList.add('found');
+                        this.currentSelection.forEach(pos => {
+                            document.getElementById(`cell-${pos.r}-${pos.c}`).classList.add('found');
+                        });
+                        this.foundCount++;
+                        if (this.foundCount >= WORDS.length) {
+                            const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                            rewards['reward_sopadelletres'] = true;
+                            sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                            document.getElementById('epic-modal').style.display = 'flex';
+                        }
+                    }
+                } else {
+                    playSound('buzz');
+                }
+
+                // Clear selection visual
+                document.querySelectorAll('.cell.selected').forEach(el => el.classList.remove('selected'));
+                this.currentSelection = [];
+            }
+
+            updateSelection(end) {
+                // Calculate line
+                document.querySelectorAll('.cell.selected').forEach(el => el.classList.remove('selected'));
+                this.currentSelection = [];
+
+                const dr = end.r - this.startCell.r;
+                const dc = end.c - this.startCell.c;
+
+                // Determine direction (H, V, D)
+                if (dr === 0) { // H
+                    const start = Math.min(this.startCell.c, end.c);
+                    const stop = Math.max(this.startCell.c, end.c);
+                    for (let c = start; c <= stop; c++) this.currentSelection.push({ r: this.startCell.r, c });
+                } else if (dc === 0) { // V
+                    const start = Math.min(this.startCell.r, end.r);
+                    const stop = Math.max(this.startCell.r, end.r);
+                    for (let r = start; r <= stop; r++) this.currentSelection.push({ r, c: this.startCell.c });
+                } else if (Math.abs(dr) === Math.abs(dc)) { // D
+                    const stepR = dr > 0 ? 1 : -1;
+                    const stepC = dc > 0 ? 1 : -1;
+                    let r = this.startCell.r;
+                    let c = this.startCell.c;
+                    for (let i = 0; i <= Math.abs(dr); i++) {
+                        this.currentSelection.push({ r, c });
+                        r += stepR;
+                        c += stepC;
+                    }
+                }
+
+                this.currentSelection.forEach(pos => {
+                    document.getElementById(`cell-${pos.r}-${pos.c}`).classList.add('selected');
+                });
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Càlcul Lògic</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --neon-green: #0f0;
+            --neon-blue: #0ff;
+            --dark-bg: #051015;
+            --panel-bg: #0a1a20;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--dark-bg);
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--neon-blue);
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid var(--neon-blue);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--neon-blue);
+            font-size: 1.2rem;
+            border: 1px solid var(--neon-blue);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Game Area */
+        #game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            gap: 50px;
+        }
+
+        /* Pipeline */
+        #pipeline {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: var(--panel-bg);
+            padding: 40px;
+            border: 2px solid var(--neon-blue);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .slot {
+            width: 100px;
+            height: 100px;
+            border: 2px dashed var(--neon-green);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            background: rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .slot.filled {
+            border-style: solid;
+        }
+
+        .slot img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        .operator {
+            font-size: 3rem;
+            color: white;
+        }
+
+        /* Inventory */
+        #inventory {
+            display: flex;
+            gap: 40px;
+        }
+
+        .inv-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .items-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .draggable {
+            width: 80px;
+            height: 80px;
+            background: #111;
+            border: 1px solid var(--neon-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            font-size: 2rem;
+            transition: transform 0.2s;
+        }
+
+        .draggable:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        .draggable img {
+            width: 70%;
+            height: 70%;
+            object-fit: contain;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #051015;
+            padding: 40px;
+            border: 4px solid var(--neon-green);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+            box-shadow: 0 0 50px var(--neon-green);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--neon-blue);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--neon-blue);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5"
+                style="accent-color: var(--neon-blue);">
+        </div>
+        <div style="font-size:1.2rem;">NIVELL: <span id="level-display">1</span>/7</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="game-area">
+        <div id="pipeline">
+            <!-- Input -->
+            <div class="slot filled" id="slot-input">
+                <!-- Img injected -->
+            </div>
+
+            <!-- Operator Drop Zone -->
+            <div class="slot" id="drop-op" ondrop="game.drop(event, 'op')" ondragover="game.allowDrop(event)">
+                ?
+            </div>
+
+            <!-- Note Drop Zone -->
+            <div class="slot" id="drop-note" ondrop="game.drop(event, 'note')" ondragover="game.allowDrop(event)">
+                ?
+            </div>
+
+            <div class="operator">=</div>
+
+            <!-- Target -->
+            <div class="slot filled" id="slot-target">
+                <!-- Img injected -->
+            </div>
+        </div>
+
+        <button class="action-btn" onclick="game.checkSolution()">VERIFICAR</button>
+
+        <div id="inventory">
+            <div class="inv-section">
+                <span>OPERADORS</span>
+                <div class="items-row">
+                    <div class="draggable" draggable="true" ondragstart="game.drag(event, 'op', '+')">+</div>
+                    <div class="draggable" draggable="true" ondragstart="game.drag(event, 'op', '-')">-</div>
+                    <div class="draggable" draggable="true" ondragstart="game.drag(event, 'op', '*')">×</div>
+                    <div class="draggable" draggable="true" ondragstart="game.drag(event, 'op', '/')">÷</div>
+                </div>
+            </div>
+            <div class="inv-section">
+                <span>NOTES</span>
+                <div class="items-row" id="notes-inv">
+                    <!-- Injected -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--neon-blue);">COM JUGAR A "EL CÀLCUL LÒGIC"</h2>
+            <p>1. Resol l'equació musical: [ENTRADA] [OPERADOR] [NOTA] = [RESULTAT].</p>
+            <p>2. Arrossega un Operador (+, -, ×, ÷) i una Nota a les caselles buides.</p>
+            <p>3. Clica "VERIFICAR" per comprovar.</p>
+            <p>4. Resol 7 nivells per guanyar.</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--neon-green);">LÒGICA SERIAL!</h2>
+            <div class="relic-icon">🔢</div>
+            <h3 style="color: var(--neon-green);">LA MATRIU DE SCHOENBERG</h3>
+            <p style="font-style: italic; color: #aaa;">"El diagrama de regles i lògica que Arnold Schoenberg va
+                utilitzar per crear el seu revolucionari mètode de composició de 12 tons."</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'clack') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.05);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.05);
+                osc.start();
+                osc.stop(now + 0.05);
+            } else if (type === 'success') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(880, now + 0.1);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start();
+                osc.stop(now + 0.3);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(50, now + 0.3);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start();
+                osc.stop(now + 0.3);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        const NOTES = [
+            { id: 'rodona', val: 4, img: 'images/rodona.jpg' },
+            { id: 'blanca', val: 2, img: 'images/blanca.jpg' },
+            { id: 'negra', val: 1, img: 'images/negra.jpg' },
+            { id: 'corxera', val: 0.5, img: 'images/corxera.jpg' },
+            { id: 'semicorxera', val: 0.25, img: 'images/semicorxera.jpg' }
+        ];
+
+        const LEVELS = [
+            { in: 2, out: 4 },   // 2 + 2 = 4 OR 2 * 2 = 4
+            { in: 1, out: 0.5 }, // 1 - 0.5 = 0.5 OR 1 / 2 = 0.5
+            { in: 4, out: 1 },   // 4 / 4 = 1
+            { in: 0.5, out: 1 }, // 0.5 + 0.5 = 1 OR 0.5 * 2 = 1
+            { in: 2, out: 1 },   // 2 - 1 = 1 OR 2 / 2 = 1
+            { in: 1, out: 4 },   // 1 + ? (3 not avail) -> 1 * 4 = 4
+            { in: 0.25, out: 1 } // 0.25 * 4 = 1
+        ];
+
+        class Game {
+            constructor() {
+                this.level = 0;
+                this.currentOp = null;
+                this.currentNote = null;
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.renderInventory();
+                this.loadLevel();
+            }
+
+            renderInventory() {
+                const container = document.getElementById('notes-inv');
+                container.innerHTML = '';
+                NOTES.forEach(n => {
+                    const div = document.createElement('div');
+                    div.className = 'draggable';
+                    div.draggable = true;
+                    div.innerHTML = `<img src="${n.img}">`;
+                    div.ondragstart = (e) => this.drag(e, 'note', n.val, n.img);
+                    container.appendChild(div);
+                });
+            }
+
+            loadLevel() {
+                if (this.level >= LEVELS.length) {
+                    // Win
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_calculogic'] = true;
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    document.getElementById('epic-modal').style.display = 'flex';
+                    return;
+                }
+
+                const lvl = LEVELS[this.level];
+                document.getElementById('level-display').textContent = this.level + 1;
+
+                // Set Input
+                const inNote = this.findNoteByVal(lvl.in);
+                document.getElementById('slot-input').innerHTML = `<img src="${inNote.img}">`;
+
+                // Set Target
+                const outNote = this.findNoteByVal(lvl.out);
+                document.getElementById('slot-target').innerHTML = `<img src="${outNote.img}">`;
+
+                // Clear Drops
+                this.currentOp = null;
+                this.currentNote = null;
+                document.getElementById('drop-op').innerHTML = '?';
+                document.getElementById('drop-note').innerHTML = '?';
+            }
+
+            findNoteByVal(val) {
+                return NOTES.find(n => n.val === val) || { img: '', val: val };
+            }
+
+            drag(ev, type, val, img) {
+                ev.dataTransfer.setData("type", type);
+                ev.dataTransfer.setData("val", val);
+                if (img) ev.dataTransfer.setData("img", img);
+            }
+
+            allowDrop(ev) {
+                ev.preventDefault();
+            }
+
+            drop(ev, targetType) {
+                ev.preventDefault();
+                const type = ev.dataTransfer.getData("type");
+                if (type !== targetType) return;
+
+                const val = ev.dataTransfer.getData("val");
+                const img = ev.dataTransfer.getData("img");
+
+                playSound('clack');
+
+                if (type === 'op') {
+                    this.currentOp = val;
+                    ev.target.textContent = val === '*' ? '×' : (val === '/' ? '÷' : val);
+                } else {
+                    this.currentNote = parseFloat(val);
+                    ev.target.innerHTML = `<img src="${img}">`;
+                }
+            }
+
+            checkSolution() {
+                if (!this.currentOp || this.currentNote === null) return;
+
+                const lvl = LEVELS[this.level];
+                let result = 0;
+
+                switch (this.currentOp) {
+                    case '+': result = lvl.in + this.currentNote; break;
+                    case '-': result = lvl.in - this.currentNote; break;
+                    case '*': result = lvl.in * this.currentNote; break;
+                    case '/': result = lvl.in / this.currentNote; break;
+                }
+
+                if (Math.abs(result - lvl.out) < 0.01) {
+                    playSound('success');
+                    this.level++;
+                    setTimeout(() => this.loadLevel(), 1000);
+                } else {
+                    playSound('error');
+                    // Shake effect
+                    document.getElementById('pipeline').style.transform = 'translateX(10px)';
+                    setTimeout(() => document.getElementById('pipeline').style.transform = 'translateX(0)', 100);
+                }
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

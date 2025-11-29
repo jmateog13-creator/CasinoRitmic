@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Embut Classificador</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        :root {
+            --neon-green: #39ff14;
+            --neon-red: #ff003c;
+            --neon-yellow: #fff01f;
+            --dark-bg: #111;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--dark-bg);
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid #555;
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: white;
+            font-size: 1rem;
+            border: 2px solid white;
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Game Canvas */
+        #game-canvas {
+            background: #222;
+            border-left: 5px solid #555;
+            border-right: 5px solid #555;
+            box-shadow: inset 0 0 50px black;
+        }
+
+        /* Controls Overlay */
+        #controls-overlay {
+            position: absolute;
+            bottom: 20px;
+            display: flex;
+            gap: 20px;
+            z-index: 50;
+        }
+
+        .ctrl-btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 4px solid white;
+            border-radius: 50%;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .ctrl-btn:active {
+            background: white;
+            color: black;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px solid var(--neon-yellow);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            font-size: 1rem;
+            background: var(--neon-yellow);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 15px 30px;
+            font-size: 1rem;
+            background: var(--neon-yellow);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+            font-family: 'Press Start 2P', cursive;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button id="mute-btn" style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">🔊</button>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: white;">
+        </div>
+        <div>PUNTS: <span id="score">0</span>/1000</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <canvas id="game-canvas" width="600" height="800"></canvas>
+
+    <div id="controls-overlay">
+        <button class="ctrl-btn" onmousedown="game.setDir(-1)" onmouseup="game.setDir(0)" ontouchstart="game.setDir(-1)"
+            ontouchend="game.setDir(0)">◀</button>
+        <button class="ctrl-btn" onmousedown="game.setDir(1)" onmouseup="game.setDir(0)" ontouchstart="game.setDir(1)"
+            ontouchend="game.setDir(0)">▶</button>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--neon-yellow);">L'EMBUT CLASSIFICADOR</h2>
+            <p>1. Mou la porta amb les fletxes per guiar les notes.</p>
+            <p>2. Omple els compassos (2/4, 3/4, 4/4) exactament.</p>
+            <p>3. Si et passes (Bust), perds punts!</p>
+            <p>4. Arriba a 1000 punts.</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--neon-yellow);">TEMPO CLÀSSIC!</h2>
+            <div class="relic-icon">🕰️</div>
+            <h3 style="color: var(--neon-yellow);">EL PÈNDOL DEL RELLOTGE DE HAYDN</h3>
+            <p style="font-style: italic; color: #aaa;">"El pèndol de la Simfonia 'El Rellotge' de Haydn. Símbol de la
+                precisió i el ritme constant del Classicisme!"</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        const muteBtn = document.getElementById('mute-btn');
+        let isMuted = false;
+        let previousVolume = 0.5;
+
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused && !isMuted) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            if (isMuted) {
+                isMuted = false;
+                muteBtn.textContent = '🔊';
+            }
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        muteBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            if (isMuted) {
+                previousVolume = bgMusic.volume;
+                bgMusic.volume = 0;
+                muteBtn.textContent = '🔇';
+            } else {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                muteBtn.textContent = '🔊';
+            }
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'clonk') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start();
+                osc.stop(now + 0.1);
+            } else if (type === 'ding') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, now);
+                osc.frequency.setValueAtTime(1760, now + 0.1);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start();
+                osc.stop(now + 0.3);
+            } else if (type === 'bust') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(50, now + 0.3);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start();
+                osc.stop(now + 0.3);
+            }
+        }
+
+        // --- IMAGES ---
+        const IMGS = {
+            4: new Image(),
+            2: new Image(),
+            1: new Image(),
+            0.5: new Image(),
+            0.25: new Image()
+        };
+        IMGS[4].src = 'images/rodona.jpg';
+        IMGS[2].src = 'images/blanca.jpg';
+        IMGS[1].src = 'images/negra.jpg';
+        IMGS[0.5].src = 'images/corxera.jpg';
+        IMGS[0.25].src = 'images/semicorxera.jpg';
+
+        // --- GAME LOGIC ---
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('game-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.score = 0;
+                this.notes = [];
+                this.bins = [
+                    { target: 2, current: 0, label: '2/4' },
+                    { target: 3, current: 0, label: '3/4' },
+                    { target: 4, current: 0, label: '4/4' }
+                ];
+                this.gateX = 300; // Center
+                this.gateDir = 0;
+                this.spawnTimer = 0;
+                this.gameOver = false;
+                this.animationId = null;
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.loop();
+            }
+
+            setDir(d) {
+                this.gateDir = d;
+            }
+
+            spawnNote() {
+                const vals = [4, 2, 1, 0.5, 0.25];
+                const val = vals[Math.floor(Math.random() * vals.length)];
+                this.notes.push({
+                    x: 300, // Spawn center
+                    y: 0,
+                    val: val,
+                    vx: (Math.random() - 0.5) * 2, // Slight jitter
+                    vy: 2
+                });
+            }
+
+            update() {
+                if (this.gameOver) return;
+
+                // Gate Movement
+                this.gateX += this.gateDir * 5;
+                if (this.gateX < 50) this.gateX = 50;
+                if (this.gateX > 550) this.gateX = 550;
+
+                // Spawn
+                this.spawnTimer++;
+                if (this.spawnTimer > 100) {
+                    this.spawnNote();
+                    this.spawnTimer = 0;
+                }
+
+                // Notes
+                for (let i = this.notes.length - 1; i >= 0; i--) {
+                    const n = this.notes[i];
+                    n.y += n.vy;
+
+                    // Guide by Gate (Simple physics: if above gate y range, follow gate x?)
+                    // Let's say gate is at y=200.
+                    // If note is above 200, it falls towards gateX?
+                    // No, "Mou la porta... per dirigir".
+                    // Maybe the gate is a deflector at y=200.
+                    // If note hits gate, it gets pushed?
+                    // Let's simplify: Note falls from top. Player moves a "Funnel" at y=100.
+                    // Note spawns at random X? No, "cauen constantment".
+                    // Let's say note spawns at Gate X. Player moves Gate to choose spawn column?
+                    // No, "dirigir la nota".
+                    // Okay, let's say notes fall from top center.
+                    // Player controls a paddle/gate at y=400.
+                    // If note hits paddle, it slides in direction of paddle movement?
+                    // Or simpler: Player moves the "Chute Output".
+                    // Note falls through chute. Player moves chute left/right.
+                    // Note exits chute at bottom and falls into bin.
+                    // Yes. Gate X is the chute exit X.
+
+                    n.x = this.gateX; // Note is inside chute until it exits?
+                    // Let's say chute ends at y=600. Bins are at y=700.
+                    // Note falls down to y=600 following gateX.
+                    // Then falls straight down.
+
+                    if (n.y > 600) {
+                        // Released from chute
+                        // Fall straight
+                    } else {
+                        n.x = this.gateX;
+                    }
+
+                    // Hit Bin
+                    if (n.y > 750) {
+                        this.checkBin(n);
+                        this.notes.splice(i, 1);
+                    }
+                }
+            }
+
+            checkBin(n) {
+                // Determine bin based on x
+                // Width 600. 3 Bins -> 0-200, 200-400, 400-600.
+                let binIdx = -1;
+                if (n.x < 200) binIdx = 0;
+                else if (n.x < 400) binIdx = 1;
+                else binIdx = 2;
+
+                const bin = this.bins[binIdx];
+                bin.current += n.val;
+                playSound('clonk');
+
+                if (Math.abs(bin.current - bin.target) < 0.01) {
+                    // Perfect
+                    this.score += 100;
+                    bin.current = 0;
+                    playSound('ding');
+                    // Visual flash?
+                } else if (bin.current > bin.target) {
+                    // Bust
+                    this.score -= 50;
+                    if (this.score < 0) this.score = 0;
+                    bin.current = 0;
+                    playSound('bust');
+                }
+
+                document.getElementById('score').textContent = this.score;
+                if (this.score >= 1000) {
+                    this.gameOver = true;
+                    // Save Reward
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_embut'] = true;
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    document.getElementById('epic-modal').style.display = 'flex';
+                }
+            }
+
+            draw() {
+                // Clear
+                this.ctx.fillStyle = '#111';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw Bins
+                const binW = 200;
+                this.bins.forEach((b, i) => {
+                    this.ctx.fillStyle = '#222';
+                    this.ctx.fillRect(i * binW, 700, binW, 100);
+                    this.ctx.strokeStyle = '#555';
+                    this.ctx.strokeRect(i * binW, 700, binW, 100);
+
+                    // Label
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.font = '20px "Press Start 2P"';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(b.label, i * binW + binW / 2, 740);
+
+                    // Progress Bar
+                    const pct = Math.min(b.current / b.target, 1);
+                    this.ctx.fillStyle = pct > 0.9 ? 'orange' : 'green';
+                    this.ctx.fillRect(i * binW + 10, 760, (binW - 20) * pct, 20);
+                });
+
+                // Draw Chute (Gate)
+                this.ctx.fillStyle = '#444';
+                this.ctx.fillRect(this.gateX - 20, 0, 40, 600); // The pipe
+                this.ctx.strokeStyle = 'white';
+                this.ctx.strokeRect(this.gateX - 20, 0, 40, 600);
+
+                // Draw Notes
+                this.notes.forEach(n => {
+                    if (IMGS[n.val].complete) {
+                        this.ctx.drawImage(IMGS[n.val], n.x - 20, n.y - 20, 40, 60); // Aspect ratio approx
+                    } else {
+                        this.ctx.fillStyle = 'white';
+                        this.ctx.fillRect(n.x - 15, n.y - 15, 30, 30);
+                    }
+                });
+            }
+
+            loop() {
+                if (!this.gameOver) {
+                    this.update();
+                    this.draw();
+                    requestAnimationFrame(() => this.loop());
+                }
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

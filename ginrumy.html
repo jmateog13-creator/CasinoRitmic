@@ -13,6 +13,51 @@
             --card-bg: #fff;
         }
 
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -303,6 +348,19 @@
             <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color:var(--gold);">
         </div>
         <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal">
+        <div class="instr-content">
+            <span class="instr-close"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Forma mans vàlides (compases complets o grups de figures iguals).</p>
+            <p>Roba i descarta cartes per millorar la teva mà.</p>
+            <button class="instr-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+        </div>
     </div>
 
     <div id="table">
@@ -653,9 +711,9 @@
 
             if (wins >= 3) {
                 // Save Reward
-                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
                 rewards['reward_ginrummy'] = true;
-                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
                 setTimeout(() => {
                     document.getElementById('win-modal').style.display = 'flex';
                 }, 1000);

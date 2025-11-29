@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Cronòmetre Invers</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-color: #000;
+            --led-red: #ff0000;
+            --led-blue: #00ffff;
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--led-blue);
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid var(--led-blue);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--led-blue);
+            font-size: 1.2rem;
+            border: 1px solid var(--led-blue);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Game Area */
+        #game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            gap: 40px;
+        }
+
+        /* Timer Display */
+        #timer-container {
+            background: #111;
+            border: 4px solid #333;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        #main-display {
+            font-size: 8rem;
+            color: var(--led-red);
+            text-shadow: 0 0 20px var(--led-red);
+            line-height: 1;
+        }
+
+        #countdown-bar {
+            width: 100%;
+            height: 10px;
+            background: #333;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        #countdown-fill {
+            height: 100%;
+            background: var(--led-red);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        /* Buttons */
+        #controls {
+            display: flex;
+            gap: 20px;
+        }
+
+        .note-btn {
+            width: 100px;
+            height: 100px;
+            background: #222;
+            border: 2px solid var(--led-blue);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .note-btn:active {
+            transform: scale(0.95);
+            background: #333;
+            box-shadow: 0 0 20px var(--led-blue);
+        }
+
+        .note-btn img {
+            width: 60%;
+            height: 60%;
+            object-fit: contain;
+            pointer-events: none;
+            filter: drop-shadow(0 0 5px white);
+        }
+
+        .note-val {
+            margin-top: 5px;
+            font-size: 1.2rem;
+        }
+
+        /* Status */
+        #level-info {
+            font-size: 1.5rem;
+            color: var(--gold);
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #111;
+            padding: 40px;
+            border: 4px solid var(--led-blue);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+            box-shadow: 0 0 50px var(--led-blue);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--led-blue);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--led-blue);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5"
+                style="accent-color: var(--led-blue);">
+        </div>
+        <div id="level-info">NIVELL 1</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="game-area">
+        <div id="timer-container">
+            <div id="main-display">5.00</div>
+            <div id="countdown-bar">
+                <div id="countdown-fill"></div>
+            </div>
+        </div>
+
+        <div id="controls">
+            <div class="note-btn" onclick="game.subtract(4)">
+                <img src="images/rodona.jpg">
+                <div class="note-val">-4.0</div>
+            </div>
+            <div class="note-btn" onclick="game.subtract(2)">
+                <img src="images/blanca.jpg">
+                <div class="note-val">-2.0</div>
+            </div>
+            <div class="note-btn" onclick="game.subtract(1)">
+                <img src="images/negra.jpg">
+                <div class="note-val">-1.0</div>
+            </div>
+            <div class="note-btn" onclick="game.subtract(0.5)">
+                <img src="images/corxera.jpg">
+                <div class="note-val">-0.5</div>
+            </div>
+            <div class="note-btn" onclick="game.subtract(0.25)">
+                <img src="images/semicorxera.jpg">
+                <div class="note-val">-0.25</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--led-blue);">EL CRONÒMETRE INVERS</h2>
+            <p>1. Tens un temps inicial (ex: 5.00).</p>
+            <p>2. Resta valors musicals per arribar EXACTAMENT a 0.00.</p>
+            <p>3. No et passis (Bust) ni esgotis els 20 segons.</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">LA LLEI DEL TEMPO!</h2>
+            <div class="relic-icon">⏱️</div>
+            <h3 style="color: var(--gold);">EL PRIMER METRÒNOM DE MAELZEL</h3>
+            <p style="font-style: italic; color: #aaa;">"Johann Maelzel va patentar el primer metrònom. Has dominat el
+                temps amb precisió algebraica!"</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <!-- Fail Modal -->
+    <div id="fail-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: red;">ERROR FATAL!</h2>
+            <p id="fail-msg">Has fet Bust!</p>
+            <button class="action-btn" onclick="game.resetLevel()">REINICIAR NIVELL</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/High Stakes Love-4.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        let tickOsc = null;
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(vol * 0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start();
+                osc.stop(now + 0.05);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(50, now + 0.5);
+                gain.gain.setValueAtTime(vol * 0.5, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            } else if (type === 'win') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(880, now + 0.1);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            } else if (type === 'tick') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(1000, now);
+                gain.gain.setValueAtTime(vol * 0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start();
+                osc.stop(now + 0.05);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        const LEVELS = [3.0, 5.0, 7.5, 9.0, 12.0];
+
+        class Game {
+            constructor() {
+                this.level = 0;
+                this.currentVal = 0;
+                this.timeLeft = 20;
+                this.timerInterval = null;
+                this.running = false;
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.startLevel();
+            }
+
+            startLevel() {
+                this.currentVal = LEVELS[this.level];
+                this.timeLeft = 20;
+                this.running = true;
+                this.updateDisplay();
+                document.getElementById('level-info').textContent = `NIVELL ${this.level + 1}`;
+
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                this.timerInterval = setInterval(() => this.tick(), 100);
+            }
+
+            resetLevel() {
+                document.getElementById('fail-modal').style.display = 'none';
+                this.startLevel();
+            }
+
+            tick() {
+                if (!this.running) return;
+                this.timeLeft -= 0.1;
+                if (Math.floor(this.timeLeft * 10) % 10 === 0) playSound('tick');
+
+                if (this.timeLeft <= 0) {
+                    this.timeLeft = 0;
+                    this.fail("Temps Esgotat!");
+                }
+                this.updateDisplay();
+            }
+
+            subtract(val) {
+                if (!this.running) return;
+
+                this.currentVal -= val;
+                // Fix float precision
+                this.currentVal = Math.round(this.currentVal * 100) / 100;
+
+                playSound('click');
+                this.updateDisplay();
+
+                if (this.currentVal === 0) {
+                    this.winLevel();
+                } else if (this.currentVal < 0) {
+                    this.fail("BUST! T'has passat!");
+                }
+            }
+
+            fail(msg) {
+                this.running = false;
+                clearInterval(this.timerInterval);
+                playSound('error');
+                document.getElementById('fail-msg').textContent = msg;
+                document.getElementById('fail-modal').style.display = 'flex';
+            }
+
+            winLevel() {
+                this.running = false;
+                clearInterval(this.timerInterval);
+                playSound('win');
+
+                this.level++;
+                if (this.level >= 3) { // Goal: 3 levels
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_cronometre'] = true;
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    document.getElementById('epic-modal').style.display = 'flex';
+                } else {
+                    setTimeout(() => {
+                        alert("Nivell Completat!");
+                        this.startLevel();
+                    }, 500);
+                }
+            }
+
+            updateDisplay() {
+                document.getElementById('main-display').textContent = this.currentVal.toFixed(2);
+                const pct = (this.timeLeft / 20) * 100;
+                document.getElementById('countdown-fill').style.width = pct + '%';
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

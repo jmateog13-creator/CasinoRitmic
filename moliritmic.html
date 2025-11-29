@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Molí Rítmic</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
+
+        :root {
+            --wood-bg: #4e342e;
+            --line-col: #d7ccc8;
+            --p1-col: #2196f3;
+            --p2-col: #f44336;
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #2d1b15;
+            font-family: 'MedievalSharp', cursive;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.6);
+            border-bottom: 2px solid var(--gold);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            font-size: 1.2rem;
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Game Area */
+        #game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        #board-container {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            background: var(--wood-bg);
+            border: 10px solid #3e2723;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+
+        /* SVG Board Lines */
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        line {
+            stroke: var(--line-col);
+            stroke-width: 5;
+        }
+
+        /* Points */
+        .point {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .point:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Pieces */
+        .piece {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .piece.p1 {
+            background: var(--p1-col);
+        }
+
+        .piece.p2 {
+            background: var(--p2-col);
+        }
+
+        .piece.selected {
+            box-shadow: 0 0 15px var(--gold);
+            border-color: var(--gold);
+        }
+
+        /* Status */
+        #status {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: var(--gold);
+            text-shadow: 2px 2px 4px black;
+        }
+
+        /* Quiz Modal */
+        #quiz-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .quiz-content {
+            background: #3e2723;
+            padding: 30px;
+            border: 4px solid var(--gold);
+            text-align: center;
+            max-width: 500px;
+            color: white;
+        }
+
+        .quiz-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #5d4037;
+            border: 1px solid #d7ccc8;
+            color: white;
+            cursor: pointer;
+            font-family: 'MedievalSharp', cursive;
+            font-size: 1.1rem;
+        }
+
+        .quiz-btn:hover {
+            background: #6d4c41;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #2d1b15;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #2d1b15;
+            margin-top: 20px;
+            font-family: 'MedievalSharp', cursive;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #2d1b15;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+        <div style="font-size:1.2rem;">VICTÒRIES: <span id="wins-display">0</span>/2</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="game-area">
+        <div id="board-container">
+            <svg>
+                <!-- Outer Square -->
+                <line x1="10%" y1="10%" x2="90%" y2="10%" />
+                <line x1="90%" y1="10%" x2="90%" y2="90%" />
+                <line x1="90%" y1="90%" x2="10%" y2="90%" />
+                <line x1="10%" y1="90%" x2="10%" y2="10%" />
+
+                <!-- Middle Square -->
+                <line x1="25%" y1="25%" x2="75%" y2="25%" />
+                <line x1="75%" y1="25%" x2="75%" y2="75%" />
+                <line x1="75%" y1="75%" x2="25%" y2="75%" />
+                <line x1="25%" y1="75%" x2="25%" y2="25%" />
+
+                <!-- Inner Square -->
+                <line x1="40%" y1="40%" x2="60%" y2="40%" />
+                <line x1="60%" y1="40%" x2="60%" y2="60%" />
+                <line x1="60%" y1="60%" x2="40%" y2="60%" />
+                <line x1="40%" y1="60%" x2="40%" y2="40%" />
+
+                <!-- Connections -->
+                <line x1="50%" y1="10%" x2="50%" y2="25%" />
+                <line x1="50%" y1="75%" x2="50%" y2="90%" />
+                <line x1="10%" y1="50%" x2="25%" y2="50%" />
+                <line x1="75%" y1="50%" x2="90%" y2="50%" />
+            </svg>
+
+            <!-- Points generated by JS -->
+        </div>
+        <div id="status">Fase de Col·locació: Torn del Jugador</div>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div id="quiz-modal">
+        <div class="quiz-content">
+            <h2>PREGUNTA RÍTMICA</h2>
+            <p id="quiz-q">...</p>
+            <div id="quiz-options"></div>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">EL MOLÍ RÍTMIC</h2>
+            <p>1. Col·loca les teves peces responent preguntes.</p>
+            <p>2. Fes línies de 3 (Molí) per eliminar peces rivals.</p>
+            <p>3. Deixa al rival amb 2 peces per guanyar.</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">ARQUITECTE SONOR!</h2>
+            <div class="relic-icon">🧩</div>
+            <h3 style="color: var(--gold);">LA PLACA DEL 'MOLÍ' DE BACH</h3>
+            <p style="font-style: italic; color: #aaa;">"Una referència als complexos cànons i puzles lògics que J.S.
+                Bach construïa amb la seva música."</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/High Stakes-2.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'clack') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, now);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start();
+                osc.stop(now + 0.1);
+            } else if (type === 'bell') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, now);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+                osc.start();
+                osc.stop(now + 1.5);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        // 24 Points coordinates (percent)
+        const COORDS = [
+            // Outer
+            { x: 10, y: 10 }, { x: 50, y: 10 }, { x: 90, y: 10 },
+            { x: 90, y: 50 }, { x: 90, y: 90 }, { x: 50, y: 90 },
+            { x: 10, y: 90 }, { x: 10, y: 50 },
+            // Middle
+            { x: 25, y: 25 }, { x: 50, y: 25 }, { x: 75, y: 25 },
+            { x: 75, y: 50 }, { x: 75, y: 75 }, { x: 50, y: 75 },
+            { x: 25, y: 75 }, { x: 25, y: 50 },
+            // Inner
+            { x: 40, y: 40 }, { x: 50, y: 40 }, { x: 60, y: 40 },
+            { x: 60, y: 50 }, { x: 60, y: 60 }, { x: 50, y: 60 },
+            { x: 40, y: 60 }, { x: 40, y: 50 }
+        ];
+
+        // Adjacency list (simplified manual mapping)
+        const ADJ = [
+            [1, 7], [0, 2, 9], [1, 3], [2, 4, 11], [3, 5], [4, 6, 13], [5, 7], [0, 6, 15], // Outer 0-7
+            [9, 15], [1, 8, 10, 17], [9, 11], [3, 10, 12, 19], [11, 13], [5, 12, 14, 21], [13, 15], [7, 8, 14, 23], // Middle 8-15
+            [17, 23], [9, 16, 18], [17, 19], [11, 18, 20], [19, 21], [13, 20, 22], [21, 23], [15, 16, 22] // Inner 16-23
+        ];
+
+        // Mills (lines of 3)
+        const MILLS = [
+            [0, 1, 2], [2, 3, 4], [4, 5, 6], [6, 7, 0],
+            [8, 9, 10], [10, 11, 12], [12, 13, 14], [14, 15, 8],
+            [16, 17, 18], [18, 19, 20], [20, 21, 22], [22, 23, 16],
+            [1, 9, 17], [3, 11, 19], [5, 13, 21], [7, 15, 23]
+        ];
+
+        const QUIZ = [
+            { q: "Quina figura dura 2 temps?", a: ["Blanca", "Negra", "Rodona"], c: 0 },
+            { q: "Quants temps dura una Negra?", a: ["1", "2", "0.5"], c: 0 },
+            { q: "Quina nota val 4 temps?", a: ["Rodona", "Blanca", "Corxera"], c: 0 },
+            { q: "Què és un silenci de negra?", a: ["1 temps de silenci", "2 temps", "0.5 temps"], c: 0 }
+        ];
+
+        class Game {
+            constructor() {
+                this.wins = 0;
+                this.phase = 'place'; // 'place', 'move', 'remove'
+                this.turn = 'p1'; // 'p1' (Player), 'p2' (CPU)
+                this.pieces = { p1: 9, p2: 9 }; // Pieces to place
+                this.board = Array(24).fill(null); // null, 'p1', 'p2'
+                this.selected = null;
+                this.pendingPlace = null;
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.render();
+            }
+
+            render() {
+                const container = document.getElementById('board-container');
+                // Clear existing points
+                const old = container.querySelectorAll('.point');
+                old.forEach(el => el.remove());
+
+                COORDS.forEach((c, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'point';
+                    el.style.left = c.x + '%';
+                    el.style.top = c.y + '%';
+                    el.onclick = () => this.clickPoint(i);
+
+                    if (this.board[i]) {
+                        const p = document.createElement('div');
+                        p.className = `piece ${this.board[i]}`;
+                        if (this.selected === i) p.classList.add('selected');
+                        // Add symbol based on index for variety
+                        const syms = ['♩', '♪', '♫', '♬'];
+                        p.textContent = syms[i % 4];
+                        el.appendChild(p);
+                    }
+
+                    container.appendChild(el);
+                });
+
+                let status = "";
+                if (this.phase === 'place') status = `Col·locació: ${this.turn === 'p1' ? 'Jugador' : 'CPU'} (${this.pieces[this.turn]} restants)`;
+                else if (this.phase === 'move') status = `Moviment: ${this.turn === 'p1' ? 'Jugador' : 'CPU'}`;
+                else if (this.phase === 'remove') status = `ELIMINA UNA PEÇA RIVAL!`;
+
+                document.getElementById('status').textContent = status;
+            }
+
+            clickPoint(idx) {
+                if (this.turn !== 'p1') return;
+
+                if (this.phase === 'place') {
+                    if (this.board[idx] === null && this.pieces.p1 > 0) {
+                        this.pendingPlace = idx;
+                        this.showQuiz();
+                    }
+                } else if (this.phase === 'move') {
+                    if (this.board[idx] === 'p1') {
+                        this.selected = idx;
+                        this.render();
+                    } else if (this.board[idx] === null && this.selected !== null) {
+                        // Check adjacency
+                        if (ADJ[this.selected].includes(idx)) {
+                            this.board[this.selected] = null;
+                            this.board[idx] = 'p1';
+                            this.selected = null;
+                            playSound('clack');
+                            if (this.checkMill(idx, 'p1')) {
+                                this.phase = 'remove';
+                                playSound('bell');
+                            } else {
+                                this.turn = 'p2';
+                                setTimeout(() => this.cpuTurn(), 1000);
+                            }
+                            this.render();
+                        }
+                    }
+                } else if (this.phase === 'remove') {
+                    if (this.board[idx] === 'p2') {
+                        // Check if part of mill (cannot remove unless all are in mills)
+                        if (!this.checkMill(idx, 'p2') || this.allInMills('p2')) {
+                            this.board[idx] = null;
+                            this.phase = this.pieces.p1 > 0 || this.pieces.p2 > 0 ? 'place' : 'move'; // Logic fix: phase depends on game state
+                            // Actually phase logic is global. If pieces > 0 we are in place phase generally, but here we mix.
+                            // Simplified: If we were in move, stay move. If place, stay place.
+                            // But wait, pieces count is "to place".
+                            if (this.pieces.p1 === 0 && this.pieces.p2 === 0) this.phase = 'move';
+                            else this.phase = 'place';
+
+                            this.turn = 'p2';
+                            this.checkWin();
+                            if (this.turn === 'p2') setTimeout(() => this.cpuTurn(), 1000);
+                            this.render();
+                        } else {
+                            alert("No pots eliminar una peça que forma part d'un molí!");
+                        }
+                    }
+                }
+            }
+
+            showQuiz() {
+                const q = QUIZ[Math.floor(Math.random() * QUIZ.length)];
+                document.getElementById('quiz-q').textContent = q.q;
+                const opts = document.getElementById('quiz-options');
+                opts.innerHTML = '';
+                q.a.forEach((a, i) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'quiz-btn';
+                    btn.textContent = a;
+                    btn.onclick = () => {
+                        if (i === q.c) {
+                            document.getElementById('quiz-modal').style.display = 'none';
+                            this.placePiece(this.pendingPlace, 'p1');
+                        } else {
+                            alert("Incorrecte! Perds el torn.");
+                            document.getElementById('quiz-modal').style.display = 'none';
+                            this.turn = 'p2';
+                            setTimeout(() => this.cpuTurn(), 1000);
+                        }
+                    };
+                    opts.appendChild(btn);
+                });
+                document.getElementById('quiz-modal').style.display = 'flex';
+            }
+
+            placePiece(idx, player) {
+                this.board[idx] = player;
+                this.pieces[player]--;
+                playSound('clack');
+
+                if (this.checkMill(idx, player)) {
+                    if (player === 'p1') {
+                        this.phase = 'remove';
+                        playSound('bell');
+                    } else {
+                        // CPU remove
+                        this.cpuRemove();
+                        this.turn = 'p1';
+                    }
+                } else {
+                    this.turn = player === 'p1' ? 'p2' : 'p1';
+                }
+
+                // Check phase transition
+                if (this.pieces.p1 === 0 && this.pieces.p2 === 0 && this.phase !== 'remove') {
+                    this.phase = 'move';
+                }
+
+                if (player === 'p1' && this.turn === 'p2') setTimeout(() => this.cpuTurn(), 1000);
+                this.render();
+            }
+
+            cpuTurn() {
+                if (this.turn !== 'p2') return;
+
+                if (this.phase === 'place') {
+                    // Random empty
+                    const empty = this.board.map((v, i) => v === null ? i : -1).filter(i => i !== -1);
+                    if (empty.length > 0) {
+                        const pick = empty[Math.floor(Math.random() * empty.length)];
+                        this.placePiece(pick, 'p2');
+                    }
+                } else if (this.phase === 'move') {
+                    // Find movable pieces
+                    const movable = [];
+                    this.board.forEach((v, i) => {
+                        if (v === 'p2') {
+                            const adjs = ADJ[i].filter(n => this.board[n] === null);
+                            if (adjs.length > 0) movable.push({ from: i, to: adjs });
+                        }
+                    });
+
+                    if (movable.length > 0) {
+                        const m = movable[Math.floor(Math.random() * movable.length)];
+                        const to = m.to[Math.floor(Math.random() * m.to.length)];
+                        this.board[m.from] = null;
+                        this.board[to] = 'p2';
+                        playSound('clack');
+
+                        if (this.checkMill(to, 'p2')) {
+                            this.cpuRemove();
+                        }
+
+                        this.turn = 'p1';
+                        this.checkWin();
+                        this.render();
+                    } else {
+                        // No moves, lose?
+                        this.turn = 'p1'; // Pass?
+                    }
+                }
+            }
+
+            cpuRemove() {
+                // Remove p1 piece
+                const targets = this.board.map((v, i) => v === 'p1' ? i : -1).filter(i => i !== -1);
+                // Filter out mills if possible
+                const nonMills = targets.filter(i => !this.checkMill(i, 'p1'));
+                const list = nonMills.length > 0 ? nonMills : targets;
+
+                if (list.length > 0) {
+                    const pick = list[Math.floor(Math.random() * list.length)];
+                    this.board[pick] = null;
+                    playSound('bell'); // reuse bell for remove
+                }
+            }
+
+            checkMill(idx, player) {
+                // Check if idx is part of any mill for player
+                return MILLS.some(m => m.includes(idx) && m.every(p => this.board[p] === player));
+            }
+
+            allInMills(player) {
+                const pieces = this.board.map((v, i) => v === player ? i : -1).filter(i => i !== -1);
+                return pieces.every(p => this.checkMill(p, player));
+            }
+
+            checkWin() {
+                const p1Count = this.board.filter(x => x === 'p1').length;
+                const p2Count = this.board.filter(x => x === 'p2').length;
+
+                if (this.pieces.p1 === 0 && this.pieces.p2 === 0) {
+                    if (p2Count < 3) {
+                        this.wins++;
+                        document.getElementById('wins-display').textContent = this.wins;
+                        if (this.wins >= 2) {
+                            const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                            rewards['reward_moliritmic'] = true;
+                            sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                            document.getElementById('epic-modal').style.display = 'flex';
+                        } else {
+                            alert("Has guanyat la ronda!");
+                            this.reset();
+                        }
+                    } else if (p1Count < 3) {
+                        alert("Has perdut!");
+                        this.reset();
+                    }
+                }
+            }
+
+            reset() {
+                this.board = Array(24).fill(null);
+                this.pieces = { p1: 9, p2: 9 };
+                this.phase = 'place';
+                this.turn = 'p1';
+                this.render();
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

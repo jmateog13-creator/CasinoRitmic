@@ -9,6 +9,7 @@
         :root {
             --wood: #8b4513;
             --wood-light: #d2691e;
+            --wood-dark: #3e2723;
             --gold: #ffd700;
             --bg: #1a0f0a;
             --text: #f5e6d3;
@@ -28,31 +29,93 @@
             user-select: none;
         }
 
+        /* Top UI */
+        #ui-top {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: space-around;
+            border-bottom: 2px solid var(--gold);
+            z-index: 10;
+        }
+
+        .stat-box {
+            font-size: 1.5rem;
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        /* Game Area */
         #game-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
             position: relative;
-            width: 800px;
-            height: 600px;
-            background: #000;
-            border: 10px solid var(--wood);
-            border-radius: 10px;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-            margin-top: 20px;
+        }
+
+        /* Left Panel: Deck */
+        #deck-panel {
+            width: 300px;
+            background: #2a1a10;
+            border-right: 5px solid var(--wood);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5);
+            z-index: 5;
+        }
+
+        .card {
+            width: 80px;
+            height: 120px;
+            background: white;
+            border: 2px solid #000;
+            border-radius: 8px;
+            margin: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card:active {
+            cursor: grabbing;
+        }
+
+        .card img {
+            width: 50px;
+            pointer-events: none;
+        }
+
+        .card-val {
+            color: #000;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        /* Right Panel: Lane */
+        #lane-panel {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(to bottom, #5c2e0e, #8b4513);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
             overflow: hidden;
         }
 
-        /* Lane */
-        #lane {
-            position: absolute;
-            bottom: 0;
-            left: 100px;
-            width: 600px;
-            height: 500px;
-            background: linear-gradient(to bottom, #5c2e0e, #8b4513);
-            perspective: 1000px;
-            transform-style: preserve-3d;
-        }
-
-        #lane::after {
+        #lane-panel::after {
             content: '';
             position: absolute;
             top: 0;
@@ -60,139 +123,130 @@
             right: 0;
             bottom: 0;
             background: repeating-linear-gradient(90deg, transparent 0, transparent 40px, rgba(0, 0, 0, 0.1) 40px, rgba(0, 0, 0, 0.1) 42px);
+            pointer-events: none;
         }
 
-        /* Pins Area */
-        #pins-area {
-            position: absolute;
-            top: 50px;
-            left: 50%;
-            transform: translateX(-50%);
+        /* Pins Setup */
+        #pins-container {
+            position: relative;
             width: 400px;
-            height: 200px;
+            height: 300px;
+            transform: rotateX(20deg) translateY(-50px);
+            transform-style: preserve-3d;
+        }
+
+        .pin-slot {
+            position: absolute;
+            width: 50px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 50% 50% 10px 10px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            transition: all 0.3s;
+        }
+
+        .pin-slot.drag-over {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: var(--gold);
+            transform: scale(1.1);
         }
 
         .pin {
-            position: absolute;
-            width: 40px;
-            height: 80px;
+            width: 50px;
+            height: 100px;
             background: white;
-            border-radius: 10px 10px 5px 5px;
+            border-radius: 50% 50% 10px 10px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
-            transition: transform 0.2s;
+            transition: transform 0.5s;
         }
 
         .pin img {
             width: 30px;
+            pointer-events: none;
+        }
+
+        .pin-val {
+            position: absolute;
+            top: -25px;
+            color: var(--gold);
+            font-weight: bold;
+            text-shadow: 0 2px 4px #000;
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .pin-slot:hover .pin-val,
+        .pin-slot.has-card .pin-val {
+            opacity: 1;
         }
 
         .pin.knocked {
             transform: rotate(90deg) translate(20px, 20px);
-            opacity: 0.5;
+            opacity: 0.7;
         }
 
         /* Ball */
         #ball {
             position: absolute;
-            bottom: 20px;
+            bottom: -100px;
             left: 50%;
             transform: translateX(-50%);
-            width: 50px;
-            height: 50px;
+            width: 80px;
+            height: 80px;
             background: radial-gradient(circle at 30% 30%, #444, #000);
             border-radius: 50%;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-            z-index: 10;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            z-index: 20;
+            transition: bottom 0.5s;
         }
 
         /* Controls */
-        #controls-area {
+        #controls {
             position: absolute;
-            bottom: 80px;
-            left: 0;
-            width: 100%;
-            height: 100px;
+            bottom: 20px;
+            right: 20px;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            pointer-events: none;
-            /* Let clicks pass through if needed, but buttons need events */
-        }
-
-        #arrow {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            width: 4px;
-            height: 100px;
-            background: var(--gold);
-            transform-origin: bottom center;
-            transform: translateX(-50%) rotate(0deg);
-            z-index: 5;
-            display: none;
-            /* Hidden until aiming */
-        }
-
-        #arrow::after {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: -8px;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-bottom: 15px solid var(--gold);
-        }
-
-        /* UI */
-        #ui-top {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: space-between;
-            box-sizing: border-box;
+            gap: 10px;
             z-index: 20;
         }
 
-        .stat-box {
-            color: var(--gold);
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        #msg-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 3rem;
-            color: var(--gold);
-            text-shadow: 0 0 10px #000;
-            display: none;
-            z-index: 30;
-            text-align: center;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 1.2rem;
+        .btn-action {
+            padding: 15px 30px;
+            font-size: 1.5rem;
             background: var(--gold);
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-family: 'Georgia', serif;
             font-weight: bold;
             color: #3e2723;
+            box-shadow: 0 4px 0 #b8860b;
+            transition: transform 0.1s;
         }
 
-        button:hover {
-            background: #fff;
+        .btn-action:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .btn-menu {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.5);
         }
 
         /* Modals */
@@ -213,317 +267,353 @@
             background: #2a0a10;
             padding: 40px;
             border: 4px double var(--gold);
-            border-radius: 10px;
             text-align: center;
+            color: white;
             max-width: 500px;
-            color: var(--text);
+        }
+
+        /* Drag Ghost */
+        .dragging {
+            opacity: 0.5;
         }
     </style>
 </head>
 
 <body>
 
+    <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+
     <div id="ui-top">
-        <div class="stat-box">OBJECTIU: <span id="target-score">0</span> TEMPS</div>
-        <div class="stat-box">SUMA: <span id="current-score">0</span></div>
-        <div class="stat-box">TIRADES: <span id="throws-left">3</span></div>
+        <div class="stat-box">OBJECTIU: <span id="target-score">0</span></div>
+        <div class="stat-box">SUMA ACTUAL: <span id="current-score">0</span></div>
     </div>
 
     <div id="game-container">
-        <div id="lane">
-            <div id="pins-area">
-                <!-- Pins generated by JS -->
+        <!-- Left Panel: Deck -->
+        <div id="deck-panel">
+            <h3 style="color:var(--gold); margin-top:0;">CARTES</h3>
+            <div id="cards-container">
+                <!-- Cards generated JS -->
+            </div>
+        </div>
+
+        <!-- Right Panel: Lane -->
+        <div id="lane-panel">
+            <div id="pins-container">
+                <!-- Pins generated JS -->
             </div>
             <div id="ball"></div>
-            <!-- Arrow removed -->
         </div>
-        <div id="msg-overlay">STRIKE!</div>
     </div>
 
-    <div style="margin-top: 20px;">
-        <button id="btn-action" onclick="handleAction()">TIRAR (IA)</button>
-        <a href="menu.html"><button style="background:#555; color:#fff; margin-left:10px;">SORTIR</button></a>
+    <div id="controls">
+        <button class="btn-action" onclick="shoot()">TIRAR BOLA</button>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">BOLERA MATEMÀTICA</h2>
+            <p>1. L'objectiu és aconseguir la SUMA EXACTA.</p>
+            <p>2. Arrossega les cartes als bolos per donar-los valor.</p>
+            <p>3. Els bolos buits valen 0.</p>
+            <p>4. Fes un PLENO per guanyar!</p>
+            <button class="btn-action"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+        </div>
     </div>
 
     <!-- Win Modal -->
     <div id="win-modal" class="modal">
         <div class="modal-content">
-            <h2 style="color: var(--gold);">HAS GUANYAT!</h2>
-            <p>Has aconseguit la suma exacta!</p>
+            <h2 style="color: var(--gold);">STRIKE!</h2>
             <div style="font-size: 4rem;">🎳</div>
-            <p>"LA BATUTA DE MENDELSSOHN"</p>
-            <button onclick="nextLevel()">SEGÜENT NIVELL</button>
+            <p>Has aconseguit la suma exacta!</p>
+            <button class="btn-action" onclick="location.reload()">NOVA PARTIDA</button>
         </div>
     </div>
 
     <!-- Lose Modal -->
     <div id="lose-modal" class="modal">
         <div class="modal-content">
-            <h2 style="color: red;">GAME OVER</h2>
-            <p>No has aconseguit l'objectiu.</p>
-            <button onclick="retry()">TORNAR A PROVAR</button>
+            <h2 style="color: red;">CANALETA...</h2>
+            <p>La suma no és correcta.</p>
+            <button class="btn-action" onclick="resetBall()">REINTENTAR</button>
         </div>
     </div>
 
     <audio id="bg-music" src="music/background_music_bolera.mp3" loop></audio>
 
-    // Audio
-    const bgMusic = document.getElementById('bg-music');
-    document.body.addEventListener('click', () => {
-    if (bgMusic.paused) {
-    bgMusic.volume = 0.3;
-    bgMusic.play().catch(e => console.log(e));
-    }
-    }, { once: true });
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = 0.3;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
 
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const audioCtx = new AudioContext();
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
 
-    function playSound(type) {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    const now = audioCtx.currentTime;
-
-    if (type === 'roll') {
-    osc.type = 'triangle'; // Low rumble
-    osc.frequency.setValueAtTime(100, now);
-    osc.frequency.linearRampToValueAtTime(50, now + 1);
-    gain.gain.setValueAtTime(0.5, now);
-    gain.gain.linearRampToValueAtTime(0, now + 1);
-    osc.start();
-    osc.stop(now + 1);
-    } else if (type === 'hit') {
-    osc.type = 'square'; // Crash
-    osc.frequency.setValueAtTime(200, now);
-    osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
-    gain.gain.setValueAtTime(0.5, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-    osc.start();
-    osc.stop(now + 0.1);
-    } else if (type === 'click') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, now);
-    gain.gain.setValueAtTime(0.1, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-    osc.start();
-    osc.stop(now + 0.1);
-    }
-    }
-
-    // Game Logic
-    const NOTES = [
-    { id: 'rodona', val: 4, img: 'images/rodona.jpg' },
-    { id: 'blanca', val: 2, img: 'images/blanca.jpg' },
-    { id: 'negra', val: 1, img: 'images/negra.jpg' },
-    { id: 'corxera', val: 0.5, img: 'images/corxera.jpg' },
-    { id: 'silenci', val: 0, img: 'images/silencinegra.jpg' } // Using silencinegra as generic silence/0
-    ];
-
-    let level = 1;
-    let targetScore = 0;
-    let currentScore = 0;
-    let pins = [];
-    let isRolling = false;
-
-    function initLevel() {
-    // Setup Target
-    // 10 pins. Max score 40 (all rodonas). Min score 0.
-    // Let's make achievable targets.
-    // Level 1: Simple integers.
-    // Level 2+: Decimals.
-
-    const minVal = 5 + level;
-    const maxVal = 15 + (level * 2);
-    targetScore = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal;
-
-    if (level > 2 && Math.random() > 0.5) targetScore += 0.5;
-
-    isRolling = false;
-    updateUI();
-    setupPins();
-    calculateCurrentScore();
-    }
-
-    function setupPins() {
-    const area = document.getElementById('pins-area');
-    area.innerHTML = '';
-    pins = [];
-
-    // Triangle setup: 1, 2, 3, 4 (10 pins)
-    const rows = 4;
-    const pinWidth = 40;
-    const pinHeight = 80;
-    const startX = 200; // Center of 400px area
-    const startY = 0;
-
-    let rowCount = 1;
-    for (let r = 0; r < rows; r++) { for (let c=0; c < rowCount; c++) { // Default to Silence (0) or Random? // Let's
-        default to Random to make it a puzzle of changing things const noteIdx=Math.floor(Math.random() * NOTES.length);
-        const p=document.createElement('div'); p.className='pin' ; p.style.cursor='pointer' ; // Position const
-        rowWidth=rowCount * (pinWidth + 10); const x=startX - (rowWidth / 2) + (c * (pinWidth + 10)) + (pinWidth / 2);
-        const y=startY + (r * (pinHeight - 20)); p.style.left=x + 'px' ; p.style.top=y + 'px' ; // Data
-        p.dataset.noteIdx=noteIdx; p.onclick=()=> cyclePin(p);
-
-        updatePinVisual(p);
-        area.appendChild(p);
-
-        pins.push({
-        el: p,
-        x: x,
-        y: y,
-        knocked: false
-        });
-        }
-        rowCount++;
-        }
+            if (type === 'pop') {
+                osc.frequency.setValueAtTime(600, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start();
+                osc.stop(now + 0.1);
+            } else if (type === 'roll') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(50, now + 1.5);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1.5);
+                osc.start();
+                osc.stop(now + 1.5);
+            } else if (type === 'crash') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start();
+                osc.stop(now + 0.2);
+            }
         }
 
-        function cyclePin(el) {
-        if (isRolling) return;
-        let idx = parseInt(el.dataset.noteIdx);
-        idx = (idx + 1) % NOTES.length;
-        el.dataset.noteIdx = idx;
-        updatePinVisual(el);
-        playSound('click');
-        calculateCurrentScore();
+        // --- GAME LOGIC ---
+        const NOTES = [
+            { id: 'rodona', val: 4, img: 'images/rodona.jpg' },
+            { id: 'blanca', val: 2, img: 'images/blanca.jpg' },
+            { id: 'negra', val: 1, img: 'images/negra.jpg' },
+            { id: 'corxera', val: 0.5, img: 'images/corxera.jpg' },
+            { id: 'silenci', val: 0, img: 'images/silencinegra.jpg' }
+        ];
+
+        let targetScore = 0;
+        let currentScore = 0;
+        let pinValues = Array(10).fill(0); // 10 pins
+        let isRolling = false;
+
+        function initGame() {
+            // Generate Target
+            // 10 pins available.
+            // Random target between 10 and 30
+            targetScore = Math.floor(Math.random() * 21) + 10;
+            if (Math.random() > 0.5) targetScore += 0.5; // Add decimal challenge
+
+            document.getElementById('target-score').textContent = targetScore;
+            updateScore();
+
+            renderDeck();
+            renderPins();
         }
 
-        function updatePinVisual(el) {
-        const idx = parseInt(el.dataset.noteIdx);
-        const note = NOTES[idx];
-        el.innerHTML = `<img src="${note.img}">`;
+        function renderDeck() {
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '';
+            // Provide infinite supply of each note
+            NOTES.forEach(note => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.draggable = true;
+                card.innerHTML = `<img src="${note.img}"><div class="card-val">${note.val}</div>`;
+
+                card.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', JSON.stringify(note));
+                    card.classList.add('dragging');
+                });
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging');
+                });
+
+                container.appendChild(card);
+            });
         }
 
-        function calculateCurrentScore() {
-        currentScore = 0;
-        pins.forEach(p => {
-        const idx = parseInt(p.el.dataset.noteIdx);
-        currentScore += NOTES[idx].val;
-        });
-        updateUI();
+        function renderPins() {
+            const container = document.getElementById('pins-container');
+            container.innerHTML = '';
+
+            // Triangle layout coordinates (approximate for CSS absolute)
+            // Row 1: 1 pin (center)
+            // Row 2: 2 pins
+            // Row 3: 3 pins
+            // Row 4: 4 pins
+
+            const positions = [
+                { x: 175, y: 0 },   // Pin 0 (Back Row 4)
+                { x: 125, y: 0 }, { x: 225, y: 0 }, { x: 75, y: 0 }, { x: 275, y: 0 }, // Wait, standard bowling is 1-2-3-4 front to back?
+                // Let's do visual rows from back to front for z-index
+                // Row 4 (Back): 4 pins
+                { x: 50, y: 0 }, { x: 150, y: 0 }, { x: 250, y: 0 }, { x: 350, y: 0 },
+                // Row 3: 3 pins
+                { x: 100, y: 50 }, { x: 200, y: 50 }, { x: 300, y: 50 },
+                // Row 2: 2 pins
+                { x: 150, y: 100 }, { x: 250, y: 100 },
+                // Row 1 (Front): 1 pin
+                { x: 200, y: 150 }
+            ];
+
+            // Actually let's just use the index 0-9
+            // 0-3: Row 4
+            // 4-6: Row 3
+            // 7-8: Row 2
+            // 9: Row 1
+
+            // Re-map positions carefully
+            const coords = [
+                // Row 4 (Back)
+                { x: 25, y: 0 }, { x: 125, y: 0 }, { x: 225, y: 0 }, { x: 325, y: 0 },
+                // Row 3
+                { x: 75, y: 60 }, { x: 175, y: 60 }, { x: 275, y: 60 },
+                // Row 2
+                { x: 125, y: 120 }, { x: 225, y: 120 },
+                // Row 1 (Front)
+                { x: 175, y: 180 }
+            ];
+
+            coords.forEach((pos, index) => {
+                const slot = document.createElement('div');
+                slot.className = 'pin-slot';
+                slot.style.left = pos.x + 'px';
+                slot.style.top = pos.y + 'px';
+                // Z-index based on row (front pins higher)
+                slot.style.zIndex = index < 4 ? 1 : index < 7 ? 2 : index < 9 ? 3 : 4;
+
+                slot.dataset.index = index;
+
+                // Pin visual
+                const pin = document.createElement('div');
+                pin.className = 'pin';
+                pin.id = `pin-${index}`;
+                // Default image (empty/silence)
+                pin.innerHTML = `<img src="images/silencinegra.jpg">`;
+
+                // Value display
+                const valDisplay = document.createElement('div');
+                valDisplay.className = 'pin-val';
+                valDisplay.textContent = '0';
+                slot.appendChild(valDisplay);
+                slot.appendChild(pin);
+
+                // Drop Events
+                slot.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    slot.classList.add('drag-over');
+                });
+                slot.addEventListener('dragleave', () => {
+                    slot.classList.remove('drag-over');
+                });
+                slot.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    slot.classList.remove('drag-over');
+                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    updatePin(index, data);
+                });
+
+                // Click to reset pin to 0
+                slot.addEventListener('click', () => {
+                    updatePin(index, { val: 0, img: 'images/silencinegra.jpg' });
+                });
+
+                container.appendChild(slot);
+            });
         }
 
-        function updateUI() {
-        document.getElementById('target-score').textContent = targetScore;
-        document.getElementById('current-score').textContent = currentScore;
+        function updatePin(index, noteData) {
+            if (isRolling) return;
+            pinValues[index] = noteData.val;
 
-        const btn = document.getElementById('btn-action');
-        if (isRolling) {
-        btn.textContent = "TIRANT...";
-        btn.disabled = true;
-        btn.style.background = "#555";
-        } else {
-        btn.textContent = "TIRAR (IA)";
-        btn.disabled = false;
-        btn.style.background = "var(--gold)";
-        }
-        }
+            const slot = document.querySelector(`.pin-slot[data-index="${index}"]`);
+            const pin = slot.querySelector('.pin');
+            const valDisp = slot.querySelector('.pin-val');
 
-        function handleAction() {
-        if (isRolling) return;
+            pin.innerHTML = `<img src="${noteData.img}">`;
+            valDisp.textContent = noteData.val;
 
-        // AI Throws
-        shootAI();
+            if (noteData.val > 0) slot.classList.add('has-card');
+            else slot.classList.remove('has-card');
+
+            playSound('pop');
+            updateScore();
         }
 
-        function shootAI() {
-        isRolling = true;
-        updateUI();
-        playSound('roll');
+        function updateScore() {
+            currentScore = pinValues.reduce((a, b) => a + b, 0);
+            document.getElementById('current-score').textContent = currentScore;
 
-        const ball = document.getElementById('ball');
-
-        // Reset Ball
-        ball.style.transition = 'none';
-        ball.style.bottom = '20px';
-        ball.style.left = '50%';
-        ball.style.transform = 'translateX(-50%) scale(1)';
-
-        // Force reflow
-        ball.offsetHeight;
-
-        // Animate Strike
-        ball.style.transition = 'all 1s ease-in';
-        ball.style.bottom = '450px'; // Hit zone
-        ball.style.transform = 'translateX(-50%) scale(0.5)'; // Perspective effect
-
-        setTimeout(() => {
-        // Impact
-        strikeImpact();
-        }, 1000);
+            const diff = Math.abs(targetScore - currentScore);
+            const scoreEl = document.getElementById('current-score');
+            if (diff === 0) scoreEl.style.color = '#0f0';
+            else scoreEl.style.color = 'var(--gold)';
         }
 
-        function strikeImpact() {
-        playSound('hit');
+        function shoot() {
+            if (isRolling) return;
+            isRolling = true;
+            playSound('roll');
 
-        // Knock all pins
-        pins.forEach(p => {
-        p.knocked = true;
-        p.el.classList.add('knocked');
-        // Random fly direction
-        const rot = (Math.random() * 180) - 90;
-        const tx = (Math.random() * 100) - 50;
-        const ty = (Math.random() * 100) - 50;
-        p.el.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg)`;
-        p.el.style.opacity = '0.5';
-        });
+            const ball = document.getElementById('ball');
+            ball.style.bottom = '20px'; // Reset pos just in case
 
-        showMsg("STRIKE!");
+            // Animate
+            setTimeout(() => {
+                ball.style.bottom = '400px'; // Move up
+                ball.style.transform = 'translateX(-50%) scale(0.5)'; // Perspective
+            }, 50);
 
-        setTimeout(() => {
-        checkResult();
-        }, 1500);
+            setTimeout(() => {
+                checkWin();
+            }, 1500);
         }
 
-        function checkResult() {
-        if (currentScore === targetScore) {
-        document.getElementById('win-modal').style.display = 'flex';
-        } else {
-        document.getElementById('lose-modal').style.display = 'flex';
-        }
-        }
+        function checkWin() {
+            if (currentScore === targetScore) {
+                // Strike!
+                playSound('crash');
+                document.querySelectorAll('.pin').forEach(p => p.classList.add('knocked'));
+                document.getElementById('win-modal').style.display = 'flex';
 
-        function showMsg(txt) {
-        const el = document.getElementById('msg-overlay');
-        el.textContent = txt;
-        el.style.display = 'block';
-        setTimeout(() => el.style.display = 'none', 1000);
-        }
+                // Save Reward
+                const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                rewards['reward_bolera'] = true;
+                sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
 
-        function nextLevel() {
-        level++;
-        document.getElementById('win-modal').style.display = 'none';
-        initLevel();
+            } else {
+                // Miss
+                document.getElementById('lose-modal').style.display = 'flex';
+            }
         }
 
-        function retry() {
-        document.getElementById('lose-modal').style.display = 'none';
-        isRolling = false;
-        // Reset pins visual state
-        pins.forEach(p => {
-        p.knocked = false;
-        p.el.classList.remove('knocked');
-        p.el.style.transform = 'none';
-        p.el.style.opacity = '1';
-        });
+        function resetBall() {
+            isRolling = false;
+            const ball = document.getElementById('ball');
+            ball.style.transition = 'none';
+            ball.style.bottom = '-100px';
+            ball.style.transform = 'translateX(-50%) scale(1)';
 
-        // Reset ball
-        const ball = document.getElementById('ball');
-        ball.style.transition = 'none';
-        ball.style.bottom = '20px';
-        ball.style.transform = 'translateX(-50%)';
+            // Force reflow
+            ball.offsetHeight;
+            ball.style.transition = 'bottom 0.5s';
 
-        updateUI();
+            document.getElementById('lose-modal').style.display = 'none';
+            ball.style.transform = 'translateX(-50%)';
+
+            updateUI();
         }
 
         // Init
         initLevel();
 
-        </script>
+    </script>
 </body>
 
 </html>

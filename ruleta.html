@@ -16,6 +16,51 @@
             --danger-red: #ff0033;
         }
 
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -464,7 +509,8 @@
     <div id="game-table">
         <!-- Volume Control -->
         <div class="volume-control">
-            <span id="volume-icon">🔊</span>
+            <button id="mute-btn" onclick="game.toggleMute()"
+                style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">🔊</button>
             <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5"
                 oninput="game.setVolume(this.value)">
         </div>
@@ -481,9 +527,22 @@
             <img id="wheel-image" src="images/rodona.jpg" alt="Nota Musical">
         </div>
 
-        <!-- Menu Button -->
-        <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+        <div id="ui-bar">
+            <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+        </div>
 
+        <!-- Instructions Modal -->
+        <div id="instructions-modal">
+            <div class="instr-content">
+                <span class="instr-close"
+                    onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+                <h2 style="color: var(--gold);">COM JUGAR</h2>
+                <p style="font-size:1.2rem;">Aposta a figures musicals i gira la ruleta.</p>
+                <p>Si la bola cau a la teva aposta, guanyes!</p>
+                <button class="instr-btn"
+                    onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+            </div>
+        </div>
         <div class="game-container">
             <div id="timer-container">
                 <div id="timer-bar"></div>
@@ -562,7 +621,10 @@
                     this.currentNote = null;
                     this.timerInterval = null;
                     this.audioCtx = null;
+                    this.audioCtx = null;
                     this.rewardUnlocked = false;
+                    this.isMuted = false;
+                    this.previousVolume = 0.5;
                 }
 
                 init() {
@@ -579,11 +641,38 @@
 
                 setVolume(value) {
                     const audio = document.getElementById('bg-music');
-                    const icon = document.getElementById('volume-icon');
+                    const icon = document.getElementById('mute-btn');
+
+                    if (this.isMuted) {
+                        this.isMuted = false;
+                        icon.textContent = "🔊";
+                    }
+
                     audio.volume = value;
+                    this.updateMuteIcon(value);
+                }
+
+                toggleMute() {
+                    this.isMuted = !this.isMuted;
+                    const audio = document.getElementById('bg-music');
+                    const icon = document.getElementById('mute-btn');
+                    const slider = document.getElementById('volume-slider');
+
+                    if (this.isMuted) {
+                        this.previousVolume = audio.volume;
+                        audio.volume = 0;
+                        icon.textContent = "🔇";
+                    } else {
+                        audio.volume = slider.value * 0.5;
+                        this.updateMuteIcon(audio.volume);
+                    }
+                }
+
+                updateMuteIcon(value) {
+                    const icon = document.getElementById('mute-btn');
                     if (value == 0) {
                         icon.textContent = "🔇";
-                    } else if (value < 0.5) {
+                    } else if (value < 0.25) {
                         icon.textContent = "🔉";
                     } else {
                         icon.textContent = "🔊";
@@ -655,14 +744,14 @@
                         document.getElementById('victory-modal').classList.remove('hidden');
 
                         // Save Reward
-                        const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
                         rewards['reward_ruleta'] = true;
-                        localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
 
                         // Redirect
-                        setTimeout(() => {
-                            window.location.href = 'menu.html';
-                        }, 4000);
+                        // setTimeout(() => {
+                        //     window.location.href = 'menu.html';
+                        // }, 4000);
                     }
                 }
 

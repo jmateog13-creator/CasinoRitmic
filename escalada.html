@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Escalada d'Intervals</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap');
+
+        :root {
+            --sky-top: #1a237e;
+            --sky-bottom: #64b5f6;
+            --rock: #5d4037;
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: white;
+            font-size: 1.2rem;
+            border: 2px solid white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Game Area */
+        #game-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        #mountain {
+            width: 600px;
+            height: 90%;
+            background: linear-gradient(to top, #3e2723, #795548);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            position: relative;
+        }
+
+        .ledge {
+            position: absolute;
+            width: 60px;
+            height: 20px;
+            background: #8d6e63;
+            border-radius: 5px;
+            transform: translateX(-50%);
+        }
+
+        #climber {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            background: yellow;
+            border-radius: 5px;
+            transform: translateX(-50%);
+            transition: bottom 0.5s, left 0.5s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+        }
+
+        /* Quiz Panel */
+        #quiz-panel {
+            position: absolute;
+            top: 20%;
+            right: 10%;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #1e88e5;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.1rem;
+            border-radius: 5px;
+        }
+
+        .option-btn:hover {
+            background: #42a5f5;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border: 4px solid #1a237e;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            color: #1a237e;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: #1a237e;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            margin-top: 20px;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: #1a237e;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5">
+        </div>
+        <div style="font-size:1.2rem;">ALTURA: <span id="score">0</span>m</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="game-area">
+        <div id="mountain">
+            <!-- Ledges generated by JS -->
+            <div id="climber">🧗</div>
+        </div>
+
+        <div id="quiz-panel">
+            <h3>QUIN INTERVAL ÉS?</h3>
+            <button class="option-btn" onclick="game.answer(2)">2a (Segona)</button>
+            <button class="option-btn" onclick="game.answer(3)">3a (Tercera)</button>
+            <button class="option-btn" onclick="game.answer(4)">4a (Quarta)</button>
+            <button class="option-btn" onclick="game.answer(5)">5a (Cinquena)</button>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: #1a237e;">L'ESCALADA D'INTERVALS</h2>
+            <p>1. Escolta l'interval musical.</p>
+            <p>2. Endevina si és 2a, 3a, 4a o 5a.</p>
+            <p>3. Puja la muntanya fins al cim!</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">EL CIM DEL SO!</h2>
+            <div class="relic-icon">🏔️</div>
+            <h3 style="color: var(--gold);">EL PIOLET DE STRAUSS</h3>
+            <p style="font-style: italic; color: #555;">"Richard Strauss va compondre la Simfonia Alpina. Has conquerit
+                les altures de l'harmonia!"</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/High Stakes.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'step') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(200, now + 0.1);
+                gain.gain.setValueAtTime(vol * 0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start();
+                osc.stop(now + 0.1);
+            } else if (type === 'fall') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(50, now + 0.5);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            }
+        }
+
+        function playInterval(semitones) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const now = audioCtx.currentTime;
+
+            const baseFreq = 261.63; // C4
+            const targetFreq = baseFreq * Math.pow(2, semitones / 12);
+
+            // Note 1
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.connect(gain1);
+            gain1.connect(audioCtx.destination);
+            osc1.type = 'sine';
+            osc1.frequency.value = baseFreq;
+            gain1.gain.setValueAtTime(vol * 0.3, now);
+            gain1.gain.linearRampToValueAtTime(0, now + 1);
+            osc1.start(now);
+            osc1.stop(now + 1);
+
+            // Note 2
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.type = 'sine';
+            osc2.frequency.value = targetFreq;
+            gain2.gain.setValueAtTime(vol * 0.3, now + 0.5); // Play sequentially
+            gain2.gain.linearRampToValueAtTime(0, now + 1.5);
+            osc2.start(now + 0.5);
+            osc2.stop(now + 1.5);
+        }
+
+        // --- GAME LOGIC ---
+        // Intervals: 2 (2 semitones), 3 (4 semitones), 4 (5 semitones), 5 (7 semitones)
+        // Simplified: Major 2nd, Major 3rd, Perfect 4th, Perfect 5th
+        const INTERVALS = [
+            { name: 2, semi: 2 },
+            { name: 3, semi: 4 },
+            { name: 4, semi: 5 },
+            { name: 5, semi: 7 }
+        ];
+
+        class Game {
+            constructor() {
+                this.level = 0;
+                this.currentInterval = null;
+                this.ledges = [];
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.generateMountain();
+                this.nextTurn();
+            }
+
+            generateMountain() {
+                const mtn = document.getElementById('mountain');
+                // Clear old ledges
+                document.querySelectorAll('.ledge').forEach(e => e.remove());
+
+                this.ledges = [];
+                // 5 steps to win
+                for (let i = 0; i <= 5; i++) {
+                    const l = document.createElement('div');
+                    l.className = 'ledge';
+                    l.style.bottom = (i * 15) + '%';
+                    l.style.left = (50 + (Math.random() * 20 - 10)) + '%'; // Slight zigzag
+                    mtn.appendChild(l);
+                    this.ledges.push(l);
+                }
+
+                // Place climber
+                this.updateClimber();
+            }
+
+            updateClimber() {
+                const c = document.getElementById('climber');
+                const l = this.ledges[this.level];
+                c.style.bottom = (parseFloat(l.style.bottom) + 5) + '%'; // On top of ledge
+                c.style.left = l.style.left;
+                document.getElementById('score').textContent = this.level * 100;
+            }
+
+            nextTurn() {
+                if (this.level >= 5) {
+                    // Win
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_escalada'] = true;
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    document.getElementById('epic-modal').style.display = 'flex';
+                    return;
+                }
+
+                document.getElementById('quiz-panel').style.display = 'block';
+                this.currentInterval = INTERVALS[Math.floor(Math.random() * INTERVALS.length)];
+                setTimeout(() => playInterval(this.currentInterval.semi), 500);
+            }
+
+            answer(val) {
+                if (val === this.currentInterval.name) {
+                    this.level++;
+                    playSound('step');
+                    this.updateClimber();
+                    document.getElementById('quiz-panel').style.display = 'none';
+                    setTimeout(() => this.nextTurn(), 1500);
+                } else {
+                    playSound('fall');
+                    alert("Incorrecte! Has relliscat!");
+                    if (this.level > 0) this.level--;
+                    this.updateClimber();
+                    // Replay?
+                    setTimeout(() => playInterval(this.currentInterval.semi), 1000);
+                }
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

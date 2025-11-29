@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Gran Premi Rítmic</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+        :root {
+            --neon-blue: #00ffff;
+            --neon-pink: #ff00ff;
+            --neon-green: #39ff14;
+            --dark-bg: #050510;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--dark-bg);
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            border-bottom: 2px solid var(--neon-blue);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--neon-blue);
+            font-size: 1.2rem;
+            border: 1px solid var(--neon-blue);
+            padding: 5px 15px;
+            border-radius: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Canvas */
+        #game-canvas {
+            background: #111;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.2);
+            border: 2px solid var(--neon-blue);
+        }
+
+        /* Quiz Panel */
+        #quiz-panel {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 4px solid var(--neon-pink);
+            padding: 30px;
+            width: 600px;
+            text-align: center;
+            z-index: 500;
+            box-shadow: 0 0 50px var(--neon-pink);
+            border-radius: 20px;
+        }
+
+        #question-text {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .option-btn {
+            background: transparent;
+            border: 2px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 15px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            transition: all 0.2s;
+            border-radius: 10px;
+        }
+
+        .option-btn:hover {
+            background: var(--neon-blue);
+            color: black;
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #0a0a1a;
+            padding: 40px;
+            border: 4px solid var(--neon-green);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+            box-shadow: 0 0 50px var(--neon-green);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--neon-green);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--neon-blue);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--neon-blue);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5"
+                style="accent-color: var(--neon-blue);">
+        </div>
+        <div style="font-size:1.2rem;">VOLTA: <span id="lap-display">1</span>/3</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <canvas id="game-canvas" width="800" height="600"></canvas>
+
+    <!-- Quiz Panel -->
+    <div id="quiz-panel">
+        <h2 style="color:var(--neon-pink);">PIT STOP!</h2>
+        <p id="question-text">Pregunta aquí...</p>
+        <div class="options-grid" id="options-container">
+            <!-- Buttons injected by JS -->
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content" style="border-color: var(--neon-blue);">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--neon-blue);">COM JUGAR A "SCALEXTRIC RÍTMIC"</h2>
+            <p>1. Competeix contra la IA en una cursa a 3 voltes.</p>
+            <p>2. El cotxe s'atura periòdicament per fer-te una pregunta musical.</p>
+            <p>3. <strong>ENCERTA</strong> per accelerar (Turbo).</p>
+            <p>4. <strong>FALLA</strong> i et quedaràs clavat (Avaria).</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--neon-green);">LA MÀQUINA RÍTMICA!</h2>
+            <div class="relic-icon">⏱️</div>
+            <h3 style="color: var(--neon-green);">EL CRONÒMETRE DE STRAVINSKY</h3>
+            <p style="font-style: italic; color: #aaa;">"Igor Stravinsky era obsessionat amb la precisió del temps.
+                Aquest és el seu cronòmetre personal, símbol del nou ritme del segle XX."</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <!-- Lose Modal -->
+    <div id="lose-modal" class="modal">
+        <div class="modal-content" style="border-color: red;">
+            <h2 style="color: red;">HAS PERDUT!</h2>
+            <p>La IA ha creuat la meta abans que tu.</p>
+            <button class="action-btn" style="background:red; color:white;" onclick="location.reload()">TORNAR A
+                PROVAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'boost') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(600, now + 0.5);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            } else if (type === 'crash') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(10, now + 0.5);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            }
+        }
+
+        // --- QUESTIONS DB ---
+        const QUESTIONS = [
+            { q: "Quant sumen dues Corxeres?", options: ["1 temps", "2 temps", "0.5 temps"], ans: 0 },
+            { q: "Quina figura val 4 temps?", options: ["Blanca", "Rodona", "Negra"], ans: 1 },
+            { q: "Quina figura val la meitat d'una Blanca?", options: ["Rodona", "Negra", "Corxera"], ans: 1 },
+            { q: "Quant val un Silenci de Negra?", options: ["1 temps", "2 temps", "4 temps"], ans: 0 },
+            { q: "Quantes Semicorxeres fan una Negra?", options: ["2", "4", "8"], ans: 1 },
+            { q: "Quin compàs té 3 temps per compàs?", options: ["2/4", "4/4", "3/4"], ans: 2 },
+            { q: "Què significa el puntet?", options: ["Afegeix meitat valor", "Duplica valor", "Resta valor"], ans: 0 },
+            { q: "Quant suma Blanca + Negra?", options: ["2", "3", "4"], ans: 1 },
+            { q: "Quina nota és més ràpida?", options: ["Negra", "Corxera", "Semicorxera"], ans: 2 },
+            { q: "Quant dura una Rodona?", options: ["2 temps", "4 temps", "1 temps"], ans: 1 }
+        ];
+
+        // --- GAME LOGIC ---
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('game-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.player = { pos: 0, lap: 1, color: '#00ffff', speed: 0 };
+                this.ai = { pos: 0, lap: 1, color: '#ff003c', speed: 0.3 }; // Constant slow speed
+                this.trackLength = 100; // Virtual units
+                this.quizInterval = 15; // Quiz every 15 units
+                this.nextQuizPos = 15;
+                this.isQuizActive = false;
+                this.gameOver = false;
+                this.animationId = null;
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.loop();
+            }
+
+            loop() {
+                if (this.gameOver) return;
+
+                this.update();
+                this.draw();
+                this.animationId = requestAnimationFrame(() => this.loop());
+            }
+
+            update() {
+                if (this.isQuizActive) return;
+
+                // AI Movement
+                this.ai.pos += this.ai.speed;
+                if (this.ai.pos >= this.trackLength) {
+                    this.ai.pos = 0;
+                    this.ai.lap++;
+                    if (this.ai.lap > 3) this.endGame(false);
+                }
+
+                // Player Movement (only during boost animation really, but here we simulate steps)
+                // Actually, player moves ONLY via quiz answers in this design?
+                // "El cotxe del jugador s'atura automàticament... Resposta Correcta: El cotxe avança un gran pas"
+                // So player speed is 0 normally?
+                // "L'IA avança un pas més lent per torn... L'objectiu és que el coneixement del jugador superi la constància"
+                // Let's make player move slowly too, but stop for quiz? Or just move on quiz?
+                // Prompt: "El cotxe del jugador s'atura automàticament cada 5 o 6 segments... Resposta Correcta: avança un gran pas (15%)."
+                // This implies player moves between quizzes?
+                // Let's assume player moves at same speed as AI, but stops for quiz.
+                // If correct -> Boost. If wrong -> Stop (wait for next quiz? or just lose time?)
+                // "Resposta Incorrecta: El cotxe es queda quiet (xoca amb un mur) i el seu torn acaba."
+                // This implies turn-based? But Scalextric is real-time.
+                // Let's implement: Player moves slowly (0.2). Reaches checkpoint -> Quiz.
+                // Correct -> Jump forward (+15). Incorrect -> Stay (+0).
+
+                this.player.pos += 0.2;
+
+                // Check Quiz trigger
+                if (this.player.pos >= this.nextQuizPos) {
+                    this.isQuizActive = true;
+                    this.showQuiz();
+                }
+
+                // Lap Check
+                if (this.player.pos >= this.trackLength) {
+                    this.player.pos = this.player.pos % this.trackLength;
+                    this.player.lap++;
+                    this.nextQuizPos = 15; // Reset quiz trigger for new lap
+                    document.getElementById('lap-display').textContent = this.player.lap;
+                    if (this.player.lap > 3) this.endGame(true);
+                }
+            }
+
+            showQuiz() {
+                const q = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+                document.getElementById('question-text').textContent = q.q;
+                const container = document.getElementById('options-container');
+                container.innerHTML = '';
+
+                q.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.textContent = opt;
+                    btn.onclick = () => this.answer(idx === q.ans);
+                    container.appendChild(btn);
+                });
+
+                document.getElementById('quiz-panel').style.display = 'block';
+            }
+
+            answer(isCorrect) {
+                document.getElementById('quiz-panel').style.display = 'none';
+                this.isQuizActive = false;
+                this.nextQuizPos += 20; // Next quiz in 20 units
+
+                if (isCorrect) {
+                    playSound('boost');
+                    this.player.pos += 15; // Boost
+                } else {
+                    playSound('crash');
+                    // No boost, just continue slow speed
+                }
+            }
+
+            draw() {
+                // Clear
+                this.ctx.fillStyle = '#050510';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw Track (Oval)
+                this.ctx.beginPath();
+                this.ctx.ellipse(400, 300, 350, 200, 0, 0, Math.PI * 2);
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 60;
+                this.ctx.stroke();
+                this.ctx.strokeStyle = '#fff'; // Center line
+                this.ctx.lineWidth = 2;
+                this.ctx.setLineDash([20, 20]);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+
+                // Draw Cars
+                this.drawCar(this.player, 20); // Outer lane
+                this.drawCar(this.ai, -20);    // Inner lane
+            }
+
+            drawCar(entity, offset) {
+                // Calculate position on ellipse
+                // pos 0-100 -> angle 0-2PI
+                // Start at bottom (PI/2)
+                const angle = (entity.pos / this.trackLength) * Math.PI * 2 + (Math.PI / 2);
+
+                const cx = 400;
+                const cy = 300;
+                const rx = 350;
+                const ry = 200;
+
+                // Position with offset for lane
+                // Approximate normal vector logic or just scale radii
+                const x = cx + (rx + offset) * Math.cos(angle);
+                const y = cy + (ry + offset) * Math.sin(angle);
+
+                // Draw Car
+                this.ctx.save();
+                this.ctx.translate(x, y);
+                this.ctx.rotate(angle + Math.PI / 2); // Rotate to face direction
+
+                this.ctx.fillStyle = entity.color;
+                this.ctx.shadowColor = entity.color;
+                this.ctx.shadowBlur = 20;
+                this.ctx.fillRect(-15, -10, 30, 20);
+
+                this.ctx.restore();
+            }
+
+            endGame(win) {
+                this.gameOver = true;
+                cancelAnimationFrame(this.animationId);
+
+                if (win) {
+                    // Save Reward
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_scalextric'] = true;
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    document.getElementById('epic-modal').style.display = 'flex';
+                } else {
+                    document.getElementById('lose-modal').style.display = 'flex';
+                }
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,250 @@
+GUÍA PEDAGÓGICA - CASINO RÍTMIC
+=================================
+
+Esta guía detalla los conceptos musicales y las habilidades cognitivas que se trabajan en cada uno de los juegos de la suite "Casino Ritmic".
+
+1. BLACKJACK RÍTMICO
+--------------------
+Concepto Musical: Suma de valores rítmicos hasta completar un compás de 4/4.
+Habilidad Cognitiva: Cálculo mental rápido, toma de decisiones (pedir carta o plantarse) basada en la probabilidad.
+Descripción: El jugador debe sumar exactamente 4 tiempos usando figuras musicales (Negra=1, Blanca=2, etc.). Fomenta la interiorización de la duración de las notas y la completitud del compás.
+
+2. RULETA RÍTMICA
+-----------------
+Concepto Musical: Identificación auditiva y visual de figuras y sus valores.
+Habilidad Cognitiva: Asociación riesgo-recompensa, predicción.
+Descripción: Los jugadores apuestan a figuras específicas o grupos de valores (ej. notas de menos de 1 tiempo). Refuerza la jerarquía de valores (Rodona > Blanca > Negra...).
+
+3. ELS DAUS DEL COMPÀS (YAHTZEE)
+--------------------------------
+Concepto Musical: Combinatoria de figuras rítmicas.
+Habilidad Cognitiva: Planificación estratégica, reconocimiento de patrones.
+Descripción: Se lanzan dados con figuras musicales para formar combinaciones como "Poker de Negras" o "Escalera Rítmica". Ayuda a visualizar agrupaciones de notas.
+
+4. LA GRAN SUBASTA
+------------------
+Concepto Musical: Valoración relativa de las figuras.
+Habilidad Cognitiva: Gestión de recursos, valoración de activos.
+Descripción: Los jugadores pujan por "lotes" de notas. Deben calcular rápidamente si el valor musical del lote (suma de tiempos) compensa el coste en fichas.
+
+5. ESCOBA RÍTMICA
+-----------------
+Concepto Musical: Suma de valores para completar grupos de 4 tiempos.
+Habilidad Cognitiva: Visión espacial, cálculo combinatorio.
+Descripción: El objetivo es capturar cartas de la mesa que, sumadas a la de la mano, den 4 tiempos. Entrena la flexibilidad para ver diferentes combinaciones que suman lo mismo.
+
+6. CONECTA 4 RÍTMIC
+-------------------
+Concepto Musical: Equivalencias rítmicas.
+Habilidad Cognitiva: Estrategia espacial, anticipación.
+Descripción: Para colocar una ficha, el jugador debe responder una pregunta de equivalencia (ej. "¿Cuántas corcheas equivalen a una blanca?"). Refuerza la teoría básica.
+
+7. MEMORY RÍTMIC
+----------------
+Concepto Musical: Reconocimiento visual de símbolos musicales.
+Habilidad Cognitiva: Memoria visual a corto plazo.
+Descripción: Clásico juego de parejas. Ayuda a los estudiantes a familiarizarse con la grafía de las notas y silencios de forma lúdica.
+
+8. SIMON RÍTMIC
+---------------
+Concepto Musical: Memoria auditiva y rítmica.
+Habilidad Cognitiva: Atención sostenida, secuenciación auditiva.
+Descripción: El jugador debe repetir secuencias de sonidos percusivos cada vez más largas. Entrena el oído y la retención de patrones rítmicos.
+
+9. TEXAS HOLD'EM RÍTMIC
+-----------------------
+Concepto Musical: Formación de la mejor "mano" (compás o patrón) posible.
+Habilidad Cognitiva: Psicología (farol), cálculo de probabilidades.
+Descripción: Variante del póker donde las "manos" son sumas rítmicas específicas. Enseña a evaluar el potencial de las cartas propias frente a las comunitarias.
+
+10. EL TRILER RÍTMIC
+--------------------
+Concepto Musical: Atención visual y seguimiento de objetos.
+Habilidad Cognitiva: Agudeza visual, concentración.
+Descripción: Se esconde una figura musical bajo un cubilete. El jugador debe seguir el movimiento. Sirve como descanso cognitivo pero mantiene el foco en la simbología musical.
+
+11. BOLERA RÍTMICA
+------------------
+Concepto Musical: Preguntas teóricas de ritmo (quiz).
+Habilidad Cognitiva: Recuperación de conocimientos teóricos.
+Descripción: Para lanzar la bola con precisión, el jugador debe responder correctamente preguntas sobre valores y equivalencias. Vincula el éxito deportivo al conocimiento teórico.
+
+12. EL GRAN DERBY RÍTMIC
+------------------------
+Concepto Musical: Estimación de velocidad y tempo.
+Habilidad Cognitiva: Observación, intuición probabilística.
+Descripción: Carreras de caballos donde cada caballo representa una figura (el caballo "Semicorchea" es más rápido pero inestable, "Redonda" es lento pero seguro). Ilustra la relación entre valor y "velocidad" (frecuencia).
+
+13. 2048 RÍTMIC
+---------------
+Concepto Musical: Subdivisión y multiplicación binaria de valores (Semicorchea -> Corchea -> Negra...).
+Habilidad Cognitiva: Planificación a largo plazo, lógica matemática.
+Descripción: Al fusionar dos notas iguales, se convierten en la figura de valor inmediatamente superior. Visualiza perfectamente la matemática binaria del sistema rítmico.
+
+14. L'AVARÍCIA TRENCA EL SAC (PIG)
+----------------------------------
+Concepto Musical: Acumulación de tiempos.
+Habilidad Cognitiva: Gestión del riesgo.
+Descripción: El jugador lanza dados para acumular tiempos, pero si sale un "Silencio", pierde lo acumulado en el turno. Enseña a saber cuándo detenerse.
+
+15. EL MARTELL DE MAHLER (WHAC-A-MOLE)
+--------------------------------------
+Concepto Musical: Discriminación visual rápida.
+Habilidad Cognitiva: Velocidad de reacción, inhibición de impulsos.
+Descripción: Golpear solo las figuras correctas (ej. "Solo Negras") y evitar las incorrectas. Entrena el reconocimiento instantáneo de símbolos.
+
+16. EL CORRECTOR RÍTMIC (VIDEO POKER)
+-------------------------------------
+Concepto Musical: Corrección de compases erróneos.
+Habilidad Cognitiva: Análisis crítico, resolución de problemas.
+Descripción: Se presenta un compás incorrecto y el jugador debe descartar y robar cartas para arreglarlo y que sume 4 tiempos. Fomenta el análisis de errores.
+
+17. LA CABINA DE VENT RÍTMICA
+-----------------------------
+Concepto Musical: Captura de figuras en movimiento.
+Habilidad Cognitiva: Coordinación óculo-manual.
+Descripción: Notas vuelan por la pantalla; el jugador debe atrapar las valiosas y evitar las penalizaciones. Refuerzo lúdico de la identificación visual.
+
+18. LA CASCADA D'OR (COIN PUSHER)
+---------------------------------
+Concepto Musical: Resolución de problemas rítmicos bajo presión.
+Habilidad Cognitiva: Timing, paciencia.
+Descripción: Para que la máquina empuje las monedas, el jugador debe responder preguntas o resolver sumas rítmicas en el momento justo.
+
+19. DESACTIVACIÓ RÍTMICA (BUSCAMINAS/BOMBA)
+-------------------------------------------
+Concepto Musical: Deducción lógica de valores ocultos.
+Habilidad Cognitiva: Razonamiento deductivo.
+Descripción: Cortar cables (notas) para llegar a una suma objetivo sin pasarse ("explotar"). Requiere cálculo preciso y cuidadoso.
+
+20. EL CRONÒMETRE RÍTMIC
+------------------------
+Concepto Musical: Percepción del tiempo real vs. tiempo musical.
+Habilidad Cognitiva: Estimación temporal interna.
+Descripción: El jugador debe detener un cronómetro exactamente en el segundo que corresponde a la duración de una nota dada (a un BPM específico). Conecta el tiempo físico con el musical.
+
+21. LA GALERIA DE TIR RÍTMICA
+-----------------------------
+Concepto Musical: Identificación rápida de figuras específicas.
+Habilidad Cognitiva: Atención selectiva, puntería.
+Descripción: Disparar a objetivos que muestran la figura solicitada. Entrena la discriminación visual en un entorno dinámico.
+
+22. SLOTS RÍTMICS
+-----------------
+Concepto Musical: Reconocimiento de patrones visuales (tres iguales).
+Habilidad Cognitiva: Reconocimiento de patrones.
+Descripción: Máquina tragaperras clásica adaptada con símbolos musicales. Incluye minijuegos de preguntas ("Quiz") para obtener tiradas extra.
+
+23. EL SOLITARI DEL MESTRE
+--------------------------
+Concepto Musical: Parejas de suma equivalente (Complementarios).
+Habilidad Cognitiva: Cálculo mental, planificación.
+Descripción: Eliminar cartas por parejas que sumen un valor objetivo (ej. 2 tiempos). Similar al Mahjong o Solitario numérico, enfocado en la suma rítmica.
+
+24. LA BALANÇA DEL PRESTAMISTA
+------------------------------
+Concepto Musical: Equivalencia de pesos/valores.
+Habilidad Cognitiva: Comparación, pensamiento algebraico (A = B + C).
+Descripción: Equilibrar una balanza colocando notas en un lado para igualar el valor rítmico del otro. Visualización física de la equivalencia matemática.
+
+25. LA RODA DEL RISC
+--------------------
+Concepto Musical: Suma acumulativa hasta un límite.
+Habilidad Cognitiva: Evaluación de probabilidades.
+Descripción: Girar la rueda para sumar tiempos sin pasarse de 4. Similar al Blackjack pero con mecánica de ruleta.
+
+26. RED DOG RÍTMIC (INTERVAL)
+-----------------------------
+Concepto Musical: Comparación de valores (Mayor/Menor/Entre).
+Habilidad Cognitiva: Estimación de rangos.
+Descripción: Se reparten dos cartas (notas) y se apuesta si la tercera tendrá un valor intermedio. Enseña a ordenar mentalmente los valores rítmicos.
+
+27. GIN RUMMY RÍTMIC
+--------------------
+Concepto Musical: Agrupación de notas (Sets y Runs rítmicos).
+Habilidad Cognitiva: Organización, estrategia de descarte.
+Descripción: Formar manos válidas (compases completos o grupos de figuras iguales) robando y descartando.
+
+28. MAHJONG RÍTMIC
+------------------
+Concepto Musical: Identificación de parejas idénticas.
+Habilidad Cognitiva: Percepción visual, memoria espacial.
+Descripción: Buscar y eliminar fichas libres con la misma figura musical. Ejercicio de relajación y reconocimiento visual.
+
+29. TETRIS RÍTMIC
+-----------------
+Concepto Musical: Duración relativa representada como longitud espacial.
+Habilidad Cognitiva: Rotación mental, planificación espacial rápida.
+Descripción: Bloques que caen con anchura proporcional a su valor (Redonda=Bloque ancho, Negra=Bloque estrecho). Completar líneas equivale a completar compases.
+
+30. LA BATALLA DE VIENA (WAR)
+-----------------------------
+Concepto Musical: Comparación directa de valores (Mayor > Menor).
+Habilidad Cognitiva: Comparación rápida.
+Descripción: Cada jugador saca una carta; la figura de mayor valor gana. En caso de empate ("Guerra"), se resuelve con una pregunta teórica o desempate.
+
+31. LA MÀQUINA DE RITMES (CAJA DE RITMOS)
+-----------------------------------------
+Concepto Musical: Programación de patrones rítmicos (Step Sequencer).
+Habilidad Cognitiva: Descomposición de patrones, lógica secuencial.
+Descripción: El jugador debe reproducir un patrón rítmico escrito en partitura programándolo en una cuadrícula de 16 pasos. Introduce la producción musical moderna.
+
+32. CRAPS RÍTMIC
+----------------
+Concepto Musical: Suma de dos valores aleatorios.
+Habilidad Cognitiva: Probabilidad de sumas (distribución normal).
+Descripción: Apostar al resultado de la suma de dos dados musicales. Enseña qué sumas son más probables (ej. 2 Negras es más probable que 2 Redondas).
+
+33. EL TORNEIG DE DARDS
+-----------------------
+Concepto Musical: Suma precisa a un objetivo decimal (ej. 2.5 tiempos).
+Habilidad Cognitiva: Precisión motriz y cálculo exacto.
+Descripción: Lanzar dardos a secciones del tablero para restar su valor a una puntuación inicial hasta llegar exactamente a cero (o sumar hasta un objetivo).
+
+34. DAUS MENTIDERS (LIAR'S DICE)
+--------------------------------
+Concepto Musical: Estimación de frecuencias en un conjunto oculto.
+Habilidad Cognitiva: Deducción, engaño, cálculo de probabilidades.
+Descripción: Estimar cuántas figuras de un tipo (ej. "5 Negras") hay en total en la mesa, basándose en los dados propios y la probabilidad.
+
+35. EL GANXO DEL VIRTUÓS (CLAW MACHINE)
+---------------------------------------
+Concepto Musical: Identificación visual y coordinación.
+Habilidad Cognitiva: Coordinación temporo-espacial.
+Descripción: Mover un gancho para atrapar la figura musical solicitada entre muchas otras en movimiento.
+
+36. JOKER WILD
+--------------
+Concepto Musical: Álgebra rítmica (Valor desconocido).
+Habilidad Cognitiva: Resolución de ecuaciones simples.
+Descripción: Video Poker con un comodín (Joker). El jugador debe asignar al Joker el valor necesario para completar el compás (4 - suma actual = Joker).
+
+37. KENO RÍTMIC
+---------------
+Concepto Musical: Llenado de múltiples contenedores (compases) simultáneamente.
+Habilidad Cognitiva: Gestión de múltiples objetivos.
+Descripción: Se extraen bolas (notas) y el jugador decide en qué compás colocarlas para completarlos sin pasarse.
+
+38. EL LABERINT RÍTMIC
+----------------------
+Concepto Musical: Suma de caminos (Ramificaciones).
+Habilidad Cognitiva: Planificación de rutas, lógica booleana.
+Descripción: Configurar puertas lógicas para que una bola caiga en el cubo que corresponde a la suma de la secuencia mostrada.
+
+39. EL POLS INTERN (RULETA RÍTMICA)
+-----------------------------------
+Concepto Musical: Mantenimiento del pulso (Tempo interno).
+Habilidad Cognitiva: Precisión temporal, ritmo interno.
+Descripción: El jugador escucha un metrónomo y luego debe continuar marcando el pulso en silencio ("Tap tempo"). Mide la desviación en milisegundos.
+
+40. SPEED RÍTMIC
+----------------
+Concepto Musical: Reconocimiento instantáneo de igualdad.
+Habilidad Cognitiva: Velocidad de procesamiento visual.
+Descripción: Jugador y CPU voltean cartas simultáneamente. Si coinciden en valor, el primero en pulsar el botón gana.
+
+41. SUDOKU RÍTMIC
+-----------------
+Concepto Musical: Lógica de exclusión y suma constante.
+Habilidad Cognitiva: Razonamiento lógico avanzado.
+Descripción: Rellenar una cuadrícula 4x4 donde cada fila y columna debe sumar 4 tiempos y contener figuras específicas sin repetir (o cumpliendo la regla de suma).

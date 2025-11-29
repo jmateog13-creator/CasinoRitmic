@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Camp de Batalla Rítmic</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+
+        :root {
+            --board-light: #d2b48c;
+            --board-dark: #8b4513;
+            --gold: #ffd700;
+            --p1-color: #007bff;
+            --p2-color: #dc3545;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a0505;
+            font-family: 'Cinzel', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            font-size: 1.2rem;
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Game Area */
+        #game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(6, 80px);
+            grid-template-rows: repeat(6, 80px);
+            border: 10px solid #5d4037;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+        }
+
+        .cell {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .cell.light {
+            background: var(--board-light);
+        }
+
+        .cell.dark {
+            background: var(--board-dark);
+        }
+
+        .cell.highlight {
+            box-shadow: inset 0 0 20px var(--gold);
+            cursor: pointer;
+        }
+
+        .piece {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s;
+            cursor: pointer;
+            border: 3px solid white;
+        }
+
+        .piece img {
+            width: 70%;
+            height: 70%;
+            object-fit: contain;
+        }
+
+        .piece.p1 {
+            background: radial-gradient(circle, #4facfe, #00f2fe);
+            border-color: gold;
+        }
+
+        .piece.p2 {
+            background: radial-gradient(circle, #ff0844, #ffb199);
+            border-color: silver;
+        }
+
+        .piece.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px white;
+        }
+
+        #status-bar {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: var(--gold);
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+        <div style="font-size:1.2rem;">VICTÒRIES: <span id="wins-display">0</span>/2</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="game-area">
+        <div id="status-bar">EL TEU TORN</div>
+        <div id="board">
+            <!-- Grid injected -->
+        </div>
+        <div style="margin-top: 10px; color: #aaa;">Captures: TU <span id="p1-caps">0</span> - CPU <span
+                id="p2-caps">0</span></div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR A "EL CAMP DE BATALLA"</h2>
+            <p>1. Mou les teves peces (Blaus) una casella.</p>
+            <p>2. <strong>CAPTURA</strong> peces enemigues (Vermelles) si el teu valor és <strong>SUPERIOR</strong>.</p>
+            <p>3. Jerarquia: Rodona(4) > Blanca(2) > Negra(1) > Corxera(0.5).</p>
+            <p>4. Guanya capturant 8 peces enemigues.</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">LA VOLUNTAT DEL MESTRE!</h2>
+            <div class="relic-icon">📜</div>
+            <h3 style="color: var(--gold);">EL TESTAMENT DE HEILIGENSTADT</h3>
+            <p style="font-style: italic; color: #aaa;">"La commovedora carta de Ludwig van Beethoven. Un símbol de la
+                seva lluita contra la sordesa i la seva voluntat de triomfar."</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="result-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="result-title">RESULTAT</h2>
+            <button class="action-btn" onclick="game.reset()">CONTINUAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_batalla.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'move') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.1);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start();
+                osc.stop(now + 0.1);
+            } else if (type === 'capture') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(50, now + 0.3);
+                gain.gain.setValueAtTime(vol * 0.5, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start();
+                osc.stop(now + 0.3);
+            } else if (type === 'win') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(880, now + 0.2);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1);
+                osc.start();
+                osc.stop(now + 1);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        const PIECES = [
+            { val: 4, img: 'images/rodona.jpg' },
+            { val: 2, img: 'images/blanca.jpg' },
+            { val: 1, img: 'images/negra.jpg' },
+            { val: 0.5, img: 'images/corxera.jpg' }
+        ];
+
+        class Game {
+            constructor() {
+                this.wins = 0;
+                this.board = []; // 6x6
+                this.selected = null; // {x, y}
+                this.turn = 'player';
+                this.p1Caps = 0;
+                this.p2Caps = 0;
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.reset();
+            }
+
+            reset() {
+                document.getElementById('result-modal').style.display = 'none';
+                this.board = Array(6).fill(null).map(() => Array(6).fill(null));
+                this.p1Caps = 0;
+                this.p2Caps = 0;
+                this.turn = 'player';
+                this.selected = null;
+
+                // Init Pieces
+                // 12 pieces each. 3 of each type?
+                // Rows 0-1 for P2 (CPU), Rows 4-5 for P1 (Player)
+                this.placePieces(0, 1, 'p2');
+                this.placePieces(4, 5, 'p1');
+
+                this.render();
+                this.updateStatus();
+            }
+
+            placePieces(r1, r2, owner) {
+                const pool = [];
+                for (let i = 0; i < 3; i++) pool.push(...PIECES); // 3 of each type = 12 pieces
+                pool.sort(() => Math.random() - 0.5);
+
+                let idx = 0;
+                for (let r = r1; r <= r2; r++) {
+                    for (let c = 0; c < 6; c++) {
+                        this.board[r][c] = { ...pool[idx], owner: owner };
+                        idx++;
+                    }
+                }
+            }
+
+            clickCell(r, c) {
+                if (this.turn !== 'player') return;
+
+                const piece = this.board[r][c];
+
+                if (this.selected) {
+                    // Move or Attack
+                    if (this.isValidMove(this.selected.r, this.selected.c, r, c)) {
+                        this.executeMove(this.selected.r, this.selected.c, r, c);
+                        this.selected = null;
+                        this.render();
+                        this.checkWin();
+                        if (this.p1Caps < 8 && this.p2Caps < 8) {
+                            this.turn = 'cpu';
+                            this.updateStatus();
+                            setTimeout(() => this.cpuTurn(), 1000);
+                        }
+                    } else if (piece && piece.owner === 'p1') {
+                        // Change selection
+                        this.selected = { r, c };
+                        this.render();
+                    } else {
+                        // Deselect
+                        this.selected = null;
+                        this.render();
+                    }
+                } else {
+                    // Select
+                    if (piece && piece.owner === 'p1') {
+                        this.selected = { r, c };
+                        this.render();
+                    }
+                }
+            }
+
+            isValidMove(r1, c1, r2, c2) {
+                // Distance 1 (including diagonal)
+                const dr = Math.abs(r2 - r1);
+                const dc = Math.abs(c2 - c1);
+                if (dr > 1 || dc > 1 || (dr === 0 && dc === 0)) return false;
+
+                const target = this.board[r2][c2];
+                const source = this.board[r1][c1];
+
+                if (!target) return true; // Empty
+                if (target.owner === source.owner) return false; // Friendly
+
+                // Capture rule: Source > Target
+                return source.val > target.val;
+            }
+
+            executeMove(r1, c1, r2, c2) {
+                const target = this.board[r2][c2];
+                if (target) {
+                    playSound('capture');
+                    if (this.board[r1][c1].owner === 'p1') this.p1Caps++;
+                    else this.p2Caps++;
+                } else {
+                    playSound('move');
+                }
+
+                this.board[r2][c2] = this.board[r1][c1];
+                this.board[r1][c1] = null;
+                this.updateStatus();
+            }
+
+            cpuTurn() {
+                // Simple AI:
+                // 1. Check for captures
+                // 2. Check for safe moves
+                // 3. Random move
+
+                let moves = [];
+
+                for (let r = 0; r < 6; r++) {
+                    for (let c = 0; c < 6; c++) {
+                        const p = this.board[r][c];
+                        if (p && p.owner === 'p2') {
+                            // Check neighbors
+                            for (let nr = r - 1; nr <= r + 1; nr++) {
+                                for (let nc = c - 1; nc <= c + 1; nc++) {
+                                    if (nr >= 0 && nr < 6 && nc >= 0 && nc < 6) {
+                                        if (this.isValidMove(r, c, nr, nc)) {
+                                            const target = this.board[nr][nc];
+                                            let score = 0;
+                                            if (target) score = 10 + target.val; // Capture priority
+                                            else score = 1; // Move
+
+                                            // Danger check (dumb)
+                                            moves.push({ r1: r, c1: c, r2: nr, c2: nc, score });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                moves.sort((a, b) => b.score - a.score);
+
+                if (moves.length > 0) {
+                    const m = moves[0]; // Best move
+                    this.executeMove(m.r1, m.c1, m.r2, m.c2);
+                    this.render();
+                    this.checkWin();
+                    if (this.p1Caps < 8 && this.p2Caps < 8) {
+                        this.turn = 'player';
+                        this.updateStatus();
+                    }
+                } else {
+                    // Stuck? Pass
+                    this.turn = 'player';
+                    this.updateStatus();
+                }
+            }
+
+            checkWin() {
+                if (this.p1Caps >= 8) {
+                    this.wins++;
+                    document.getElementById('wins-display').textContent = this.wins;
+                    if (this.wins >= 2) {
+                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                        rewards['reward_risk'] = true;
+                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                        playSound('win');
+                        document.getElementById('epic-modal').style.display = 'flex';
+                    } else {
+                        document.getElementById('result-title').textContent = "HAS GUANYAT LA BATALLA!";
+                        document.getElementById('result-modal').style.display = 'flex';
+                    }
+                } else if (this.p2Caps >= 8) {
+                    document.getElementById('result-title').textContent = "HAS PERDUT LA BATALLA!";
+                    document.getElementById('result-modal').style.display = 'flex';
+                }
+            }
+
+            updateStatus() {
+                document.getElementById('p1-caps').textContent = this.p1Caps;
+                document.getElementById('p2-caps').textContent = this.p2Caps;
+                document.getElementById('status-bar').textContent = this.turn === 'player' ? "EL TEU TORN" : "TORN DE LA CPU...";
+            }
+
+            render() {
+                const boardEl = document.getElementById('board');
+                boardEl.innerHTML = '';
+
+                for (let r = 0; r < 6; r++) {
+                    for (let c = 0; c < 6; c++) {
+                        const cell = document.createElement('div');
+                        cell.className = `cell ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+                        cell.onclick = () => this.clickCell(r, c);
+
+                        // Highlight valid moves
+                        if (this.selected && this.isValidMove(this.selected.r, this.selected.c, r, c)) {
+                            cell.classList.add('highlight');
+                        }
+
+                        const p = this.board[r][c];
+                        if (p) {
+                            const pEl = document.createElement('div');
+                            pEl.className = `piece ${p.owner}`;
+                            pEl.innerHTML = `<img src="${p.img}">`;
+                            if (this.selected && this.selected.r === r && this.selected.c === c) {
+                                pEl.classList.add('selected');
+                            }
+                            cell.appendChild(pEl);
+                        }
+
+                        boardEl.appendChild(cell);
+                    }
+                }
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

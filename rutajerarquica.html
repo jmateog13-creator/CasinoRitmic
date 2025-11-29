@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Ruta Jeràrquica</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap');
+
+        :root {
+            --bg-dark: #1a1a1a;
+            --tile-bg: #2d2d2d;
+            --gold: #ffd700;
+            --path-col: #4caf50;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            font-family: 'Cinzel Decorative', cursive;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid var(--gold);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            font-size: 1.2rem;
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Game Area */
+        #game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+            background: #333;
+            padding: 10px;
+            border: 4px solid var(--gold);
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .tile {
+            width: 80px;
+            height: 80px;
+            background: var(--tile-bg);
+            border: 1px solid #444;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .tile:hover {
+            background: #3d3d3d;
+        }
+
+        .tile img {
+            width: 70%;
+            height: 70%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .tile.current {
+            box-shadow: inset 0 0 15px var(--gold);
+            border-color: var(--gold);
+        }
+
+        .tile.visited {
+            background: #1b5e20;
+        }
+
+        .tile.start::after {
+            content: "INICI";
+            position: absolute;
+            bottom: 2px;
+            font-size: 0.6rem;
+            color: #0f0;
+        }
+
+        .tile.end::after {
+            content: "FINAL";
+            position: absolute;
+            bottom: 2px;
+            font-size: 0.6rem;
+            color: #f00;
+        }
+
+        /* Status */
+        #status {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: var(--gold);
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+            font-family: 'Cinzel Decorative', cursive;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+        <div style="font-size:1.2rem;">PUZLES RESOLTS: <span id="wins-display">0</span>/3</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="game-area">
+        <div id="board">
+            <!-- 6x6 Grid -->
+        </div>
+        <div id="status">Mou-te al DOBLE o la MEITAT del valor actual.</div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">LA RUTA JERÀRQUICA</h2>
+            <p>1. Comença a la casella INICI.</p>
+            <p>2. Mou-te a una casella adjacent (H/V) només si el valor és el DOBLE o la MEITAT.</p>
+            <p>3. Arriba a la casella FINAL.</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">LA LÒGICA DE L'OFRENA!</h2>
+            <div class="relic-icon">🧩</div>
+            <h3 style="color: var(--gold);">LA PARTITURA DE L'OFRENA MUSICAL DE BACH</h3>
+            <p style="font-style: italic; color: #aaa;">"Aquest manuscrit conté els cànons i puzles més intel·ligents de
+                J.S. Bach, un homenatge a la lògica de la música."</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/High Stakes Love.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'step') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                gain.gain.setValueAtTime(vol * 0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.05);
+                osc.start();
+                osc.stop(now + 0.05);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start();
+                osc.stop(now + 0.3);
+            } else if (type === 'win') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(880, now + 0.2);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1);
+                osc.start();
+                osc.stop(now + 1);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        const NOTES = [
+            { val: 4, img: 'images/rodona.jpg' },
+            { val: 2, img: 'images/blanca.jpg' },
+            { val: 1, img: 'images/negra.jpg' },
+            { val: 0.5, img: 'images/corxera.jpg' },
+            { val: 0.25, img: 'images/semicorxera.jpg' }
+        ];
+
+        class Game {
+            constructor() {
+                this.wins = 0;
+                this.grid = []; // 6x6
+                this.currentPos = { x: 0, y: 0 };
+                this.endPos = { x: 5, y: 5 };
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.generateLevel();
+            }
+
+            generateLevel() {
+                // Simple generation: Random walk from start to end to ensure path, then fill rest
+                this.grid = Array(6).fill().map(() => Array(6).fill(null));
+
+                let x = 0, y = 0;
+                this.grid[y][x] = NOTES[Math.floor(Math.random() * NOTES.length)];
+
+                const path = [{ x, y }];
+
+                // Force path to end
+                while (x !== 5 || y !== 5) {
+                    const moves = [];
+                    if (x < 5) moves.push({ dx: 1, dy: 0 });
+                    if (y < 5) moves.push({ dx: 0, dy: 1 });
+                    // Allow backward moves sometimes for complexity? No, just forward/down for guaranteed simple path generation
+                    // Actually, to make it a puzzle, we should allow meandering.
+                    // But to ensure solvability easily:
+
+                    const move = moves[Math.floor(Math.random() * moves.length)];
+                    x += move.dx;
+                    y += move.dy;
+
+                    // Determine next value (Double or Half)
+                    const prev = this.grid[y - move.dy][x - move.dx];
+                    const options = [];
+                    if (prev.val * 2 <= 4) options.push(prev.val * 2);
+                    if (prev.val / 2 >= 0.25) options.push(prev.val / 2);
+
+                    const nextVal = options[Math.floor(Math.random() * options.length)];
+                    const nextNote = NOTES.find(n => n.val === nextVal);
+                    this.grid[y][x] = nextNote;
+                    path.push({ x, y });
+                }
+
+                // Fill rest randomly
+                for (let r = 0; r < 6; r++) {
+                    for (let c = 0; c < 6; c++) {
+                        if (!this.grid[r][c]) {
+                            this.grid[r][c] = NOTES[Math.floor(Math.random() * NOTES.length)];
+                        }
+                    }
+                }
+
+                this.currentPos = { x: 0, y: 0 };
+                this.render();
+            }
+
+            render() {
+                const board = document.getElementById('board');
+                board.innerHTML = '';
+
+                for (let r = 0; r < 6; r++) {
+                    for (let c = 0; c < 6; c++) {
+                        const tile = document.createElement('div');
+                        tile.className = 'tile';
+                        if (r === 0 && c === 0) tile.classList.add('start');
+                        if (r === 5 && c === 5) tile.classList.add('end');
+                        if (r === this.currentPos.y && c === this.currentPos.x) tile.classList.add('current');
+
+                        // Visited logic could be added
+
+                        tile.innerHTML = `<img src="${this.grid[r][c].img}">`;
+                        tile.onclick = () => this.move(c, r);
+                        board.appendChild(tile);
+                    }
+                }
+            }
+
+            move(x, y) {
+                const dx = Math.abs(x - this.currentPos.x);
+                const dy = Math.abs(y - this.currentPos.y);
+
+                if (dx + dy !== 1) return; // Not adjacent
+
+                const currVal = this.grid[this.currentPos.y][this.currentPos.x].val;
+                const nextVal = this.grid[y][x].val;
+
+                // Check rule: Double or Half
+                // Floating point precision check
+                const isDouble = Math.abs(nextVal - (currVal * 2)) < 0.001;
+                const isHalf = Math.abs(nextVal - (currVal / 2)) < 0.001;
+
+                if (isDouble || isHalf) {
+                    this.currentPos = { x, y };
+                    playSound('step');
+                    this.render();
+
+                    if (x === 5 && y === 5) {
+                        this.winLevel();
+                    }
+                } else {
+                    playSound('error');
+                    // Visual feedback
+                    const tiles = document.querySelectorAll('.tile');
+                    const idx = y * 6 + x;
+                    tiles[idx].style.borderColor = 'red';
+                    setTimeout(() => tiles[idx].style.borderColor = '#444', 500);
+                }
+            }
+
+            winLevel() {
+                this.wins++;
+                document.getElementById('wins-display').textContent = this.wins;
+                playSound('win');
+
+                if (this.wins >= 3) {
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_rutajerarquica'] = true;
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    document.getElementById('epic-modal').style.display = 'flex';
+                } else {
+                    setTimeout(() => {
+                        alert("Nivell Completat!");
+                        this.generateLevel();
+                    }, 500);
+                }
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

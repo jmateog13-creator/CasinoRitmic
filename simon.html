@@ -14,7 +14,54 @@
             /* Dark Red Velvet */
             --accent-gold: #d4af37;
             --text-light: #f0f0f0;
+            --neon-blue: #00ffff;
+            --gold: #ffd700;
             --panel-bg: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
         }
 
         body {
@@ -382,13 +429,26 @@
     </header>
 
     <div id="audio-controls">
-        <span>🎵</span>
+        <button id="mute-btn" style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">🎵</button>
         <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.3">
     </div>
 
-    <!-- Menu Button -->
-    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+    <div id="ui-bar">
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
 
+    <!-- Instructions Modal -->
+    <div id="instructions-modal">
+        <div class="instr-content">
+            <span class="instr-close"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Repeteix la seqüència rítmica que toca el Simon.</p>
+            <p>Cada ronda és més difícil. Memoritza i repeteix!</p>
+            <button class="instr-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+        </div>
+    </div>
     <div id="game-container">
         <div id="master-screen">
             <!-- Replaced Image with Icon/Text for listening mode -->
@@ -456,7 +516,11 @@
             isPlaying: false,
             isPlayerTurn: false,
             gameOver: false,
-            userVolume: 0.3 // Store user preferred volume
+            isPlayerTurn: false,
+            gameOver: false,
+            userVolume: 0.3, // Store user preferred volume
+            isMuted: false,
+            previousVolume: 0.3
         };
 
         // --- AUDIO ENGINE ---
@@ -530,12 +594,29 @@
 
             volumeSlider.addEventListener('input', (e) => {
                 state.userVolume = parseFloat(e.target.value);
+                if (state.isMuted) {
+                    state.isMuted = false;
+                    document.getElementById('mute-btn').textContent = '🎵';
+                }
                 // Only update immediately if not currently ducked (playing sequence)
                 if (!state.isPlaying) {
                     bgMusic.volume = state.userVolume;
                 }
             });
             bgMusic.volume = state.userVolume;
+
+            document.getElementById('mute-btn').addEventListener('click', () => {
+                state.isMuted = !state.isMuted;
+                const btn = document.getElementById('mute-btn');
+                if (state.isMuted) {
+                    state.previousVolume = bgMusic.volume;
+                    bgMusic.volume = 0;
+                    btn.textContent = '🔇';
+                } else {
+                    bgMusic.volume = state.userVolume;
+                    btn.textContent = '🎵';
+                }
+            });
         }
 
         function createKeypad() {
@@ -760,14 +841,12 @@
             createConfetti();
 
             // Save Reward
-            const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+            const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
             rewards['reward_simon'] = true;
-            localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+            sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
 
-            // Redirect
-            setTimeout(() => {
-                window.location.href = 'menu.html';
-            }, 4000);
+            // No auto-redirect, let user choose via modal button
+
         }
 
         function createConfetti() {

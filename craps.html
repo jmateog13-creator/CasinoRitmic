@@ -9,8 +9,55 @@
         :root {
             --felt: #006400;
             --felt-light: #008000;
+            --felt-green: #2d5a27;
+            --gold: #ffd700;
             --white: #fff;
             --red: #d00;
+        }
+
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
         }
 
         body {
@@ -258,6 +305,19 @@
         <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
     </div>
 
+    <!-- Instructions Modal -->
+    <div id="instructions-modal">
+        <div class="instr-content">
+            <span class="instr-close"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Aposta al resultat de la suma dels dos daus musicals.</p>
+            <p>Endevina si la suma serà Baixa, Mitjana o Alta.</p>
+            <button class="instr-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+        </div>
+    </div>
+
     <div id="table">
         <div id="hud">
             <div>FITXES: <span id="chips">500</span></div>
@@ -284,11 +344,8 @@
         </div>
 
         <div id="deck-area">
-            <div id="deck" onclick="drawCard()">
-                <div class="card-back"></div>
-            </div>
-            <button id="discard-btn" onclick="discardCard()">DESCARTAR</button>
-            <div id="drawn-card"></div>
+            <div id="die1" class="die"><img src="images/negra.jpg"></div>
+            <div id="die2" class="die"><img src="images/negra.jpg"></div>
         </div>
 
         <div id="controls">
@@ -540,9 +597,9 @@
             setTimeout(() => {
                 if (chips >= 2000) {
                     // Save Reward
-                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
                     rewards['reward_craps'] = true;
-                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
                     document.getElementById('win-modal').style.display = 'flex';
                 } else if (chips <= 0) {
                     alert("Has perdut totes les fitxes! Reiniciant...");

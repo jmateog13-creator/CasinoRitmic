@@ -15,6 +15,51 @@
             --text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
         }
 
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -601,6 +646,18 @@
     </div>
 
     <div id="game-table">
+        <!-- Instructions Modal -->
+        <div id="instructions-modal">
+            <div class="instr-content">
+                <span class="instr-close"
+                    onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+                <h2 style="color: var(--gold);">COM JUGAR</h2>
+                <p style="font-size:1.2rem;">L'objectiu és sumar exactament 4 temps amb les teves cartes.</p>
+                <p>Demana carta o planta't per apropar-te a 4 sense passar-te.</p>
+                <button class="instr-btn"
+                    onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+            </div>
+        </div>
         <canvas id="confetti-canvas"></canvas>
 
         <!-- Golden Button -->
@@ -612,7 +669,8 @@
 
         <!-- Volume Control -->
         <div class="volume-control">
-            <span id="volume-icon">🔊</span>
+            <button id="mute-btn" onclick="game.toggleMute()"
+                style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">🔊</button>
             <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5"
                 oninput="game.setVolume(this.value)">
         </div>
@@ -700,6 +758,8 @@
                 this.gameOver = false;
                 this.scoreRevealed = false;
                 this.attempts = 1;
+                this.isMuted = false;
+                this.previousVolume = 0.5;
 
                 this.ui = {
                     wallet: document.getElementById('wallet'),
@@ -720,7 +780,9 @@
                     btnClaimVictory: document.getElementById('btn-claim-victory'),
                     bgMusic: document.getElementById('bg-music'),
                     volumeSlider: document.getElementById('volume-slider'),
-                    volumeIcon: document.getElementById('volume-icon'),
+                    bgMusic: document.getElementById('bg-music'),
+                    volumeSlider: document.getElementById('volume-slider'),
+                    muteBtn: document.getElementById('mute-btn'),
                     attemptsDisplay: document.getElementById('attempts-display')
                 };
 
@@ -743,13 +805,33 @@
             }
 
             setVolume(value) {
+                if (this.isMuted) {
+                    this.isMuted = false;
+                    this.ui.muteBtn.textContent = "🔊";
+                }
                 this.ui.bgMusic.volume = value;
-                if (value == 0) {
-                    this.ui.volumeIcon.textContent = "🔇";
-                } else if (value < 0.5) {
-                    this.ui.volumeIcon.textContent = "🔉";
+                this.updateMuteIcon(value);
+            }
+
+            toggleMute() {
+                this.isMuted = !this.isMuted;
+                if (this.isMuted) {
+                    this.previousVolume = this.ui.bgMusic.volume;
+                    this.ui.bgMusic.volume = 0;
+                    this.ui.muteBtn.textContent = "🔇";
                 } else {
-                    this.ui.volumeIcon.textContent = "🔊";
+                    this.ui.bgMusic.volume = this.ui.volumeSlider.value;
+                    this.updateMuteIcon(this.ui.bgMusic.volume);
+                }
+            }
+
+            updateMuteIcon(value) {
+                if (value == 0) {
+                    this.ui.muteBtn.textContent = "🔇";
+                } else if (value < 0.5) {
+                    this.ui.muteBtn.textContent = "🔉";
+                } else {
+                    this.ui.muteBtn.textContent = "🔊";
                 }
             }
 
@@ -1007,9 +1089,9 @@
                     startConfetti();
 
                     // Save Reward
-                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
                     rewards['reward_blackjack'] = true;
-                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
 
                     // Redirect to menu after a short delay or on modal close
                     // For now, let's change the modal behavior or add a button there.
@@ -1017,9 +1099,10 @@
                     // So we can redirect after a few seconds or change the modal button.
 
                     // Let's modify the modal content dynamically or just redirect after confetti.
-                    setTimeout(() => {
-                        window.location.href = 'menu.html';
-                    }, 4000); // 4 seconds to see confetti
+                    // Let's modify the modal content dynamically or just redirect after confetti.
+                    // setTimeout(() => {
+                    //     window.location.href = 'menu.html';
+                    // }, 4000); // 4 seconds to see confetti
                 } else {
                     alert("Encara no tens 10,000 Beethovens!");
                 }

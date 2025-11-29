@@ -11,9 +11,57 @@
             --felt-dark: #1e3c2f;
             --wood-color: #5c4033;
             --gold: #ffd700;
+            --felt-green: #2d5a27;
             --card-size: 140px;
             /* Larger 2D size */
         }
+
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+
+
 
         body {
             margin: 0;
@@ -383,16 +431,29 @@
         </div>
     </div>
 
-    <!-- Menu Button -->
-    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+    <div id="ui-bar">
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
 
-    <!-- Audio -->
+    <!-- Instructions Modal -->
+    <div id="instructions-modal">
+        <div class="instr-content">
+            <span class="instr-close"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Llança els daus i forma combinacions com Poker o Escalera.</p>
+            <p>Aconsegueix la màxima puntuació possible!</p>
+            <button class="instr-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+        </div>
+    </div><!-- Audio -->
     <audio id="bg-music" src="music/background_music_dados.mp3" loop></audio>
 
     <div id="game-table">
         <!-- Volume -->
         <div class="volume-control">
-            <span id="volume-icon">🔊</span>
+            <button id="mute-btn" onclick="game.toggleMute()"
+                style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">🔊</button>
             <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5"
                 oninput="game.setVolume(this.value)">
         </div>
@@ -466,7 +527,10 @@
                     { value: 1, locked: false, element: null } // Reduced to 4 dice
                 ];
                 this.rollsLeft = 5;
+                this.rollsLeft = 5;
                 this.volume = 0.5;
+                this.isMuted = false;
+                this.previousVolume = 0.5;
                 this.rewardUnlocked = false;
                 this.wins = 0;
                 this.roundWon = false;
@@ -526,11 +590,39 @@
             }
 
             setVolume(val) {
+                if (this.isMuted) {
+                    this.isMuted = false;
+                    document.getElementById('mute-btn').textContent = "🔊";
+                }
+
                 this.volume = val;
-                const icon = document.getElementById('volume-icon');
                 const bgMusic = document.getElementById('bg-music');
                 if (bgMusic) bgMusic.volume = val;
 
+                this.updateMuteIcon(val);
+            }
+
+            toggleMute() {
+                this.isMuted = !this.isMuted;
+                const icon = document.getElementById('mute-btn');
+                const slider = document.getElementById('volume-slider');
+
+                if (this.isMuted) {
+                    this.previousVolume = parseFloat(slider.value);
+                    this.volume = 0;
+                    const bgMusic = document.getElementById('bg-music');
+                    if (bgMusic) bgMusic.volume = 0;
+                    icon.textContent = "🔇";
+                } else {
+                    this.volume = parseFloat(slider.value);
+                    const bgMusic = document.getElementById('bg-music');
+                    if (bgMusic) bgMusic.volume = this.volume;
+                    this.updateMuteIcon(this.volume);
+                }
+            }
+
+            updateMuteIcon(val) {
+                const icon = document.getElementById('mute-btn');
                 if (val == 0) icon.textContent = "🔇";
                 else if (val < 0.5) icon.textContent = "🔉";
                 else icon.textContent = "🔊";
@@ -672,14 +764,14 @@
                     setTimeout(() => document.getElementById('reward-modal').style.display = 'flex', 500);
 
                     // Save Reward
-                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
                     rewards['reward_daus'] = true;
-                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
 
                     // Redirect
-                    setTimeout(() => {
-                        window.location.href = 'menu.html';
-                    }, 4000);
+                    // setTimeout(() => {
+                    //     window.location.href = 'menu.html';
+                    // }, 4000);
                 }
             }
 

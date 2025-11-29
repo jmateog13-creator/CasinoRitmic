@@ -13,6 +13,53 @@
             --neon-yellow: #ffff00;
             --neon-green: #00ff00;
             --card-white: #ffffff;
+            --felt-blue: #00008b;
+            --gold: #ffd700;
+        }
+
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
         }
 
         body {
@@ -256,10 +303,23 @@
 
 <body>
 
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--neon-yellow);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Video Poker amb un comodín (Joker).</p>
+            <p>Assigna al Joker el valor necessari per completar el compàs de 4 temps.</p>
+            <button class="btn-action"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+        </div>
+    </div>
+
     <div id="ui-bar">
         <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
         <div style="display:flex; align-items:center; gap:10px;">
-            <span>🔊</span>
+            <button id="mute-btn" style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">🔊</button>
             <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5"
                 style="accent-color: var(--neon-yellow);">
         </div>
@@ -322,6 +382,15 @@
         </div>
     </div>
 
+    <!-- Lose Modal -->
+    <div id="lose-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: red;">GAME OVER</h2>
+            <p id="lose-msg">Has perdut.</p>
+            <button class="btn-action" onclick="location.reload()">REINTENTAR</button>
+        </div>
+    </div>
+
     <audio id="bg-music" src="music/background_music_jokerwild.mp3" loop></audio>
 
     <script>
@@ -329,17 +398,37 @@
         const audioCtx = new AudioContext();
 
         // Background Music
+        // Background Music
+        const bgMusic = document.getElementById('bg-music');
+        const muteBtn = document.getElementById('mute-btn');
+        let isMuted = false;
+        let previousVolume = 0.5;
+
         document.body.addEventListener('click', () => {
-            const bgMusic = document.getElementById('bg-music');
-            if (bgMusic.paused) {
+            if (bgMusic.paused && !isMuted) {
                 bgMusic.volume = document.getElementById('volume').value * 0.5;
                 bgMusic.play().catch(e => console.log(e));
             }
         }, { once: true });
 
         document.getElementById('volume').addEventListener('input', (e) => {
-            const bgMusic = document.getElementById('bg-music');
+            if (isMuted) {
+                isMuted = false;
+                muteBtn.textContent = '🔊';
+            }
             bgMusic.volume = e.target.value * 0.5;
+        });
+
+        muteBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            if (isMuted) {
+                previousVolume = bgMusic.volume;
+                bgMusic.volume = 0;
+                muteBtn.textContent = '🔇';
+            } else {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                muteBtn.textContent = '🔊';
+            }
         });
 
         // Game State
@@ -535,9 +624,9 @@
 
             if (wins >= 5) {
                 // Save Reward
-                const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
                 rewards['reward_joker'] = true;
-                localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
 
                 setTimeout(() => {
                     document.getElementById('win-modal').style.display = 'flex';
@@ -547,7 +636,8 @@
 
         function gameOver(msg) {
             playSound('lose');
-            // alert(msg);
+            document.getElementById('lose-msg').textContent = msg;
+            document.getElementById('lose-modal').style.display = 'flex';
         }
 
         function updateUI() {

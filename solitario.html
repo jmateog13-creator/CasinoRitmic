@@ -9,8 +9,54 @@
         :root {
             --felt-blue: #003366;
             --felt-burgundy: #660000;
+            --felt-green: #2d5a27;
             --gold: #ffd700;
             --card-bg: #fff;
+        }
+
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
         }
 
         body {
@@ -267,6 +313,19 @@
         <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
     </div>
 
+    <!-- Instructions Modal -->
+    <div id="instructions-modal">
+        <div class="instr-content">
+            <span class="instr-close"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Organitza les cartes en seqüències lògiques seguint regles musicals.</p>
+            <p>Completa totes les piles per guanyar!</p>
+            <button class="instr-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+        </div>
+    </div>
+
     <!-- <a href="menu.html" id="btn-menu">🏠 MENÚ</a> Removed old button -->
 
     <div id="table">
@@ -302,9 +361,11 @@
             <p>Regla: Suma <strong style="color:#800;">EXACTAMENT 2 TEMPS</strong>.</p>
             <p>(Ex: Blanca sola, o 2 Negres).</p>
             <div style="display:flex; gap:20px; justify-content:center; margin-top:20px;">
-                <button class="action-btn" onclick="game.start(1)">NIVELL 1 (Fàcil)</button>
-                <button class="action-btn" onclick="game.start(2)">NIVELL 2 (Mitjà)</button>
-                <button class="action-btn" onclick="game.start(3)">NIVELL 3 (Difícil)</button>
+                <button class="action-btn" id="btn-lvl1" onclick="game.start(1)">NIVELL 1 (Fàcil)</button>
+                <button class="action-btn" id="btn-lvl2" onclick="game.start(2)" disabled
+                    style="opacity: 0.5; cursor: not-allowed;">NIVELL 2 (Mitjà) 🔒</button>
+                <button class="action-btn" id="btn-lvl3" onclick="game.start(3)" disabled
+                    style="opacity: 0.5; cursor: not-allowed;">NIVELL 3 (Difícil) 🔒</button>
             </div>
         </div>
     </div>
@@ -383,6 +444,7 @@
             }
 
             start(level) {
+                this.currentLevel = level;
                 document.getElementById('start-screen').style.display = 'none';
                 this.createDeck();
                 this.dealPyramid(level);
@@ -591,14 +653,34 @@
             checkWin() {
                 const remaining = this.pyramid.filter(c => !c.isRemoved).length;
                 if (remaining === 0) {
-                    // Save Reward
-                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
-                    rewards['reward_solitari'] = true;
-                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    if (this.currentLevel === 1) {
+                        alert("NIVELL 1 COMPLETAT! Has desbloquejat el Nivell 2.");
+                        document.getElementById('start-screen').style.display = 'flex';
+                        const btn2 = document.getElementById('btn-lvl2');
+                        btn2.disabled = false;
+                        btn2.style.opacity = '1';
+                        btn2.style.cursor = 'pointer';
+                        btn2.textContent = "NIVELL 2 (DESBLOQUEJAT)";
+                        document.getElementById('btn-lvl1').textContent = "NIVELL 1 (COMPLETAT ✅)";
+                    } else if (this.currentLevel === 2) {
+                        alert("NIVELL 2 COMPLETAT! Has desbloquejat el Nivell 3.");
+                        document.getElementById('start-screen').style.display = 'flex';
+                        const btn3 = document.getElementById('btn-lvl3');
+                        btn3.disabled = false;
+                        btn3.style.opacity = '1';
+                        btn3.style.cursor = 'pointer';
+                        btn3.textContent = "NIVELL 3 (DESBLOQUEJAT)";
+                        document.getElementById('btn-lvl2').textContent = "NIVELL 2 (COMPLETAT ✅)";
+                    } else if (this.currentLevel === 3) {
+                        // Save Reward
+                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                        rewards['reward_solitario'] = true;
+                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
 
-                    setTimeout(() => {
-                        document.getElementById('win-modal').style.display = 'flex';
-                    }, 1000);
+                        setTimeout(() => {
+                            document.getElementById('win-modal').style.display = 'flex';
+                        }, 1000);
+                    }
                 }
             }
 

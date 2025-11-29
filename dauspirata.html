@@ -13,6 +13,51 @@
             --felt: #1b5e20;
         }
 
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -289,8 +334,22 @@
     <div id="ui-bar">
         <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
         <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
-            <span>🔊</span>
+            <button id="mute-btn" onclick="toggleMute()"
+                style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">🔊</button>
             <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal">
+        <div class="instr-content">
+            <span class="instr-close"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Endevina quantes figures d'un tipus hi ha en total a la taula.</p>
+            <p>Enganya al Pirata o descobreix les seves mentides!</p>
+            <button class="instr-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
         </div>
     </div>
 
@@ -381,6 +440,9 @@
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const audioCtx = new AudioContext();
 
+        let isMuted = false;
+        let previousVolume = 0.5;
+
         // Background Music
         document.body.addEventListener('click', () => {
             const bgMusic = document.getElementById('bg-music');
@@ -391,9 +453,40 @@
         }, { once: true });
 
         document.getElementById('volume').addEventListener('input', (e) => {
+            const val = e.target.value;
+
+            if (isMuted) {
+                isMuted = false;
+                document.getElementById('mute-btn').textContent = "🔊";
+            }
+
             const bgMusic = document.getElementById('bg-music');
-            bgMusic.volume = e.target.value * 0.5;
+            bgMusic.volume = val * 0.5;
+            updateMuteIcon(val);
         });
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const icon = document.getElementById('mute-btn');
+            const slider = document.getElementById('volume');
+            const bgMusic = document.getElementById('bg-music');
+
+            if (isMuted) {
+                previousVolume = parseFloat(slider.value);
+                bgMusic.volume = 0;
+                icon.textContent = "🔇";
+            } else {
+                bgMusic.volume = slider.value * 0.5;
+                updateMuteIcon(parseFloat(slider.value));
+            }
+        }
+
+        function updateMuteIcon(val) {
+            const icon = document.getElementById('mute-btn');
+            if (val == 0) icon.textContent = "🔇";
+            else if (val < 0.5) icon.textContent = "🔉";
+            else icon.textContent = "🔊";
+        }
 
         // Game State
         const POOL_DEF = { 'rodona': 2, 'blanca': 4, 'negra': 8 };
@@ -775,16 +868,18 @@
 
         function winGame() {
             // Save Reward
-            const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+            const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
             rewards['reward_daus'] = true;
-            localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+            sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
 
             document.getElementById('win-modal').style.display = 'flex';
             playSound('fanfare');
         }
 
         // Audio
+        // Audio
         function playSound(type) {
+            if (isMuted) return;
             const vol = document.getElementById('volume').value;
             if (vol <= 0) return;
 

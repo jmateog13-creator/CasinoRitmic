@@ -12,10 +12,57 @@
         :root {
             --bg-color: #2c0505;
             /* Dark Red Velvet */
+            --felt-green: #2d5a27;
+            --gold: #ffd700;
             --accent-gold: #d4af37;
             --text-light: #f0f0f0;
             --card-width: 150px;
             --card-height: 220px;
+        }
+
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
         }
 
         body {
@@ -325,9 +372,22 @@
         <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
     </div>
 
-    <!-- Menu Button -->
-    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
+    <div id="ui-bar">
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
 
+    <!-- Instructions Modal -->
+    <div id="instructions-modal">
+        <div class="instr-content">
+            <span class="instr-close"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Segueix la bolita amb la vista i endevina on s'amaga.</p>
+            <p>No perdis de vista els gots musicals!</p>
+            <button class="instr-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+        </div>
+    </div>
     <div id="game-container">
         <div id="table-surface">
             <!-- Cards will be injected here by JS -->
@@ -429,6 +489,9 @@
 
                 // Click Event
                 cardContainer.addEventListener('click', () => handleCardClick(i));
+
+                // Set initial pos
+                cardContainer.dataset.pos = i;
 
                 tableSurface.appendChild(cardContainer);
             }
@@ -597,14 +660,15 @@
             playWinSound();
 
             // Save Reward
-            const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+            const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
             rewards['reward_triler'] = true;
-            localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+            sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
 
             // Redirect
-            setTimeout(() => {
-                window.location.href = 'menu.html';
-            }, 4000);
+            // Removed auto-redirect
+            // setTimeout(() => {
+            //     window.location.href = 'menu.html';
+            // }, 4000);
         }
 
         function playWinSound() {
@@ -628,9 +692,10 @@
         }
 
         // Set initial data-pos
-        document.querySelectorAll('.card-container').forEach((el, i) => {
-            el.dataset.pos = i;
-        });
+        // Moved to createCards to ensure elements exist
+        // document.querySelectorAll('.card-container').forEach((el, i) => {
+        //    el.dataset.pos = i;
+        // });
 
         init();
 

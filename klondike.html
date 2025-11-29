@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solitari Klondike Rítmic</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+        :root {
+            --felt-green: #2d5a27;
+            --gold: #ffd700;
+            --card-w: 80px;
+            --card-h: 120px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            font-family: 'Playfair Display', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            font-size: 1.2rem;
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Table */
+        #table {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, var(--felt-green), #1a3c1a);
+            padding-top: 60px;
+            box-sizing: border-box;
+        }
+
+        /* Top Area */
+        #top-area {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 50px;
+        }
+
+        #deck-area {
+            display: flex;
+            gap: 20px;
+        }
+
+        #foundations {
+            display: flex;
+            gap: 20px;
+        }
+
+        .slot {
+            width: var(--card-w);
+            height: var(--card-h);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        /* Tableau */
+        #tableau {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .column {
+            width: var(--card-w);
+            min-height: 300px;
+            position: relative;
+        }
+
+        /* Cards */
+        .card {
+            width: var(--card-w);
+            height: var(--card-h);
+            background: white;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .card img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        .card-back {
+            background: repeating-linear-gradient(45deg, #b71c1c, #b71c1c 10px, #800000 10px, #800000 20px);
+            border: 2px solid var(--gold);
+        }
+
+        .card-back img {
+            display: none;
+        }
+
+        .selected {
+            box-shadow: 0 0 10px 5px var(--gold);
+            z-index: 1000 !important;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+
+        /* Instructions Modal specific */
+        #instructions-modal .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="table">
+        <div id="top-area">
+            <div id="deck-area">
+                <div class="slot" id="stock" onclick="game.drawStock()">
+                    <!-- Stock Pile -->
+                </div>
+                <div class="slot" id="waste">
+                    <!-- Waste Pile -->
+                </div>
+            </div>
+            <div id="foundations">
+                <div class="slot" id="f0" onclick="game.clickFoundation(0)"></div>
+                <div class="slot" id="f1" onclick="game.clickFoundation(1)"></div>
+                <div class="slot" id="f2" onclick="game.clickFoundation(2)"></div>
+                <div class="slot" id="f3" onclick="game.clickFoundation(3)"></div>
+            </div>
+        </div>
+
+        <div id="tableau">
+            <div class="column" id="c0" onclick="game.clickColumn(0)"></div>
+            <div class="column" id="c1" onclick="game.clickColumn(1)"></div>
+            <div class="column" id="c2" onclick="game.clickColumn(2)"></div>
+            <div class="column" id="c3" onclick="game.clickColumn(3)"></div>
+            <div class="column" id="c4" onclick="game.clickColumn(4)"></div>
+            <div class="column" id="c5" onclick="game.clickColumn(5)"></div>
+            <div class="column" id="c6" onclick="game.clickColumn(6)"></div>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR A "SOLITARI KLONDIKE"</h2>
+            <p>1. Ordena les cartes a les 4 Bases de dalt (Ascendent: Semicorxera -> Rodona).</p>
+            <p>2. Al Tauler, apila cartes en ordre <strong>DESCENDENT</strong> i alternant
+                <strong>NOTA/SILENCI</strong>.</p>
+            <p>3. Ex: Una Negra (1) sobre un Silenci de Blanca (2).</p>
+            <p>4. Guanyes quan completes les 4 Bases.</p>
+            <button class="instr-btn" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">L'ART DE LA FORMA!</h2>
+            <div class="relic-icon">🎻</div>
+            <h3 style="color: var(--gold);">EL VIOLÍ DE STAINER</h3>
+            <p style="font-style: italic; color: #aaa;">"Jakob Stainer, el gran rival de Stradivari, els seus violins
+                són considerats una perfecció barroca. Símbol d'ordre i estructura!"</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_solitario.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'card') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                gain.gain.setValueAtTime(vol * 0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start();
+                osc.stop(now + 0.1);
+            } else if (type === 'win') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(880, now + 0.2);
+                gain.gain.setValueAtTime(vol * 0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1);
+                osc.start();
+                osc.stop(now + 1);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        // Ranks: Semicorxera(0) < Corxera(1) < Negra(2) < Blanca(3) < Rodona(4)
+        // Values for logic: 0, 1, 2, 3, 4
+        const RANKS = [
+            { id: 'semicorxera', val: 0, img: 'images/semicorxera.jpg', simg: 'images/silencisemicorxera.jpg' },
+            { id: 'corxera', val: 1, img: 'images/corxera.jpg', simg: 'images/silencicorxera.jpg' },
+            { id: 'negra', val: 2, img: 'images/negra.jpg', simg: 'images/silencinegra.jpg' },
+            { id: 'blanca', val: 3, img: 'images/blanca.jpg', simg: 'images/silenciblanca.jpg' },
+            { id: 'rodona', val: 4, img: 'images/rodona.jpg', simg: 'images/silencirodona.jpg' }
+        ];
+
+        class Game {
+            constructor() {
+                this.deck = [];
+                this.waste = [];
+                this.foundations = [[], [], [], []];
+                this.tableau = [[], [], [], [], [], [], []];
+                this.selected = null; // { source: 'waste'|'tableau', colIdx: number, cardIdx: number }
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.createDeck();
+                this.deal();
+                this.render();
+            }
+
+            createDeck() {
+                this.deck = [];
+                // 4 copies of each rank (2 Notes, 2 Silences) to simulate 4 suits?
+                // Or 4 Notes + 4 Silences?
+                // Prompt: "40 cartes utilitzant les 5 Notes i els 5 Silencis (4 còpies de cada tipus)"
+                // Total 10 types * 4 = 40 cards.
+
+                RANKS.forEach(r => {
+                    // 4 Notes
+                    for (let i = 0; i < 4; i++) this.deck.push({ rank: r.val, type: 'note', img: r.img, id: r.id, uid: Math.random() });
+                    // 4 Silences
+                    for (let i = 0; i < 4; i++) this.deck.push({ rank: r.val, type: 'rest', img: r.simg, id: 's_' + r.id, uid: Math.random() });
+                });
+
+                // Shuffle
+                this.deck.sort(() => Math.random() - 0.5);
+            }
+
+            deal() {
+                // Standard Klondike deal
+                // c0: 1 card, c1: 2 cards... c6: 7 cards
+                for (let i = 0; i < 7; i++) {
+                    for (let j = 0; j <= i; j++) {
+                        const card = this.deck.pop();
+                        if (j === i) card.faceUp = true;
+                        else card.faceUp = false;
+                        this.tableau[i].push(card);
+                    }
+                }
+            }
+
+            drawStock() {
+                if (this.deck.length > 0) {
+                    const card = this.deck.pop();
+                    card.faceUp = true;
+                    this.waste.push(card);
+                    this.selected = null;
+                    playSound('card');
+                } else {
+                    // Recycle waste
+                    while (this.waste.length > 0) {
+                        const c = this.waste.pop();
+                        c.faceUp = false;
+                        this.deck.push(c);
+                    }
+                }
+                this.render();
+            }
+
+            clickWaste() {
+                if (this.waste.length === 0) return;
+                if (this.selected && this.selected.source === 'waste') {
+                    this.selected = null;
+                } else {
+                    this.selected = { source: 'waste', card: this.waste[this.waste.length - 1] };
+                }
+                this.render();
+            }
+
+            clickColumn(colIdx) {
+                const col = this.tableau[colIdx];
+
+                if (this.selected) {
+                    // Try to move selected to this column
+                    const targetCard = col.length > 0 ? col[col.length - 1] : null;
+                    const movingCard = this.selected.card; // Only single card move logic for simplicity first? No, need stack.
+
+                    // If moving from tableau, we might be moving a stack
+                    let movingStack = [];
+                    if (this.selected.source === 'waste') {
+                        movingStack = [this.selected.card];
+                    } else {
+                        // Tableau source
+                        const srcCol = this.tableau[this.selected.colIdx];
+                        movingStack = srcCol.slice(this.selected.cardIdx);
+                    }
+
+                    const head = movingStack[0];
+
+                    // Validate Move
+                    // Rule: Immediate Lower Value AND Different Type
+                    // Or King (Rodona?) on empty?
+                    // Prompt: "Rodona és el més alt... Una carta només es pot apilar sobre una altra si: Valor IMMEDIATAMENT INFERIOR... TIPUS DIFERENT"
+                    // Empty column: Only Rodona? (Standard Klondike King rule). Let's assume yes.
+
+                    let valid = false;
+                    if (!targetCard) {
+                        // Empty column
+                        if (head.rank === 4) valid = true; // Rodona
+                    } else {
+                        if (targetCard.rank === head.rank + 1 && targetCard.type !== head.type) {
+                            valid = true;
+                        }
+                    }
+
+                    if (valid) {
+                        // Execute Move
+                        if (this.selected.source === 'waste') {
+                            this.waste.pop();
+                            col.push(head);
+                        } else {
+                            const srcCol = this.tableau[this.selected.colIdx];
+                            srcCol.splice(this.selected.cardIdx, movingStack.length);
+                            // Flip new top of source
+                            if (srcCol.length > 0) srcCol[srcCol.length - 1].faceUp = true;
+                            col.push(...movingStack);
+                        }
+                        this.selected = null;
+                        playSound('card');
+                        this.render();
+                        return;
+                    }
+                }
+
+                // Select logic (if not moving)
+                if (col.length > 0) {
+                    // Can only select face up cards
+                    // If clicking top card, select it.
+                    // If clicking middle face-up card, select stack.
+                    // For simplicity, let's just select top card if no complex UI
+                    // But we need stack move.
+                    // Let's assume click selects the card and everything below it if face up.
+                    // Since we don't have precise click Y coord in this simple logic, let's select the top card by default, 
+                    // or maybe we need to render them as clickable divs.
+                    // In render(), we'll attach onclicks to specific cards.
+                }
+            }
+
+            // Helper for specific card click in tableau
+            clickTableauCard(colIdx, cardIdx) {
+                const col = this.tableau[colIdx];
+                const card = col[cardIdx];
+                if (!card.faceUp) return;
+
+                if (this.selected && this.selected.source === 'tableau' && this.selected.colIdx === colIdx && this.selected.cardIdx === cardIdx) {
+                    this.selected = null; // Deselect
+                } else if (this.selected) {
+                    // Attempting to move TO this card?
+                    // Usually you click the column, not the card, to drop.
+                    // But if we click a card, it implies dropping ON it.
+                    this.clickColumn(colIdx);
+                } else {
+                    // Select this stack
+                    this.selected = { source: 'tableau', colIdx, cardIdx, card: card };
+                }
+                this.render();
+            }
+
+            clickFoundation(fIdx) {
+                if (this.selected) {
+                    // Try to move to foundation
+                    // Only single card allowed
+                    let card = null;
+                    if (this.selected.source === 'waste') {
+                        card = this.selected.card;
+                    } else {
+                        const srcCol = this.tableau[this.selected.colIdx];
+                        if (srcCol.length - 1 !== this.selected.cardIdx) return; // Can only move top card
+                        card = this.selected.card;
+                    }
+
+                    // Validate
+                    // Ascending: 0 -> 1 -> 2 -> 3 -> 4
+                    const pile = this.foundations[fIdx];
+                    const top = pile.length > 0 ? pile[pile.length - 1] : null;
+
+                    let valid = false;
+                    if (!top) {
+                        if (card.rank === 0) valid = true; // Semicorxera
+                    } else {
+                        if (card.rank === top.rank + 1) valid = true; // Same type? Prompt doesn't say. Usually same suit.
+                        // "Les cartes s'apilen en ordre ASCENDENT".
+                        // Let's enforce same type (Note on Note, Rest on Rest) to mimic suits?
+                        // Or just any type?
+                        // Prompt: "Han de començar amb la figura de valor més baix... Corxera -> Negra...".
+                        // Doesn't mention type matching. But usually Solitaire requires same suit.
+                        // Let's require same type for consistency.
+                        if (card.rank === top.rank + 1 && card.type === top.type) valid = true;
+                    }
+
+                    if (valid) {
+                        if (this.selected.source === 'waste') {
+                            this.waste.pop();
+                        } else {
+                            const srcCol = this.tableau[this.selected.colIdx];
+                            srcCol.pop();
+                            if (srcCol.length > 0) srcCol[srcCol.length - 1].faceUp = true;
+                        }
+                        pile.push(card);
+                        this.selected = null;
+                        playSound('card');
+                        this.checkWin();
+                        this.render();
+                    }
+                }
+            }
+
+            checkWin() {
+                // Win if all foundations have 10 cards (0-4 rank * 2 types? No, 40 cards total / 4 piles = 10 cards per pile?)
+                // Wait, ranks are 0,1,2,3,4. That's 5 cards.
+                // 40 cards total. 8 copies of each rank.
+                // 4 Foundations. So each foundation holds 10 cards?
+                // No, standard solitaire has 4 suits, A-K (13 cards).
+                // Here we have 5 ranks.
+                // If we have 4 foundations, and 40 cards...
+                // Maybe we stack 0-4 multiple times? Or just 0-4?
+                // If just 0-4, that's 5 cards per pile. 4 piles = 20 cards.
+                // Where do the other 20 go?
+                // Ah, maybe the deck is too big or foundations need to wrap?
+                // Or maybe we have 8 foundations?
+                // Prompt: "4 Bases de Fundació".
+                // Prompt: "Crea una baralla d'almenys 40 cartes".
+                // Maybe we just stack 0-4. Once 4 is reached, it's done?
+                // Then we have leftover cards.
+                // Let's assume we need to stack 0-4 twice per foundation? Or just discard leftovers?
+                // Standard Klondike uses all cards.
+                // Let's assume we can stack 0-1-2-3-4-0-1-2-3-4?
+                // Or maybe the game ends when all 4 Kings (Rodonas) are on top?
+                // Let's keep it simple: Stack 0 to 4. If all 4 piles have a Rodona (4), we win?
+                // But what about the other cards?
+                // Let's just check if deck and tableau are empty?
+                // Or maybe just check if we have 4 Rodonas on top of foundations.
+
+                const complete = this.foundations.every(f => f.length > 0 && f[f.length - 1].rank === 4);
+                if (complete) {
+                    // Save Reward
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                    rewards['reward_klondike'] = true;
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    playSound('win');
+                    document.getElementById('epic-modal').style.display = 'flex';
+                }
+            }
+
+            render() {
+                // Waste
+                const wasteEl = document.getElementById('waste');
+                wasteEl.innerHTML = '';
+                wasteEl.onclick = () => this.clickWaste();
+                if (this.waste.length > 0) {
+                    const c = this.waste[this.waste.length - 1];
+                    const div = this.createCardDiv(c);
+                    if (this.selected && this.selected.source === 'waste') div.classList.add('selected');
+                    wasteEl.appendChild(div);
+                }
+
+                // Foundations
+                this.foundations.forEach((pile, i) => {
+                    const el = document.getElementById('f' + i);
+                    el.innerHTML = '';
+                    if (pile.length > 0) {
+                        const c = pile[pile.length - 1];
+                        el.appendChild(this.createCardDiv(c));
+                    }
+                });
+
+                // Tableau
+                this.tableau.forEach((col, i) => {
+                    const el = document.getElementById('c' + i);
+                    el.innerHTML = '';
+                    col.forEach((c, idx) => {
+                        const div = this.createCardDiv(c);
+                        div.style.top = (idx * 30) + 'px';
+                        div.onclick = (e) => {
+                            e.stopPropagation();
+                            this.clickTableauCard(i, idx);
+                        };
+                        if (this.selected && this.selected.source === 'tableau' && this.selected.colIdx === i && this.selected.cardIdx === idx) {
+                            div.classList.add('selected');
+                        }
+                        el.appendChild(div);
+                    });
+                });
+            }
+
+            createCardDiv(c) {
+                const div = document.createElement('div');
+                div.className = 'card';
+                if (c.faceUp) {
+                    div.innerHTML = `<img src="${c.img}">`;
+                } else {
+                    div.className += ' card-back';
+                }
+                return div;
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>

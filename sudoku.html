@@ -11,6 +11,8 @@
             --ink: #2c3e50;
             --gold: #ffd700;
             --felt: #004d00;
+            --paper-bg: #fdf6e3;
+            /* Added from instruction */
         }
 
         body {
@@ -195,6 +197,51 @@
             font-size: 5rem;
             margin: 20px 0;
         }
+
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
     </style>
 </head>
 
@@ -206,6 +253,19 @@
             <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color:var(--gold);">
         </div>
         <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal">
+        <div class="instr-content">
+            <span class="instr-close"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Omple la graella perquè cada fila, columna i regió sumi 4 temps.</p>
+            <p>Utilitza la lògica musical per resoldre el sudoku!</p>
+            <button class="instr-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+        </div>
     </div>
 
     <div id="game-container">
@@ -243,8 +303,9 @@
             <p>Omple la graella 4x4.</p>
             <p>Cada fila i columna ha de sumar 4 TEMPS.</p>
             <div style="display:flex; gap:20px; justify-content:center; margin-top:20px;">
-                <button class="btn" onclick="startGame(1)">NIVELL 1 (Fàcil)</button>
-                <button class="btn" onclick="startGame(2)">NIVELL 2 (Difícil)</button>
+                <button class="btn" id="btn-lvl1" onclick="startGame(1)">NIVELL 1 (Fàcil)</button>
+                <button class="btn" id="btn-lvl2" onclick="startGame(2)" disabled
+                    style="opacity: 0.5; cursor: not-allowed;">NIVELL 2 (Difícil) 🔒</button>
             </div>
         </div>
     </div>
@@ -438,10 +499,21 @@
                 for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) if (gridState[r][c] === 0) full = false;
 
                 if (full) {
-                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
-                    rewards['reward_sudoku'] = true;
-                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
-                    document.getElementById('win-modal').style.display = 'flex';
+                    if (currentLevel === 1) {
+                        alert("NIVELL 1 COMPLETAT! Has desbloquejat el Nivell 2.");
+                        document.getElementById('start-modal').style.display = 'flex';
+                        const btn2 = document.getElementById('btn-lvl2');
+                        btn2.disabled = false;
+                        btn2.style.opacity = '1';
+                        btn2.style.cursor = 'pointer';
+                        btn2.textContent = "NIVELL 2 (DESBLOQUEJAT)";
+                        document.getElementById('btn-lvl1').textContent = "NIVELL 1 (COMPLETAT ✅)";
+                    } else if (currentLevel === 2) {
+                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                        rewards['reward_sudoku'] = true;
+                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                        document.getElementById('win-modal').style.display = 'flex';
+                    }
                 } else {
                     alert("Encara queden caselles buides!");
                 }

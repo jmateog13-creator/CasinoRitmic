@@ -18,6 +18,51 @@
             /* Dark Blue */
         }
 
+        /* Instructions Modal */
+        #instructions-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instr-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: #fff;
+            position: relative;
+        }
+
+        .instr-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .instr-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -400,10 +445,24 @@
     <!-- Menu Button -->
     <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
 
+    <!-- Instructions Modal -->
+    <div id="instructions-modal">
+        <div class="instr-content">
+            <span class="instr-close"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR</h2>
+            <p style="font-size:1.2rem;">Troba les parelles de figures musicals amagades.</p>
+            <p>Memoritza la posició de les cartes per completar el nivell.</p>
+            <button class="instr-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+        </div>
+    </div>
+
     <div id="game-table">
         <!-- Volume Control -->
         <div class="volume-control">
-            <span id="volume-icon">🔊</span>
+            <button id="mute-btn" onclick="game.toggleMute()"
+                style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">🔊</button>
             <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
         </div>
 
@@ -473,7 +532,10 @@
             constructor() {
                 this.ctx = new (window.AudioContext || window.webkitAudioContext)();
                 this.bgMusic = document.getElementById('bg-music');
+                this.bgMusic = document.getElementById('bg-music');
                 this.bgMusic.volume = 0.5;
+                this.isMuted = false;
+                this.previousVolume = 0.5;
             }
 
             startMusic() {
@@ -486,6 +548,7 @@
             }
 
             playTone(freq, type, duration) {
+                if (this.isMuted) return;
                 if (this.ctx.state === 'suspended') this.ctx.resume();
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -555,12 +618,37 @@
                 const slider = document.getElementById('volume-slider');
                 slider.addEventListener('input', (e) => {
                     const val = e.target.value;
+
+                    if (this.audio.isMuted) {
+                        this.audio.isMuted = false;
+                        document.getElementById('mute-btn').textContent = "🔊";
+                    }
+
                     this.audio.setVolume(val);
-                    const icon = document.getElementById('volume-icon');
-                    if (val == 0) icon.textContent = "🔇";
-                    else if (val < 0.5) icon.textContent = "🔉";
-                    else icon.textContent = "🔊";
+                    this.updateMuteIcon(val);
                 });
+            }
+
+            toggleMute() {
+                this.audio.isMuted = !this.audio.isMuted;
+                const icon = document.getElementById('mute-btn');
+                const slider = document.getElementById('volume-slider');
+
+                if (this.audio.isMuted) {
+                    this.audio.previousVolume = parseFloat(slider.value);
+                    this.audio.setVolume(0);
+                    icon.textContent = "🔇";
+                } else {
+                    this.audio.setVolume(slider.value);
+                    this.updateMuteIcon(parseFloat(slider.value));
+                }
+            }
+
+            updateMuteIcon(val) {
+                const icon = document.getElementById('mute-btn');
+                if (val == 0) icon.textContent = "🔇";
+                else if (val < 0.5) icon.textContent = "🔉";
+                else icon.textContent = "🔊";
             }
 
             startRound() {
@@ -786,14 +874,14 @@
                     this.createConfetti();
 
                     // Save Reward
-                    const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
                     rewards['reward_memory'] = true;
-                    localStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
 
                     // Redirect
-                    setTimeout(() => {
-                        window.location.href = 'menu.html';
-                    }, 4000);
+                    // setTimeout(() => {
+                    //     window.location.href = 'menu.html';
+                    // }, 4000);
                 }
             }
 

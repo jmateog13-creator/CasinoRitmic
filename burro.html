@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Burro Rítmic</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+        :root {
+            --felt-green: #2d5a27;
+            --felt-dark: #1a3c1a;
+            --wood: #5d4037;
+            --gold: #ffd700;
+            --card-w: 80px;
+            --card-h: 120px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            font-family: 'Playfair Display', serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            user-select: none;
+        }
+
+        /* UI Bar */
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: var(--gold);
+            font-size: 1.5rem;
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 5px;
+        }
+
+        /* Table */
+        #table {
+            position: relative;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, var(--felt-green), var(--felt-dark));
+            border: 20px solid var(--wood);
+            border-radius: 50%;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #center-logo {
+            font-size: 3rem;
+            color: rgba(0, 0, 0, 0.3);
+            font-weight: bold;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        /* Player Areas */
+        .player-area {
+            position: absolute;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #p-bottom {
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #p-left {
+            left: 50px;
+            top: 50%;
+            transform: translateY(-50%) rotate(90deg);
+        }
+
+        #p-top {
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%) rotate(180deg);
+        }
+
+        #p-right {
+            right: 50px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg);
+        }
+
+        /* Cards */
+        .card {
+            width: var(--card-w);
+            height: var(--card-h);
+            background: white;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .card img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        .card-back {
+            background: repeating-linear-gradient(45deg, #606dbc, #606dbc 10px, #465298 10px, #465298 20px);
+            border: 2px solid white;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .card.selected {
+            border: 3px solid var(--gold);
+            transform: translateY(-20px);
+        }
+
+        /* Passing Animation Class */
+        .passing {
+            transition: all 0.5s ease-in-out !important;
+            z-index: 100;
+        }
+
+        /* Burro Button */
+        #btn-burro {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff0000, #990000);
+            border: 5px solid white;
+            color: white;
+            font-size: 3rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.8);
+            transition: transform 0.2s;
+            z-index: 200;
+        }
+
+        #btn-burro:active {
+            transform: translate(-50%, -50%) scale(0.9);
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1a0505;
+            padding: 40px;
+            border: 4px double var(--gold);
+            text-align: center;
+            max-width: 600px;
+            color: white;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #aaa;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px;
+        }
+
+        button.action-btn {
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Playfair Display', serif;
+            font-weight: bold;
+            color: #1a0505;
+            margin-top: 20px;
+        }
+
+        /* Streak Indicator */
+        #streak-indicator {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            color: var(--gold);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+        </div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="table">
+        <div id="center-logo">CASINO<br>RÍTMIC</div>
+
+        <!-- Players -->
+        <div class="player-area" id="p-top">
+            <!-- AI 2 -->
+            <div class="card card-back"></div>
+            <div class="card card-back"></div>
+            <div class="card card-back"></div>
+            <div class="card card-back"></div>
+        </div>
+        <div class="player-area" id="p-left">
+            <!-- AI 1 -->
+            <div class="card card-back"></div>
+            <div class="card card-back"></div>
+            <div class="card card-back"></div>
+            <div class="card card-back"></div>
+        </div>
+        <div class="player-area" id="p-right">
+            <!-- AI 3 -->
+            <div class="card card-back"></div>
+            <div class="card card-back"></div>
+            <div class="card card-back"></div>
+            <div class="card card-back"></div>
+        </div>
+        <div class="player-area" id="p-bottom">
+            <!-- Player -->
+            <!-- Cards injected by JS -->
+        </div>
+
+        <button id="btn-burro" onclick="game.claimVictory()">BURRO!</button>
+    </div>
+
+    <div id="streak-indicator">Victòries seguides: <span id="streak-val">0</span>/2</div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="close-btn"
+                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <h2 style="color: var(--gold);">COM JUGAR A "EL BURRO RÍTMIC"</h2>
+            <p>1. L'objectiu és aconseguir <strong>4 CARTES IGUALS</strong> (Ex: 4 Negres).</p>
+            <p>2. Fes clic a una carta per <strong>PASSAR-LA</strong> al jugador de la dreta.</p>
+            <p>3. Tothom passa una carta alhora.</p>
+            <p>4. Si tens 4 iguals, prem ràpidament el botó vermell <strong>BURRO!</strong> al centre.</p>
+            <p>5. Si una IA guanya abans, perds.</p>
+            <button class="action-btn" onclick="game.start()">ENTESOS</button>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">VICTÒRIA!</h2>
+            <p>Has estat el més ràpid!</p>
+            <button class="action-btn" onclick="game.nextRound()">SEGÜENT RONDA</button>
+        </div>
+    </div>
+
+    <!-- Lose Modal -->
+    <div id="lose-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: red;">HAS PERDUT!</h2>
+            <p>Una IA ha completat el pòquer abans que tu.</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR A PROVAR</button>
+        </div>
+    </div>
+
+    <!-- Epic Reward Modal -->
+    <div id="epic-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--gold);">L'EXCÈNTRIC VIRTUÓS!</h2>
+            <div class="relic-icon">🪑</div>
+            <h3 style="color: var(--gold);">LA CADIRA DE GLENN GOULD</h3>
+            <p style="font-style: italic; color: #aaa;">"La famosa cadira plegable, vella i baixa, que Gould portava a
+                tots els seus concerts per tocar Bach a la seva manera única."</p>
+            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const bgMusic = document.getElementById('bg-music');
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.5;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.5;
+        });
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'slide') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(800, now + 0.2);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(vol * 0.3, now + 0.1);
+                gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start();
+                osc.stop(now + 0.2);
+            } else if (type === 'tap') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, now);
+                gain.gain.setValueAtTime(vol * 0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start();
+                osc.stop(now + 0.05);
+            } else if (type === 'alarm') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.linearRampToValueAtTime(600, now + 0.5);
+                gain.gain.setValueAtTime(vol * 0.5, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            }
+        }
+
+        // --- GAME LOGIC ---
+        const CARDS = ['rodona', 'blanca', 'negra', 'corxera'];
+        const IMAGES = {
+            'rodona': 'images/rodona.jpg',
+            'blanca': 'images/blanca.jpg',
+            'negra': 'images/negra.jpg',
+            'corxera': 'images/corxera.jpg'
+        };
+
+        class Game {
+            constructor() {
+                this.players = [
+                    { id: 'p-bottom', hand: [], isAI: false }, // Player
+                    { id: 'p-left', hand: [], isAI: true },    // AI 1
+                    { id: 'p-top', hand: [], isAI: true },     // AI 2
+                    { id: 'p-right', hand: [], isAI: true }    // AI 3
+                ];
+                this.streak = 0;
+                this.passing = false;
+                this.gameOver = false;
+            }
+
+            start() {
+                document.getElementById('instructions-modal').style.display = 'none';
+                this.deal();
+                this.renderPlayerHand();
+                this.gameOver = false;
+                this.passing = false;
+                document.getElementById('btn-burro').style.transform = 'translate(-50%, -50%) scale(0)';
+            }
+
+            deal() {
+                // Create deck: 4 of each
+                let deck = [];
+                CARDS.forEach(c => {
+                    for (let i = 0; i < 4; i++) deck.push(c);
+                });
+                // Shuffle
+                deck.sort(() => Math.random() - 0.5);
+
+                // Distribute
+                this.players.forEach(p => {
+                    p.hand = deck.splice(0, 4);
+                });
+            }
+
+            renderPlayerHand() {
+                const container = document.getElementById('p-bottom');
+                container.innerHTML = '';
+                this.players[0].hand.forEach((card, idx) => {
+                    const el = document.createElement('div');
+                    el.className = 'card';
+                    el.innerHTML = `<img src="${IMAGES[card]}">`;
+                    el.onclick = () => this.playerPass(idx);
+                    container.appendChild(el);
+                });
+            }
+
+            playerPass(cardIdx) {
+                if (this.passing || this.gameOver) return;
+
+                // Check if player already has 4 of a kind (should have pressed button)
+                if (this.checkWin(0)) {
+                    // Maybe alert? "Tens 4 iguals! Prem el botó!"
+                    // But let's allow passing if they miss it.
+                }
+
+                this.passing = true;
+                const playerCard = this.players[0].hand[cardIdx];
+
+                // AI Logic for passing
+                const aiPasses = [
+                    this.getAIPass(1),
+                    this.getAIPass(2),
+                    this.getAIPass(3)
+                ];
+
+                // Execute Pass (Circular: 0->3, 3->2, 2->1, 1->0 ... Wait, request says:
+                // JUGADOR -> IA 3 (Right) -> IA 2 -> IA 1 -> JUGADOR (Left)
+                // Indices: 0(Bot) -> 3(Right) -> 2(Top) -> 1(Left) -> 0(Bot)
+
+                // Visual Animation
+                this.animatePass(cardIdx, aiPasses, () => {
+                    // Update Logic
+                    // 0 passes to 3
+                    // 3 passes to 2
+                    // 2 passes to 1
+                    // 1 passes to 0
+
+                    const c0 = this.players[0].hand.splice(cardIdx, 1)[0];
+                    const c3 = this.players[3].hand.splice(aiPasses[2], 1)[0]; // AI 3 is index 3
+                    const c2 = this.players[2].hand.splice(aiPasses[1], 1)[0];
+                    const c1 = this.players[1].hand.splice(aiPasses[0], 1)[0];
+
+                    this.players[3].hand.push(c0);
+                    this.players[2].hand.push(c3);
+                    this.players[1].hand.push(c2);
+                    this.players[0].hand.push(c1);
+
+                    playSound('tap');
+                    this.renderPlayerHand();
+                    this.passing = false;
+
+                    // Check AI Wins
+                    for (let i = 1; i <= 3; i++) {
+                        if (this.checkWin(i)) {
+                            this.aiWin(i);
+                            return;
+                        }
+                    }
+
+                    // Check Player Win (enable button visual cue?)
+                    if (this.checkWin(0)) {
+                        document.getElementById('btn-burro').style.transform = 'translate(-50%, -50%) scale(1)';
+                        playSound('alarm');
+                    }
+                });
+            }
+
+            getAIPass(playerIdx) {
+                const hand = this.players[playerIdx].hand;
+                // Count frequencies
+                const counts = {};
+                hand.forEach(c => counts[c] = (counts[c] || 0) + 1);
+
+                // Find card with min frequency to discard
+                // Prefer discarding singletons
+                let bestDiscard = 0;
+                let minCount = 5;
+
+                hand.forEach((c, idx) => {
+                    if (counts[c] < minCount) {
+                        minCount = counts[c];
+                        bestDiscard = idx;
+                    }
+                });
+                return bestDiscard;
+            }
+
+            animatePass(pCardIdx, aiPassIndices, callback) {
+                playSound('slide');
+                // Simple timeout for now, or complex CSS animation?
+                // Let's do a quick timeout to simulate the slide
+                setTimeout(callback, 500);
+            }
+
+            checkWin(playerIdx) {
+                const hand = this.players[playerIdx].hand;
+                const first = hand[0];
+                return hand.every(c => c === first);
+            }
+
+            claimVictory() {
+                if (this.checkWin(0)) {
+                    this.gameOver = true;
+                    this.streak++;
+                    document.getElementById('streak-val').textContent = this.streak;
+
+                    if (this.streak >= 2) {
+                        // Epic Win
+                        // Save Reward
+                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                        rewards['reward_burro'] = true;
+                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+
+                        document.getElementById('epic-modal').style.display = 'flex';
+                    } else {
+                        document.getElementById('win-modal').style.display = 'flex';
+                    }
+                }
+            }
+
+            aiWin(aiIdx) {
+                this.gameOver = true;
+                this.streak = 0;
+                document.getElementById('streak-val').textContent = 0;
+
+                // Reveal AI hand
+                const aiArea = document.getElementById(this.players[aiIdx].id);
+                aiArea.innerHTML = '';
+                this.players[aiIdx].hand.forEach(c => {
+                    const el = document.createElement('div');
+                    el.className = 'card';
+                    el.innerHTML = `<img src="${IMAGES[c]}">`;
+                    aiArea.appendChild(el);
+                });
+
+                playSound('alarm');
+                setTimeout(() => {
+                    document.getElementById('lose-modal').style.display = 'flex';
+                }, 1000);
+            }
+
+            nextRound() {
+                document.getElementById('win-modal').style.display = 'none';
+                this.start();
+            }
+        }
+
+        const game = new Game();
+        // Start handled by modal button
+    </script>
+</body>
+
+</html>

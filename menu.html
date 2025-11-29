@@ -157,244 +157,811 @@
         .back-btn:hover {
             background: rgba(255, 255, 255, 0.1);
         }
+
+        /* Menu Buttons */
+        .menu-controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .menu-btn {
+            background: linear-gradient(to bottom, var(--gold), #b8860b);
+            border: 2px solid #fff;
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1a0505;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s;
+            font-family: 'Georgia', serif;
+            text-transform: uppercase;
+        }
+
+        .menu-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #1a0f0a;
+            padding: 40px;
+            border: 4px solid var(--gold);
+            border-radius: 10px;
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: #fff;
+            box-shadow: 0 0 50px var(--gold);
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 2rem;
+            color: var(--gold);
+            cursor: pointer;
+        }
+
+        .btn-menu:hover {
+            background: var(--gold);
+            color: #000;
+        }
+
+        /* Save Slots */
+        .save-slot {
+            background: #333;
+            border: 2px solid var(--gold);
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .save-slot:hover {
+            background: #444;
+        }
+
+        .save-slot.empty {
+            border-style: dashed;
+            color: #aaa;
+        }
+
+        .slot-info {
+            text-align: left;
+        }
+
+        .slot-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-slot {
+            padding: 5px 15px;
+            font-size: 0.9rem;
+            background: var(--gold);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-delete {
+            background: #ff4444;
+            color: white;
+        }
+
+        /* Relic Locked State */
+        .relic-item.locked {
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+
+        .relic-item.locked .relic-icon {
+            filter: brightness(0);
+        }
+
+        #relics-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
     </style>
+
 </head>
 
 <body>
-
     <div id="menu-container">
         <h1>SELECCIÓ DE JOC</h1>
-
-        <div class="game-grid">
-            <a href="blackjack_ritmic.html" class="game-card" id="card-blackjack">
+        <div class="menu-controls"><button class="menu-btn" onclick="showRewards()">🏆 PREMIS</button>
+            <div class="menu-btn" onclick="openSaveModal()">
+                <div class="icon">💾</div>
+                GUARDAR / CARREGAR
+            </div>
+        </div>
+        <div class="game-grid"><a href="blackjack_ritmic.html" class="game-card" id="card-blackjack">
                 <div class="icon">🃏</div>
                 <h2>Blackjack Rítmic</h2>
-            </a>
-            <a href="ruleta.html" class="game-card" id="card-ruleta">
+            </a><a href="ruleta.html" class="game-card" id="card-ruleta">
                 <div class="icon">🎡</div>
                 <h2>Ruleta Russa</h2>
-            </a>
-            <a href="triler.html" class="game-card" id="card-triler">
+            </a><a href="triler.html" class="game-card" id="card-triler">
                 <div class="icon">🥤</div>
                 <h2>El Triler</h2>
-            </a>
-            <a href="simon.html" class="game-card" id="card-simon">
+            </a><a href="simon.html" class="game-card" id="card-simon">
                 <div class="icon">🎹</div>
                 <h2>Simon Rítmic</h2>
-            </a>
-            <a href="slots.html" class="game-card" id="card-slots">
+            </a><a href="slots.html" class="game-card" id="card-slots">
                 <div class="icon">🎰</div>
                 <h2>Slots Rítmics</h2>
-            </a>
-            <a href="memory.html" class="game-card" id="card-memory">
+            </a><a href="memory.html" class="game-card" id="card-memory">
                 <div class="icon">🧠</div>
                 <h2>Memory Rítmic</h2>
-            </a>
-            <a href="texas.html" class="game-card" id="card-texas">
+            </a><a href="texas.html" class="game-card" id="card-texas">
                 <div class="icon">🤠</div>
                 <h2>Texas Hold'em</h2>
-            </a>
-            <a href="daus.html" class="game-card" id="card-daus">
+            </a><a href="daus.html" class="game-card" id="card-daus">
                 <div class="icon">🎲</div>
                 <h2>Daus Rítmics</h2>
-            </a>
-            <a href="bolera.html" class="game-card" id="card-bolera">
+            </a><a href="bolera.html" class="game-card" id="card-bolera">
                 <div class="icon">🎳</div>
                 <h2>Bolera Rítmica</h2>
-            </a>
-            <a href="laberinto.html" class="game-card" id="card-laberinto">
+            </a><a href="laberinto.html" class="game-card" id="card-laberinto">
                 <div class="icon">🧩</div>
                 <h2>Laberinto Rítmic</h2>
-            </a>
-            <a href="sudoku.html" class="game-card" id="card-sudoku">
+            </a><a href="sudoku.html" class="game-card" id="card-sudoku">
                 <div class="icon">🔢</div>
                 <h2>Sudoku Rítmic</h2>
-            </a>
-            <a href="bomba.html" class="game-card" id="card-bomba">
+            </a><a href="bomba.html" class="game-card" id="card-bomba">
                 <div class="icon">💣</div>
                 <h2>La Bomba</h2>
-            </a>
-            <a href="conecta4.html" class="game-card" id="card-conecta4">
+            </a><a href="conecta4.html" class="game-card" id="card-conecta4">
                 <div class="icon">🔴</div>
                 <h2>Conecta 4</h2>
-            </a>
-            <a href="mahjong.html" class="game-card" id="card-mahjong">
+            </a><a href="mahjong.html" class="game-card" id="card-mahjong">
                 <div class="icon">🀄</div>
                 <h2>Mahjong</h2>
-            </a>
-            <a href="solitario.html" class="game-card" id="card-solitario">
+            </a><a href="solitario.html" class="game-card" id="card-solitario">
                 <div class="icon">🃏</div>
                 <h2>Solitario</h2>
-            </a>
-            <a href="cajaderitmos.html" class="game-card" id="card-cajaderitmos">
+            </a><a href="cajaderitmos.html" class="game-card" id="card-cajaderitmos">
                 <div class="icon">🥁</div>
                 <h2>Caixa de Ritmes</h2>
-            </a>
-            <a href="tetris.html" class="game-card" id="card-tetris">
+            </a><a href="tetris.html" class="game-card" id="card-tetris">
                 <div class="icon">🧱</div>
                 <h2>Tetris Rítmic</h2>
-            </a>
-            <a href="rodafortuna.html" class="game-card" id="card-roda">
+            </a><a href="rodafortuna.html" class="game-card" id="card-roda">
                 <div class="icon">🎡</div>
                 <h2>Roda del Risc</h2>
-            </a>
-            <a href="jokerwild.html" class="game-card" id="card-joker">
+            </a><a href="jokerwild.html" class="game-card" id="card-joker">
                 <div class="icon">🃏</div>
                 <h2>Joker Wild</h2>
-            </a>
-            <a href="dauspirata.html" class="game-card" id="card-dauspirata">
+            </a><a href="dauspirata.html" class="game-card" id="card-dauspirata">
                 <div class="icon">🏴‍☠️</div>
                 <h2>Daus Pirata</h2>
-            </a>
-            <a href="subasta.html" class="game-card" id="card-subasta">
+            </a><a href="subasta.html" class="game-card" id="card-subasta">
                 <div class="icon">🔨</div>
                 <h2>La Subasta</h2>
-            </a>
-            <a href="prestamista.html" class="game-card" id="card-prestamista">
+            </a><a href="prestamista.html" class="game-card" id="card-prestamista">
                 <div class="icon">⚖️</div>
                 <h2>El Prestamista</h2>
-            </a>
-            <a href="ginrumy.html" class="game-card" id="card-ginrumy">
+            </a><a href="ginrumy.html" class="game-card" id="card-ginrumy">
                 <div class="icon">🃏</div>
                 <h2>Gin Rummy</h2>
-            </a>
-            <a href="polsintern.html" class="game-card" id="card-pols">
+            </a><a href="polsintern.html" class="game-card" id="card-pols">
                 <div class="icon">💓</div>
                 <h2>Pols Intern</h2>
-            </a>
-            <a href="craps.html" class="game-card" id="card-craps">
+            </a><a href="craps.html" class="game-card" id="card-craps">
                 <div class="icon">🎲</div>
                 <h2>Craps</h2>
-            </a>
-            <a href="cascada.html" class="game-card" id="card-cascada">
+            </a><a href="cascada.html" class="game-card" id="card-cascada">
                 <div class="icon">🪙</div>
                 <h2>La Cascada</h2>
-            </a>
-            <a href="gancho.html" class="game-card" id="card-gancho">
+            </a><a href="gancho.html" class="game-card" id="card-gancho">
                 <div class="icon">🏗️</div>
                 <h2>El Ganxo</h2>
-            </a>
-            <a href="keno.html" class="game-card" id="card-keno">
+            </a><a href="keno.html" class="game-card" id="card-keno">
                 <div class="icon">🎫</div>
                 <h2>Keno</h2>
-            </a>
-            <a href="dardos.html" class="game-card" id="card-dardos">
+            </a><a href="dardos.html" class="game-card" id="card-dardos">
                 <div class="icon">🎯</div>
                 <h2>Dards</h2>
-            </a>
-            <a href="derby.html" class="game-card" id="card-derby">
+            </a><a href="derby.html" class="game-card" id="card-derby">
                 <div class="icon">🏇</div>
                 <h2>Derby</h2>
-            </a>
-            <a href="galeriatir.html" class="game-card" id="card-galeria">
+            </a><a href="galeriatir.html" class="game-card" id="card-galeria">
                 <div class="icon">🔫</div>
                 <h2>Galeria de Tir</h2>
-            </a>
-            <a href="cabinavent.html" class="game-card" id="card-cabina">
+            </a><a href="cabinavent.html" class="game-card" id="card-cabina">
                 <div class="icon">💨</div>
                 <h2>Cabina de Vent</h2>
-            </a>
-            <a href="batalla.html" class="game-card" id="card-batalla">
+            </a><a href="batalla.html" class="game-card" id="card-batalla">
                 <div class="icon">🎻</div>
                 <h2>Batalla de Viena</h2>
-            </a>
-            <a href="escoba.html" class="game-card" id="card-escoba">
+            </a><a href="escoba.html" class="game-card" id="card-escoba">
                 <div class="icon">🧹</div>
                 <h2>L'Escoba Rítmica</h2>
-            </a>
-            <a href="intervalritmic.html" class="game-card" id="card-interval">
+            </a><a href="intervalritmic.html" class="game-card" id="card-interval">
                 <div class="icon">📏</div>
                 <h2>Red Dog Rítmic</h2>
-            </a>
-            <a href="speed.html" class="game-card" id="card-speed">
+            </a><a href="speed.html" class="game-card" id="card-speed">
                 <div class="icon">⚡</div>
                 <h2>Speed Rítmic</h2>
-            </a>
-            <a href="2048.html" class="game-card" id="card-2048">
+            </a><a href="2048.html" class="game-card" id="card-2048">
                 <div class="icon">🎼</div>
                 <h2>2048 Rítmic</h2>
-            </a>
-            <a href="pig.html" class="game-card" id="card-pig">
+            </a><a href="pig.html" class="game-card" id="card-pig">
                 <div class="icon">🐖</div>
                 <h2>L'Avarícia</h2>
-            </a>
-            <a href="topos.html" class="game-card" id="card-topos">
+            </a><a href="topos.html" class="game-card" id="card-topos">
                 <div class="icon">🔨</div>
                 <h2>El Martell</h2>
-            </a>
-        </div>
+            </a><a href="burro.html" class="game-card" id="card-burro">
+                <div class="game-icon">🫏</div>
+                <div class="game-title">El Burro Rítmic</div>
+            </a><a href="paigow.html" class="game-card" id="card-paigow">
+                <div class="game-icon">🀄</div>
+                <div class="game-title">Pai Gow Rítmic</div>
+            </a><a href="setimig.html" class="game-card" id="card-setimig">
+                <div class="game-icon">✒️</div>
+                <div class="game-title">Set i Mig Rítmic</div>
+            </a><a href="scalextric.html" class="game-card" id="card-scalextric">
+                <div class="game-icon">⏱️</div>
+                <div class="game-title">Scalextric Rítmic</div>
+            </a><a href="pescador.html" class="game-card" id="card-pescador">
+                <div class="game-icon">📜</div>
+                <div class="game-title">Ves a Pescar</div>
+            </a><a href="klondike.html" class="game-card" id="card-klondike">
+                <div class="game-icon">🎻</div>
+                <div class="game-title">Solitari Klondike</div>
+            </a><a href="calculogic.html" class="game-card" id="card-calculogic">
+                <div class="game-icon">🔢</div>
+                <div class="game-title">El Càlcul Lògic</div>
+            </a><a href="domino.html" class="game-card" id="card-domino">
+                <div class="game-icon">🥁</div>
+                <div class="game-title">Dominó Rítmic</div>
+            </a><a href="risk.html" class="game-card" id="card-risk">
+                <div class="game-icon">⚔️</div>
+                <div class="game-title">Camp de Batalla</div>
+            </a><a href="vals.html" class="game-card" id="card-vals">
+                <div class="game-icon">💃</div>
+                <div class="game-title">Mesa del Vals</div>
+            </a><a href="embut.html" class="game-card" id="card-embut">
+                <div class="game-icon">⏳</div>
+                <div class="game-title">Embut Classificador</div>
+            </a><a href="millonario.html" class="game-card" id="card-millonario">
+                <div class="game-icon">💰</div>
+                <div class="game-title">Qui Vol Ser Milionari</div>
+            </a><a href="clicker.html" class="game-card" id="card-clicker">
+                <div class="game-icon">👆</div>
+                <div class="game-title">El Clicker del Crupier</div>
+            </a><a href="conquian.html" class="game-card" id="card-conquian">
+                <div class="game-icon">🃏</div>
+                <div class="game-title">Conquián Rítmic</div>
+            </a><a href="backgammon.html" class="game-card" id="card-backgammon">
+                <div class="game-icon">🎲</div>
+                <div class="game-title">Backgammon Rítmic</div>
+            </a><a href="moliritmic.html" class="game-card" id="card-moliritmic">
+                <div class="game-icon">☸️</div>
+                <div class="game-title">El Molí Rítmic</div>
+            </a><a href="whist.html" class="game-card" id="card-whist">
+                <div class="game-icon">♣️</div>
+                <div class="game-title">Whist Rítmic</div>
+            </a><a href="rutajerarquica.html" class="game-card" id="card-rutajerarquica">
+                <div class="game-icon">🗺️</div>
+                <div class="game-title">La Ruta Jeràrquica</div>
+            </a><a href="cronometreinvers.html" class="game-card" id="card-cronometre">
+                <div class="game-icon">⏱️</div>
+                <div class="game-title">El Cronòmetre Invers</div>
+            </a><a href="enceuat.html" class="game-card" id="card-enceuat">
+                <div class="game-icon">📝</div>
+                <div class="game-title">Crucigrama Rítmic</div>
+            </a><a href="sopadelletres.html" class="game-card" id="card-sopadelletres">
+                <div class="game-icon">🔠</div>
+                <div class="game-title">Sopa de Lletres</div>
+            </a><a href="algebraritmica.html" class="game-card" id="card-algebra">
+                <div class="game-icon">➕</div>
+                <div class="game-title">Àlgebra Rítmica</div>
+            </a><a href="pesca.html" class="game-card" id="card-pesca">
+                <div class="game-icon">🎣</div>
+                <div class="game-title">La Pesca Rítmica</div>
+            </a><a href="escalada.html" class="game-card" id="card-escalada">
+                <div class="game-icon">🧗</div>
+                <div class="game-title">L'Escalada d' Intervals</div>
+            </a></div>
+        <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
+        < !-- Rewards Modal -->
+            <div id="rewards-modal" class="modal">
+                <div class="modal-content"><span class="close-modal"
+                        onclick="document.getElementById('rewards-modal').style.display='none'">&times;
+                    </span>
+                    <h2 style="color: var(--gold); font-size: 2rem; margin-bottom: 10px;">SALA DE TROFEUS</h2>
+                    <p>Les relíquies musicals que has recuperat.</p>
+                    <div id="relics-grid">
+                        < !-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+            <!-- Save/Load Modal -->
+            <div id="save-modal" class="modal">
+                <div class="modal-content" style="max-width: 500px;">
+                    <span class="close-modal"
+                        onclick="document.getElementById('save-modal').style.display='none'">×</span>
+                    <h2 style="color: var(--gold);">PARTIDES GUARDADES</h2>
+                    <div id="save-slots-container">
+                        <!-- Slots generated by JS -->
+                    </div>
+                    <button class="menu-btn" style="margin-top:20px; background: #ff4444; color: white; border:none;"
+                        onclick="startNewGame()">NOVA PARTIDA (RESET)</button>
+                </div>
+            </div>
+            <script> // Check Rewards
+                const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
 
+                // Map game IDs to their reward keys AND Relic Data
+                const gameMap = {
+                    'card-blackjack': {
+                        key: 'reward_blackjack', icon: '🃏', name: "L'As de Beethoven"
+                    }
 
-    </div>
+                    ,
+                    'card-ruleta': {
+                        key: 'reward_ruleta', icon: '🎡', name: "La Roda de Rossini"
+                    }
 
-    <audio id="bg-music" loop>
-        <source src="music/background_music_main.mp3" type="audio/mpeg">
-    </audio>
+                    ,
+                    'card-triler': {
+                        key: 'reward_triler', icon: '🫣', name: "L'Ull de Mozart"
+                    }
 
-    <script>
-        // Check Rewards
-        const rewards = JSON.parse(localStorage.getItem('casinoRewards') || '{}');
+                    ,
+                    'card-simon': {
+                        key: 'reward_simon', icon: '🎹', name: "La Memòria de Bach"
+                    }
 
-        // Map game IDs to their reward keys (we will define these keys when updating the games)
-        const gameMap = {
-            'card-blackjack': 'reward_blackjack',
-            'card-ruleta': 'reward_ruleta',
-            'card-triler': 'reward_triler',
-            'card-simon': 'reward_simon',
-            'card-slots': 'reward_slots',
-            'card-memory': 'reward_memory',
-            'card-texas': 'reward_texas',
-            'card-daus': 'reward_daus',
-            'card-bolera': 'reward_bolera',
-            'card-laberinto': 'reward_laberinto',
-            'card-sudoku': 'reward_sudoku',
-            'card-bomba': 'reward_bomba',
-            'card-conecta4': 'reward_conecta4',
-            'card-mahjong': 'reward_mahjong',
-            'card-solitario': 'reward_solitario',
-            'card-cajaderitmos': 'reward_cajaderitmos',
-            'card-tetris': 'reward_tetris',
-            'card-roda': 'reward_roda',
-            'card-joker': 'reward_joker',
-            'card-dauspirata': 'reward_dauspirata',
-            'card-subasta': 'reward_subasta',
-            'card-prestamista': 'reward_prestamista',
-            'card-ginrumy': 'reward_ginrumy',
-            'card-pols': 'reward_pols',
-            'card-craps': 'reward_craps',
-            'card-cascada': 'reward_cascada',
-            'card-gancho': 'reward_gancho',
-            'card-keno': 'reward_keno',
-            'card-dardos': 'reward_dardos',
-            'card-derby': 'reward_derby',
-            'card-galeria': 'reward_galeria',
-            'card-cabina': 'reward_cabina',
-            'card-batalla': 'reward_batalla',
-            'card-escoba': 'reward_escoba',
-            'card-2048': 'reward_2048',
-            'card-pig': 'reward_pig',
-            'card-topos': 'reward_topos'
-        };
+                    ,
+                    'card-slots': {
+                        key: 'reward_slots', icon: '🎰', name: "La Fortuna de Vivaldi"
+                    }
 
-        for (const [cardId, rewardKey] of Object.entries(gameMap)) {
-            if (rewards[rewardKey]) {
-                document.getElementById(cardId).classList.add('completed');
-            }
-        }
+                    ,
+                    'card-memory': {
+                        key: 'reward_memory', icon: '🧠', name: "El Cervell de Chopin"
+                    }
 
-        // Auto-play music (browser policy might block it, but we try)
-        const audio = document.getElementById('bg-music');
-        audio.volume = 0.5;
-        document.body.addEventListener('click', () => {
-            if (audio.paused) audio.play();
-        }, { once: true });
+                    ,
+                    'card-texas': {
+                        key: 'reward_texas', icon: '🤠', name: "El Barret de Copland"
+                    }
 
-        // Try playing immediately
-        audio.play().catch(() => {
-            console.log("Autoplay blocked - waiting for interaction");
-        });
+                    ,
+                    'card-daus': {
+                        key: 'reward_daus', icon: '🎲', name: "Els Daus de Haydn"
+                    }
 
-    </script>
+                    ,
+                    'card-bolera': {
+                        key: 'reward_bolera', icon: '🎳', name: "La Bola de Boulez"
+                    }
+
+                    ,
+                    'card-laberinto': {
+                        key: 'reward_laberinto', icon: '🧩', name: "El Fil d'Ariadna"
+                    }
+
+                    ,
+                    'card-sudoku': {
+                        key: 'reward_sudoku', icon: '🔢', name: "La Quadrícula de Glass"
+                    }
+
+                    ,
+                    'card-bomba': {
+                        key: 'reward_bomba', icon: '💣', name: "El Metrònom Explosiu"
+                    }
+
+                    ,
+                    'card-conecta4': {
+                        key: 'reward_conecta4', icon: '🔴', name: "La Connexió de Cage"
+                    }
+
+                    ,
+                    'card-mahjong': {
+                        key: 'reward_mahjong', icon: '🀄', name: "La Peça de Puccini"
+                    }
+
+                    ,
+                    'card-solitario': {
+                        key: 'reward_solitario', icon: '🃏', name: "La Paciència de Satie"
+                    }
+
+                    ,
+                    'card-cajaderitmos': {
+                        key: 'reward_cajaderitmos', icon: '🥁', name: "El Ritme de Stravinsky"
+                    }
+
+                    ,
+                    'card-tetris': {
+                        key: 'reward_tetris', icon: '🧱', name: "El Mur de Pink Floyd"
+                    }
+
+                    ,
+                    'card-roda': {
+                        key: 'reward_roda', icon: '🎡', name: "La Fortuna de Orff"
+                    }
+
+                    ,
+                    'card-joker': {
+                        key: 'reward_joker', icon: '🃏', name: "El Comodí de Joplin"
+                    }
+
+                    ,
+                    'card-dauspirata': {
+                        key: 'reward_dauspirata', icon: '🏴‍☠️', name: "El Tresor de Wagner"
+                    }
+
+                    ,
+                    'card-subasta': {
+                        key: 'reward_subasta', icon: '🔨', name: "El Martell de Mahler"
+                    }
+
+                    ,
+                    'card-prestamista': {
+                        key: 'reward_prestamista', icon: '💸', name: "L'Or de Verdi"
+                    }
+
+                    ,
+                    'card-ginrumy': {
+                        key: 'reward_ginrumy', icon: '🍸', name: "La Copa de Strauss"
+                    }
+
+                    ,
+                    'card-pols': {
+                        key: 'reward_pols', icon: '💪', name: "La Força de Beethoven"
+                    }
+
+                    ,
+                    'card-craps': {
+                        key: 'reward_craps', icon: '🎲', name: "La Sort de Salieri"
+                    }
+
+                    ,
+                    'card-cascada': {
+                        key: 'reward_cascada', icon: '🪙', name: "La Moneda de Bizet"
+                    }
+
+                    ,
+                    'card-gancho': {
+                        key: 'reward_gancho', icon: '🪝', name: "El Ganxo de Capità"
+                    }
+
+                    ,
+                    'card-keno': {
+                        key: 'reward_keno', icon: '🎫', name: "El Bitllet de Gershwin"
+                    }
+
+                    ,
+                    'card-dardos': {
+                        key: 'reward_dardos', icon: '🎯', name: "La Diana de Rossini"
+                    }
+
+                    ,
+                    'card-derby': {
+                        key: 'reward_derby', icon: '🏇', name: "El Cavall de Walkiria"
+                    }
+
+                    ,
+                    'card-galeria': {
+                        key: 'reward_galeria', icon: '🔫', name: "El Tret de Tchaikovsky"
+                    }
+
+                    ,
+                    'card-cabina': {
+                        key: 'reward_cabina', icon: '💨', name: "El Vent de Debussy"
+                    }
+
+                    ,
+                    'card-batalla': {
+                        key: 'reward_batalla', icon: '⚔️', name: "L'Espasa de Khachaturian"
+                    }
+
+                    ,
+                    'card-escoba': {
+                        key: 'reward_escoba', icon: '🧹', name: "L'Escoba de Dukas"
+                    }
+
+                    ,
+                    'card-2048': {
+                        key: 'reward_2048', icon: '🎼', name: "La Suma de Bach"
+                    }
+
+                    ,
+                    'card-pig': {
+                        key: 'reward_pig', icon: '🐖', name: "La Guardiola de Prokofiev"
+                    }
+
+                    ,
+                    'card-topos': {
+                        key: 'reward_topos', icon: '🔨', name: "El Martell de Thor"
+                    }
+
+                    ,
+                    'card-burro': {
+                        key: 'reward_burro', icon: '🫏', name: "La Tossuderia de Schubert"
+                    }
+
+                    ,
+                    'card-paigow': {
+                        key: 'reward_paigow', icon: '🀄', name: "El Drac de Puccini"
+                    }
+
+                    ,
+                    'card-setimig': {
+                        key: 'reward_setimig', icon: '✒️', name: "La Ploma de Cervantes"
+                    }
+
+                    ,
+                    'card-scalextric': {
+                        key: 'reward_scalextric', icon: '🏎️', name: "El Motor de Adams"
+                    }
+
+                    ,
+                    'card-pescador': {
+                        key: 'reward_pescador', icon: '🎣', name: "La Canya de Britten"
+                    }
+
+                    ,
+                    'card-klondike': {
+                        key: 'reward_klondike', icon: '🎻', name: "El Violí de Paganini"
+                    }
+
+                    ,
+                    'card-calculogic': {
+                        key: 'reward_calculogic', icon: '🔢', name: "El Nombre de Pythagoras"
+                    }
+
+                    ,
+                    'card-domino': {
+                        key: 'reward_domino', icon: '🎹', name: "La Fitxa de Ravel"
+                    }
+
+                    ,
+                    'card-risk': {
+                        key: 'reward_risk', icon: '🌍', name: "El Món de Dvorak"
+                    }
+
+                    ,
+                    'card-vals': {
+                        key: 'reward_vals', icon: '💃', name: "El Vestit de Strauss"
+                    }
+
+                    ,
+                    'card-embut': {
+                        key: 'reward_embut', icon: '⏳', name: "El Temps de Zimmer"
+                    }
+
+                    ,
+                    'card-millonario': {
+                        key: 'reward_millonario', icon: '💰', name: "El Xec de Williams"
+                    }
+
+                    ,
+                    'card-clicker': {
+                        key: 'reward_clicker', icon: '🎹', name: "El Pianoforte de Cristofori"
+                    }
+
+                    ,
+                    'card-conquian': {
+                        key: 'reward_conquian', icon: '🪄', name: "La Batuta de Berlioz"
+                    }
+
+                    ,
+                    'card-backgammon': {
+                        key: 'reward_backgammon', icon: '📏', name: "El Monocordi de Pitàgores"
+                    }
+
+                    ,
+                    'card-moliritmic': {
+                        key: 'reward_moliritmic', icon: '☸️', name: "La Placa de Bach"
+                    }
+
+                    ,
+                    'card-whist': {
+                        key: 'reward_whist', icon: '📜', name: "La Partitura d'Orfeu"
+                    }
+
+                    ,
+                    'card-rutajerarquica': {
+                        key: 'reward_rutajerarquica', icon: '🎼', name: "L'Ofrena Musical"
+                    }
+
+                    ,
+                    'card-cronometre': {
+                        key: 'reward_cronometre', icon: '⏱️', name: "El Metrònom de Maelzel"
+                    }
+
+                    ,
+                    'card-enceuat': {
+                        key: 'reward_enceuat', icon: '✒️', name: "La Ploma de Händel"
+                    }
+
+                    ,
+                    'card-sopadelletres': {
+                        key: 'reward_sopadelletres', icon: '📜', name: "El Manuscrit de la Fuga"
+                    }
+
+                    ,
+                    'card-algebra': {
+                        key: 'reward_algebra', icon: '📐', name: "La Pissarra de Schoenberg"
+                    }
+
+                    ,
+                    'card-pesca': {
+                        key: 'reward_pesca', icon: '🎣', name: "L'Ham de Schubert"
+                    }
+
+                    ,
+                    'card-escalada': {
+                        key: 'reward_escalada', icon: '⛏️', name: "El Piolet de Strauss"
+                    }
+                }
+
+                    ;
+
+                for (const [cardId, data] of Object.entries(gameMap)) {
+                    if (rewards[data.key]) {
+                        document.getElementById(cardId).classList.add('completed');
+                    }
+                }
+
+                function showRewards() {
+                    const modal = document.getElementById('rewards-modal');
+                    const grid = document.getElementById('relics-grid');
+                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+
+                    grid.innerHTML = '';
+
+                    // Iterate over ALL games in gameMap to show locked/unlocked
+                    for (const [key, data] of Object.entries(gameMap)) {
+                        const isUnlocked = rewards[data.key];
+                        const div = document.createElement('div');
+                        div.className = `relic-item ${isUnlocked ? '' : 'locked'}`;
+
+                        div.innerHTML = `
+                    <div class="relic-icon">${data.icon}</div>
+                    <div class="relic-name">${data.name}</div>
+                    ${isUnlocked ? '' : '<div style="font-size:0.8rem; color:#aaa;">(Bloquejat)</div>'}
+                `;
+                        grid.appendChild(div);
+                    }
+
+                    modal.style.display = 'flex';
+                }
+
+                function openSaveModal() {
+                    renderSaveSlots();
+                    document.getElementById('save-modal').style.display = 'flex';
+                }
+
+                function renderSaveSlots() {
+                    const container = document.getElementById('save-slots-container');
+                    container.innerHTML = '';
+
+                    const slots = JSON.parse(localStorage.getItem('casinoSaveSlots') || '[null, null, null]');
+
+                    slots.forEach((slot, index) => {
+                        const div = document.createElement('div');
+                        div.className = `save-slot ${slot ? '' : 'empty'}`;
+
+                        if (slot) {
+                            div.innerHTML = `
+                        <div class="slot-info">
+                            <div style="color:var(--gold); font-weight:bold;">${slot.name}</div>
+                            <div style="font-size:0.8rem; color:#aaa;">${slot.date}</div>
+                            <div style="font-size:0.8rem;">Relíquies: ${Object.keys(slot.rewards).length}</div>
+                        </div>
+                        <div class="slot-actions">
+                            <button class="btn-slot" onclick="loadGame(${index})">CARREGAR</button>
+                            <button class="btn-slot" onclick="saveGame(${index})">SOBREESCRIURE</button>
+                            <button class="btn-slot btn-delete" onclick="deleteSlot(${index})">X</button>
+                        </div>
+                    `;
+                        } else {
+                            div.innerHTML = `
+                        <div class="slot-info">BUIT</div>
+                        <div class="slot-actions">
+                            <button class="btn-slot" onclick="saveGame(${index})">GUARDAR AQUÍ</button>
+                        </div>
+                    `;
+                        }
+                        container.appendChild(div);
+                    });
+                }
+
+                function saveGame(index) {
+                    const name = prompt("Nom de la partida:", `Partida ${index + 1}`);
+                    if (!name) return;
+
+                    const slots = JSON.parse(localStorage.getItem('casinoSaveSlots') || '[null, null, null]');
+                    const currentRewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+
+                    slots[index] = {
+                        name: name,
+                        date: new Date().toLocaleString(),
+                        rewards: currentRewards
+                    };
+
+                    localStorage.setItem('casinoSaveSlots', JSON.stringify(slots));
+                    renderSaveSlots();
+                }
+
+                function loadGame(index) {
+                    const slots = JSON.parse(localStorage.getItem('casinoSaveSlots') || '[null, null, null]');
+                    if (slots[index]) {
+                        if (confirm(`Carregar partida "${slots[index].name}"? Es perdrà el progrés no guardat.`)) {
+                            sessionStorage.setItem('casinoRewards', JSON.stringify(slots[index].rewards));
+                            alert("Partida carregada!");
+                            location.reload();
+                        }
+                    }
+                }
+
+                function deleteSlot(index) {
+                    if (confirm("Segur que vols esborrar aquest slot?")) {
+                        const slots = JSON.parse(localStorage.getItem('casinoSaveSlots') || '[null, null, null]');
+                        slots[index] = null;
+                        localStorage.setItem('casinoSaveSlots', JSON.stringify(slots));
+                        renderSaveSlots();
+                    }
+                }
+
+                function startNewGame() {
+                    if (confirm("Començar nova partida? Es reiniciarà tot el progrés actual.")) {
+                        sessionStorage.removeItem('casinoRewards');
+                        location.reload();
+                    }
+                }
+                const audio = document.getElementById('bg-music');
+                audio.volume = 0.5;
+
+                document.body.addEventListener('click', () => {
+                    if (audio.paused) audio.play();
+                }
+
+                    , {
+                        once: true
+                    });
+
+                // Try playing immediately
+                audio.play().catch(() => {
+                    console.log("Autoplay blocked - waiting for interaction");
+                });
+
+            </script>
 </body>
 
 </html>
