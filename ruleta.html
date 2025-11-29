@@ -536,12 +536,12 @@
             document.body.addEventListener('click', () => {
                 const bgMusic = document.getElementById('bg-music');
                 if (bgMusic.paused) {
-                    bgMusic.volume = document.getElementById('volume').value * 0.5;
+                    bgMusic.volume = document.getElementById('volume-slider').value * 0.5;
                     bgMusic.play().catch(e => console.log(e));
                 }
             }, { once: true });
 
-            document.getElementById('volume').addEventListener('input', (e) => {
+            document.getElementById('volume-slider').addEventListener('input', (e) => {
                 const bgMusic = document.getElementById('bg-music');
                 bgMusic.volume = e.target.value * 0.5;
             });

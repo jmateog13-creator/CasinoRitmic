@@ -290,10 +290,7 @@
         </div>
 
         <div id="controls">
-            <div class="volume-control">
-                <span>🔊</span>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
-            </div>
+
         </div>
     </div>
 
@@ -354,7 +351,7 @@
 
         function playTone(freq, type, duration, vol = 0.1) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            const masterVol = parseFloat(document.getElementById('volume-slider').value);
+            const masterVol = parseFloat(document.getElementById('volume').value);
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = type;
