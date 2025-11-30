@@ -28,7 +28,6 @@
             user-select: none;
         }
 
-        /* UI Bar */
         #ui-bar {
             position: absolute;
             top: 0;
@@ -53,75 +52,36 @@
             background: rgba(0, 0, 0, 0.2);
         }
 
-        /* Game Area */
-        #game-area {
+        #game-container {
             position: relative;
-            width: 100%;
-            height: 100%;
-            cursor: crosshair;
+            width: 900px;
+            height: 600px;
+            margin-top: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 5px solid white;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
         }
 
-        #hook {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            width: 2px;
-            height: 100px;
-            background: black;
-            transform-origin: top center;
+        canvas {
+            display: block;
         }
 
-        #hook::after {
-            content: "J";
-            position: absolute;
-            bottom: -20px;
-            left: -10px;
-            font-size: 2rem;
-            color: black;
-            transform: rotate(90deg);
-        }
-
-        .fish {
-            position: absolute;
-            width: 80px;
-            height: 50px;
-            background: orange;
-            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: left 5s linear;
-        }
-
-        .fish::before {
-            content: "";
-            position: absolute;
-            right: -15px;
-            width: 0;
-            height: 0;
-            border-top: 15px solid transparent;
-            border-bottom: 15px solid transparent;
-            border-left: 20px solid orange;
-        }
-
-        .fish img {
-            width: 60%;
-            height: 60%;
-            object-fit: contain;
-            z-index: 1;
-        }
-
+        /* Target Display */
         #target-display {
             position: absolute;
-            top: 60px;
+            top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.8);
-            padding: 10px 20px;
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 30px;
+            border-radius: 30px;
             color: #0277bd;
-            font-size: 1.5rem;
-            border: 2px solid #0277bd;
+            font-size: 1.8rem;
+            border: 3px solid #0277bd;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 10;
         }
 
         /* Modals */
@@ -175,7 +135,6 @@
             margin-top: 20px;
         }
 
-        /* Instructions Modal specific */
         #instructions-modal .instr-btn {
             padding: 10px 30px;
             font-size: 1.2rem;
@@ -201,9 +160,9 @@
         <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
     </div>
 
-    <div id="game-area" onmousemove="game.moveHook(event)" onclick="game.dropHook()">
+    <div id="game-container">
         <div id="target-display">Busca: <span id="target-name">...</span></div>
-        <div id="hook"></div>
+        <canvas id="gameCanvas" width="900" height="600"></canvas>
     </div>
 
     <!-- Instructions Modal -->
@@ -214,7 +173,7 @@
             <h2 style="color: #0288d1;">LA PESCA RÍTMICA</h2>
             <p>1. Mou el ratolí per moure l'ham.</p>
             <p>2. Fes clic per llançar l'ham.</p>
-            <p>3. Pesca el peix amb la nota correcta.</p>
+            <p>3. Pesca el peix amb el NOM correcte.</p>
             <button class="instr-btn" onclick="game.start()">JUGAR</button>
         </div>
     </div>
@@ -278,22 +237,178 @@
         }
 
         // --- GAME LOGIC ---
-        const NOTES = [
-            { name: 'RODONA', img: 'images/rodona.jpg' },
-            { name: 'BLANCA', img: 'images/blanca.jpg' },
-            { name: 'NEGRA', img: 'images/negra.jpg' },
-            { name: 'CORXERA', img: 'images/corxera.jpg' }
+        const FISH_TYPES = [
+            { name: 'RODONA', color: '#ff9800' },
+            { name: 'BLANCA', color: '#ffeb3b' },
+            { name: 'NEGRA', color: '#212121' },
+            { name: 'CORXERA', color: '#4caf50' },
+            { name: 'SEMICORXERA', color: '#f44336' },
+            { name: 'FUSA', color: '#9c27b0' }
         ];
+
+        class Fish {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.type = FISH_TYPES[Math.floor(Math.random() * FISH_TYPES.length)];
+                this.y = 150 + Math.random() * 400; // Random depth
+                this.size = 30 + Math.random() * 30; // Random size (30-60)
+                this.speed = (1 + Math.random() * 3) * (Math.random() > 0.5 ? 1 : -1); // Random speed & dir
+
+                if (this.speed > 0) {
+                    this.x = -100;
+                } else {
+                    this.x = 900 + 100;
+                }
+
+                this.width = this.size * 2;
+                this.height = this.size;
+                this.isCaught = false;
+            }
+
+            update() {
+                if (this.isCaught) return;
+                this.x += this.speed;
+
+                // Respawn if out of bounds
+                if ((this.speed > 0 && this.x > 1000) || (this.speed < 0 && this.x < -100)) {
+                    this.reset();
+                }
+            }
+
+            draw(ctx) {
+                if (this.isCaught) return;
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                if (this.speed < 0) ctx.scale(-1, 1); // Flip if moving left
+
+                // Body
+                ctx.fillStyle = this.type.color;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.width / 2, this.height / 2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Tail
+                ctx.beginPath();
+                ctx.moveTo(-this.width / 2, 0);
+                ctx.lineTo(-this.width / 2 - 20, -15);
+                ctx.lineTo(-this.width / 2 - 20, 15);
+                ctx.closePath();
+                ctx.fillStyle = this.type.color;
+                ctx.fill();
+                ctx.stroke();
+
+                // Eye
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(this.width / 4, -this.height / 4, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(this.width / 4 + 2, -this.height / 4, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Text (Name)
+                ctx.restore(); // Restore to draw text correctly (not flipped)
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'black';
+                ctx.shadowBlur = 4;
+                ctx.fillText(this.type.name, 0, 0);
+                ctx.restore();
+            }
+        }
+
+        class Hook {
+            constructor() {
+                this.x = 450;
+                this.y = 50;
+                this.state = 'IDLE'; // IDLE, DROPPING, RISING
+                this.dropSpeed = 8;
+                this.riseSpeed = 5;
+                this.caughtFish = null;
+            }
+
+            update(mouseX) {
+                if (this.state === 'IDLE') {
+                    this.x = mouseX;
+                    // Clamp to canvas
+                    if (this.x < 20) this.x = 20;
+                    if (this.x > 880) this.x = 880;
+                } else if (this.state === 'DROPPING') {
+                    this.y += this.dropSpeed;
+                    if (this.y > 550) {
+                        this.state = 'RISING';
+                    }
+                } else if (this.state === 'RISING') {
+                    this.y -= this.riseSpeed;
+                    if (this.y <= 50) {
+                        this.y = 50;
+                        this.state = 'IDLE';
+                        if (this.caughtFish) {
+                            game.checkCatch(this.caughtFish);
+                            this.caughtFish = null;
+                        }
+                    }
+                }
+
+                if (this.caughtFish) {
+                    this.caughtFish.x = this.x;
+                    this.caughtFish.y = this.y + 20;
+                }
+            }
+
+            draw(ctx) {
+                // Line
+                ctx.beginPath();
+                ctx.moveTo(this.x, 0);
+                ctx.lineTo(this.x, this.y);
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Hook
+                ctx.beginPath();
+                ctx.arc(this.x - 10, this.y, 10, 0, Math.PI, false);
+                ctx.stroke();
+            }
+        }
 
         class Game {
             constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
                 this.score = 0;
                 this.currentTarget = null;
-                this.hookX = window.innerWidth / 2;
-                this.hookY = 100;
-                this.dropping = false;
                 this.fish = [];
-                this.lastSpawn = 0;
+                for (let i = 0; i < 10; i++) this.fish.push(new Fish());
+                this.hook = new Hook();
+
+                // Mouse Input
+                this.canvas.addEventListener('mousemove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.mouseX = e.clientX - rect.left;
+                });
+
+                this.canvas.addEventListener('mousedown', () => {
+                    if (this.hook.state === 'IDLE') {
+                        this.hook.state = 'DROPPING';
+                        playSound('splash');
+                    }
+                });
+
+                this.mouseX = 450;
             }
 
             start() {
@@ -303,112 +418,56 @@
             }
 
             setTarget() {
-                this.currentTarget = NOTES[Math.floor(Math.random() * NOTES.length)];
+                this.currentTarget = FISH_TYPES[Math.floor(Math.random() * FISH_TYPES.length)];
                 document.getElementById('target-name').textContent = this.currentTarget.name;
+                document.getElementById('target-name').style.color = this.currentTarget.color;
             }
 
-            moveHook(e) {
-                if (!this.dropping) {
-                    this.hookX = e.clientX;
-                    document.getElementById('hook').style.left = this.hookX + 'px';
+            checkCatch(fish) {
+                if (fish.type.name === this.currentTarget.name) {
+                    playSound('catch');
+                    this.score++;
+                    document.getElementById('score').textContent = this.score;
+                    if (this.score >= 5) {
+                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                        rewards['reward_pesca'] = true;
+                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                        document.getElementById('epic-modal').style.display = 'flex';
+                    } else {
+                        this.setTarget();
+                    }
                 }
-            }
-
-            dropHook() {
-                if (!this.dropping) {
-                    this.dropping = true;
-                    playSound('splash');
-                }
-            }
-
-            spawnFish() {
-                const f = document.createElement('div');
-                f.className = 'fish';
-                const type = NOTES[Math.floor(Math.random() * NOTES.length)];
-                f.innerHTML = `<img src="${type.img}">`;
-                f.dataset.name = type.name;
-
-                // Random Y
-                const y = 200 + Math.random() * (window.innerHeight - 300);
-                f.style.top = y + 'px';
-
-                // Side
-                const left = Math.random() > 0.5;
-                f.style.left = left ? '-100px' : window.innerWidth + 'px';
-                const speed = 2 + Math.random() * 3;
-                f.dx = left ? speed : -speed;
-
-                // Flip if right to left
-                if (!left) f.style.transform = 'scaleX(-1)';
-
-                document.getElementById('game-area').appendChild(f);
-                this.fish.push({ el: f, x: left ? -100 : window.innerWidth, y: y, dx: f.dx, type: type.name });
+                // Reset fish
+                fish.reset();
             }
 
             loop() {
-                // Spawn
-                if (Date.now() - this.lastSpawn > 1500) {
-                    this.spawnFish();
-                    this.lastSpawn = Date.now();
-                }
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-                // Move Fish
-                this.fish.forEach((f, i) => {
-                    f.x += f.dx;
-                    f.el.style.left = f.x + 'px';
-
-                    // Remove if out
-                    if (f.x < -200 || f.x > window.innerWidth + 200) {
-                        f.el.remove();
-                        this.fish.splice(i, 1);
-                    }
+                // Update & Draw Fish
+                this.fish.forEach(f => {
+                    f.update();
+                    f.draw(this.ctx);
                 });
 
-                // Move Hook
-                const hookEl = document.getElementById('hook');
-                if (this.dropping) {
-                    this.hookY += 10;
-                    if (this.hookY > window.innerHeight) {
-                        this.dropping = false; // Missed
-                    }
-                } else {
-                    if (this.hookY > 100) this.hookY -= 15;
-                }
-                hookEl.style.height = this.hookY + 'px';
+                // Update & Draw Hook
+                this.hook.update(this.mouseX);
+                this.hook.draw(this.ctx);
 
-                // Collision
-                if (this.dropping) {
-                    const hRect = { x: this.hookX, y: this.hookY, w: 10, h: 10 };
+                // Collision Detection
+                if (this.hook.state === 'DROPPING' && !this.hook.caughtFish) {
+                    for (let f of this.fish) {
+                        if (f.isCaught) continue;
 
-                    for (let i = 0; i < this.fish.length; i++) {
-                        const f = this.fish[i];
-                        // Simple dist check
-                        const dx = Math.abs(f.x - this.hookX);
-                        const dy = Math.abs(f.y - this.hookY);
+                        // Simple distance check
+                        const dx = this.hook.x - f.x;
+                        const dy = this.hook.y - f.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
 
-                        if (dx < 40 && dy < 30) {
-                            // Caught
-                            if (f.type === this.currentTarget.name) {
-                                playSound('catch');
-                                this.score++;
-                                document.getElementById('score').textContent = this.score;
-                                if (this.score >= 5) {
-                                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                                    rewards['reward_pesca'] = true;
-                                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
-                                    document.getElementById('epic-modal').style.display = 'flex';
-                                    return; // Stop loop
-                                } else {
-                                    this.setTarget();
-                                }
-                            } else {
-                                // Wrong fish
-                                // Penalty? Just reset hook
-                            }
-
-                            f.el.remove();
-                            this.fish.splice(i, 1);
-                            this.dropping = false;
+                        if (dist < f.height / 2 + 10) { // Hit
+                            this.hook.caughtFish = f;
+                            f.isCaught = true;
+                            this.hook.state = 'RISING';
                             break;
                         }
                     }

@@ -355,6 +355,8 @@
             <button class="btn" id="btn-left">⬅️</button>
             <button class="btn" id="btn-drop">BAIXAR GANXO</button>
             <button class="btn" id="btn-right">➡️</button>
+            <button class="btn" id="btn-shuffle"
+                style="background: var(--neon-blue); border-radius: 10px; font-size: 1rem;">BARREJA</button>
         </div>
     </div>
 
@@ -614,9 +616,9 @@
                             const dy = clawTipY - ball.y;
                             const dist = Math.sqrt(dx * dx + dy * dy);
 
-                            if (dist < ball.r) { // Physical Collision Check
-                                // Precision Grab Check: Relaxed to full radius
-                                if (dist < ball.r) {
+                            if (dist < ball.r + 20) { // Physical Collision Check (Relaxed)
+                                // Precision Grab Check: Relaxed to full radius + margin
+                                if (dist < ball.r + 20) {
                                     this.grabbedBall = ball;
                                     ball.isGrabbed = true;
                                     this.state = 'GRABBING';
@@ -742,9 +744,9 @@
                 document.getElementById('btn-left').addEventListener('mouseup', () => this.input.left = false);
                 document.getElementById('btn-right').addEventListener('mousedown', () => this.input.right = true);
                 document.getElementById('btn-right').addEventListener('mouseup', () => this.input.right = false);
-                document.getElementById('btn-drop').addEventListener('click', () => this.input.drop = true);
-                // Reset drop input immediately after click to prevent loop
-                document.getElementById('btn-drop').addEventListener('mouseup', () => setTimeout(() => this.input.drop = false, 100));
+                document.getElementById('btn-drop').addEventListener('mousedown', () => this.input.drop = true);
+                document.getElementById('btn-drop').addEventListener('mouseup', () => this.input.drop = false);
+                document.getElementById('btn-shuffle').addEventListener('click', () => game.shuffleBalls());
             }
 
             setupVolume() {
@@ -845,6 +847,18 @@
                 if (this.timeLeft <= 0) {
                     this.gameOver();
                 }
+            }
+
+            shuffleBalls() {
+                this.balls.forEach(ball => {
+                    if (!ball.isGrabbed) {
+                        // Respawn at top with random X
+                        ball.y = 100 + Math.random() * 200;
+                        ball.x = Math.random() * 800 + 50;
+                        ball.vx = (Math.random() - 0.5) * 10;
+                        ball.vy = (Math.random() - 0.5) * 10;
+                    }
+                });
             }
 
             gameOver() {

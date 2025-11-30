@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Tanda de Penaltis del Mestre</title>
+    <style>
+        :root {
+            --grass: #2e7d32;
+            --grass-light: #4caf50;
+            --white: #ffffff;
+            --gold: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1b5e20;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+            color: white;
+        }
+
+        #ui-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-menu {
+            text-decoration: none;
+            color: white;
+            font-size: 1.2rem;
+            border: 2px solid white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            margin-top: 60px;
+            background: repeating-linear-gradient(to bottom,
+                    var(--grass),
+                    var(--grass) 50px,
+                    var(--grass-light) 50px,
+                    var(--grass-light) 100px);
+            border: 10px solid white;
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        /* Goal */
+        #goal {
+            position: absolute;
+            top: 50px;
+            left: 100px;
+            width: 600px;
+            height: 200px;
+            border: 10px solid white;
+            border-bottom: none;
+            background: rgba(0, 0, 0, 0.2);
+            /* Net effect */
+            z-index: 1;
+        }
+
+        #goalkeeper {
+            position: absolute;
+            bottom: 0;
+            left: 250px;
+            /* Center of goal (600w) */
+            width: 100px;
+            height: 150px;
+            font-size: 8rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            transition: left 0.1s linear;
+            z-index: 2;
+            filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+        }
+
+        /* Arrow */
+        #arrow-container {
+            position: absolute;
+            bottom: 75px;
+            /* Just above ball */
+            left: 400px;
+            /* Center */
+            width: 0;
+            height: 0;
+            z-index: 4;
+            display: none;
+        }
+
+        #arrow {
+            position: absolute;
+            bottom: 0;
+            left: -10px;
+            width: 20px;
+            height: 100px;
+            background: rgba(255, 215, 0, 0.7);
+            border: 2px solid white;
+            transform-origin: bottom center;
+            border-radius: 10px;
+        }
+
+        #arrow::after {
+            content: "";
+            position: absolute;
+            top: -20px;
+            left: -10px;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 20px solid var(--gold);
+        }
+
+        /* Ball */
+        #ball {
+            position: absolute;
+            bottom: 50px;
+            left: 375px;
+            /* Center of 800 (ball 50px) */
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle at 30% 30%, white, #ccc);
+            border-radius: 50%;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+            z-index: 5;
+            transition: all 0.5s ease-out;
+        }
+
+        /* Controls */
+        #controls-panel {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .meter-box {
+            width: 200px;
+            height: 30px;
+            background: #333;
+            border: 2px solid white;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            display: none;
+        }
+
+        .meter-bar {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #aim-bar {
+            background: linear-gradient(to right, red, yellow, green, yellow, red);
+        }
+
+        #power-bar {
+            background: linear-gradient(to right, yellow, orange, red);
+            width: 0%;
+            /* Fills up */
+        }
+
+        .meter-cursor {
+            position: absolute;
+            top: 0;
+            width: 5px;
+            height: 100%;
+            background: white;
+            border: 1px solid black;
+        }
+
+        #action-btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: var(--gold);
+            color: black;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 0 #b7950b;
+        }
+
+        #action-btn:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+
+        /* Quiz Overlay */
+        #quiz-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .quiz-btn {
+            margin: 10px;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 300px;
+        }
+
+        .quiz-btn:hover {
+            background: #ddd;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: #1b5e20;
+            padding: 40px;
+            border: 4px solid var(--gold);
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            color: white;
+        }
+
+        .relic-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+
+        .action-btn-modal {
+            background: var(--gold);
+            color: black;
+            border: none;
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui-bar">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span>🔊</span>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5">
+        </div>
+        <div style="font-size:1.5rem; font-weight:bold;">GOLS: <span id="score">0</span>/3</div>
+        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+    </div>
+
+    <div id="game-container">
+        <div id="goal">
+            <div id="goalkeeper">🥅🧤</div>
+        </div>
+        <div id="ball"></div>
+
+        <div id="quiz-overlay" style="display:none;">
+            <h2 id="q-text" style="color:var(--gold); max-width: 80%;">Pregunta...</h2>
+            <div id="options-container"></div>
+        </div>
+
+        <div id="controls-panel">
+            <div id="arrow-container">
+                <div id="arrow"></div>
+            </div>
+            <div id="power-meter" class="meter-box">
+                <div id="power-bar" class="meter-bar"></div>
+            </div>
+            <button id="action-btn" onclick="game.handleInput()">XUTAR</button>
+        </div>
+    </div>
+
+    <!-- Intro Modal -->
+    <div id="intro-modal" class="modal" style="display:flex;">
+        <div class="modal-content">
+            <h1 style="color:var(--gold)">LA TANDA DE PENALTIS</h1>
+            <p>El Mestre és a la porteria. No serà fàcil.</p>
+            <p>1. Respon la pregunta de teoria avançada.</p>
+            <p>2. Ajusta l'angle (Centre = Verd).</p>
+            <p>3. Ajusta la potència (Màxim = Vermell).</p>
+            <p>Marca 3 gols per guanyar!</p>
+            <button class="action-btn-modal" onclick="game.start()">JUGAR</button>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color:var(--gold)">TRIOMF ABSOLUT!</h2>
+            <div class="relic-icon">👑</div>
+            <h3 style="color:var(--gold)">LA CORONA DE LAURIER DE VERDI</h3>
+            <p>"La corona de fulles de llorer que es posava Giuseppe Verdi al final de les seves òperes triomfals.
+                Símbol de la victòria i l'excel·lència!"</p>
+            <button class="action-btn-modal" onclick="location.href='menu.html'">TORNAR AL MENÚ</button>
+        </div>
+    </div>
+
+    <!-- Lose Modal -->
+    <div id="lose-modal" class="modal">
+        <div class="modal-content">
+            <h2>FALLADA!</h2>
+            <p>Has fallat la pregunta o el porter l'ha aturat.</p>
+            <button class="action-btn-modal" onclick="location.reload()">REINTENTAR</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" src="music/Roll the Dice-2.mp3" loop></audio>
+
+    <script>
+        // --- AUDIO ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const bgMusic = document.getElementById('bg-music');
+
+        document.body.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.volume = document.getElementById('volume').value * 0.3;
+                bgMusic.play().catch(e => console.log(e));
+            }
+        }, { once: true });
+
+        document.getElementById('volume').addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value * 0.3;
+        });
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const vol = parseFloat(document.getElementById('volume').value);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'kick') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(10, now + 0.1);
+                gain.gain.setValueAtTime(vol, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start();
+                osc.stop(now + 0.1);
+            } else if (type === 'goal') {
+                // Crowd cheer simulation (noise)
+                const bufferSize = audioCtx.sampleRate * 2; // 2 seconds
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(vol * 0.5, now);
+                noiseGain.gain.linearRampToValueAtTime(0, now + 2);
+                noise.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                noise.start();
+            } else if (type === 'miss') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                gain.gain.setValueAtTime(vol * 0.5, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start();
+                osc.stop(now + 0.3);
+            }
+        }
+
+        // --- GAME DATA ---
+        const QUESTIONS = [
+            { q: "Quantes corxeres caben en una Rodona?", opts: ["4", "8", "16"], a: 1 },
+            { q: "Què val més: 1 Blanca o 3 Negres?", opts: ["1 Blanca", "3 Negres", "Igual"], a: 1 },
+            { q: "En 2/4, quina figura omple tot el compàs?", opts: ["Negra", "Blanca", "Rodona"], a: 1 },
+            { q: "Quant suma: Negra puntet + Corxera?", opts: ["1.5", "2", "3"], a: 1 },
+            { q: "Quina figura val la meitat d'una Semicorxera?", opts: ["Fusa", "Semifusa", "Corxera"], a: 0 }
+        ];
+
+        class Game {
+            constructor() {
+                this.score = 0;
+                this.phase = 'QUIZ'; // QUIZ, AIM, POWER, SHOOTING
+                this.aimAngle = 0; // -45 to 45
+                this.aimDir = 1;
+                this.powerVal = 0;
+                this.powerDir = 1;
+                this.interval = null;
+
+                this.keeperPos = 50; // %
+                this.keeperDir = 1;
+                this.keeperInterval = null;
+            }
+
+            start() {
+                document.getElementById('intro-modal').style.display = 'none';
+                this.startKeeper();
+                this.nextRound();
+            }
+
+            startKeeper() {
+                this.keeperInterval = setInterval(() => {
+                    this.keeperPos += 1 * this.keeperDir;
+                    if (this.keeperPos >= 90 || this.keeperPos <= 10) this.keeperDir *= -1;
+
+                    // Map % to pixels (Goal width 600px. Keeper width 100px. Range 0-500px relative to goal)
+                    // Goal Left is 100px absolute.
+                    // Keeper relative: (this.keeperPos / 100) * 500
+                    const kRel = (this.keeperPos / 100) * 500;
+                    document.getElementById('goalkeeper').style.left = kRel + 'px';
+                }, 20);
+            }
+
+            nextRound() {
+                if (this.score >= 3) {
+                    this.win();
+                    return;
+                }
+
+                // Reset Ball
+                const ball = document.getElementById('ball');
+                ball.style.bottom = '50px';
+                ball.style.left = '375px';
+                ball.style.transform = 'scale(1)';
+
+                // Quiz Phase
+                this.phase = 'QUIZ';
+                document.getElementById('quiz-overlay').style.display = 'flex';
+                document.getElementById('controls-panel').style.display = 'none';
+
+                const q = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+                document.getElementById('q-text').textContent = q.q;
+                const opts = document.getElementById('options-container');
+                opts.innerHTML = '';
+                q.opts.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'quiz-btn';
+                    btn.textContent = opt;
+                    btn.onclick = () => this.checkAnswer(idx, q.a);
+                    opts.appendChild(btn);
+                });
+            }
+
+            checkAnswer(idx, correct) {
+                if (idx === correct) {
+                    this.startAimPhase();
+                } else {
+                    // Instant Retry
+                    this.nextRound();
+                }
+            }
+
+            startAimPhase() {
+                document.getElementById('quiz-overlay').style.display = 'none';
+                document.getElementById('controls-panel').style.display = 'flex';
+                document.getElementById('arrow-container').style.display = 'block';
+                document.getElementById('power-meter').style.display = 'none';
+                document.getElementById('action-btn').textContent = "APUNTA!";
+
+                this.phase = 'AIM';
+                this.aimAngle = 0;
+                this.interval = setInterval(() => {
+                    this.aimAngle += 2 * this.aimDir;
+                    if (this.aimAngle >= 45 || this.aimAngle <= -45) this.aimDir *= -1;
+                    document.getElementById('arrow').style.transform = `rotate(${this.aimAngle}deg)`;
+                }, 20);
+            }
+
+            handleInput() {
+                if (this.phase === 'AIM') {
+                    clearInterval(this.interval);
+                    this.startPowerPhase();
+                } else if (this.phase === 'POWER') {
+                    clearInterval(this.interval);
+                    this.shoot();
+                }
+            }
+
+            startPowerPhase() {
+                this.phase = 'POWER';
+                // Keep arrow visible but frozen
+                document.getElementById('action-btn').textContent = "POTÈNCIA!";
+                document.getElementById('power-meter').style.display = 'block';
+
+                this.powerVal = 0;
+                this.interval = setInterval(() => {
+                    this.powerVal += 3 * this.powerDir;
+                    if (this.powerVal >= 100 || this.powerVal <= 0) this.powerDir *= -1;
+                    document.getElementById('power-bar').style.width = this.powerVal + '%';
+                }, 10);
+            }
+
+            shoot() {
+                this.phase = 'SHOOTING';
+                document.getElementById('controls-panel').style.display = 'none';
+                playSound('kick');
+
+                // Calculate Trajectory based on Angle
+                // Angle -45 (Left) to +45 (Right)
+                // Map to Goal Width (100px to 700px)
+
+                // Normalize angle to 0-1 factor
+                const factor = (this.aimAngle + 45) / 90;
+                const targetX = 100 + factor * 600;
+
+                // Height based on Power (0-100) -> 0px to 180px (Goal height 200)
+                // If power is too high (>90), it might go over (220px)
+                const height = (this.powerVal / 100) * 200;
+
+                const ball = document.getElementById('ball');
+
+                // Physics Animation
+                ball.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)'; // Arc-like ease
+                ball.style.left = targetX + 'px';
+                // Goal bottom is at 50px (game-container relative). Height 200px.
+                // To enter goal, ball must be > 50px.
+                // Let's make it go INTO the net.
+                ball.style.bottom = (70 + height) + 'px'; // Lift it up into the goal
+                ball.style.transform = 'scale(0.3)'; // Smaller perspective
+                ball.style.zIndex = '1'; // Behind keeper/posts if needed? No, usually in front until it hits net.
+                // Actually, net is z-index 1. Keeper is 2. Ball is 5.
+                // To look like it's IN the net, maybe drop z-index?
+                setTimeout(() => {
+                    ball.style.zIndex = '0'; // Go behind keeper/posts to simulate being inside
+                }, 300);
+
+                setTimeout(() => {
+                    this.checkGoal(targetX, height);
+                }, 600); // Flight time
+            }
+
+            checkGoal(ballX, ballHeight) {
+                // Keeper Position (Relative to goal + Goal Left offset)
+                const keeperLeft = 100 + parseFloat(document.getElementById('goalkeeper').style.left);
+                const keeperRight = keeperLeft + 100; // Width
+                const keeperTop = 150; // Height of keeper
+
+                // Check if goal (inside posts)
+                if (ballX < 110 || ballX > 690) { // Post hit or wide
+                    playSound('miss'); // Post sound?
+                    this.endRound(false);
+                    return;
+                }
+
+                // Check Height (Crossbar is at 200px relative to bottom of goal area?)
+                // Goal div is top:50, height:200. 
+                // Ball bottom is relative to game-container.
+                // Goal bottom is at 50+200 = 250px from top? No, absolute positioning.
+                // Let's assume visual height. If height > 190, it hits bar or goes over.
+                if (ballHeight > 190) {
+                    playSound('miss');
+                    this.endRound(false);
+                    return;
+                }
+
+                // Keeper Save?
+                // Keeper is at bottom 0. Height 150.
+                // If ball is low enough and within X range
+                if (ballX > keeperLeft - 20 && ballX < keeperRight + 20 && ballHeight < 140) {
+                    // Saved!
+                    playSound('miss');
+                    this.endRound(false);
+                } else {
+                    // Goal!
+                    playSound('goal');
+                    this.score++;
+                    document.getElementById('score').textContent = this.score;
+                    this.endRound(true);
+                }
+            }
+
+            endRound(success) {
+                if (!success) {
+                    setTimeout(() => {
+                        this.nextRound();
+                    }, 1000);
+                } else {
+                    setTimeout(() => {
+                        this.nextRound();
+                    }, 2000);
+                }
+            }
+
+            win() {
+                clearInterval(this.keeperInterval);
+                const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+                rewards['reward_penaltis'] = true;
+                sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                document.getElementById('win-modal').style.display = 'flex';
+            }
+        }
+
+        const game = new Game();
+    </script>
+</body>
+
+</html>
