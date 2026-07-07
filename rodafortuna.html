@@ -690,6 +690,13 @@
             } else if (type === 'lose') {
                 playTone(300, 'sawtooth', 0.5);
                 setTimeout(() => playTone(200, 'sawtooth', 0.5), 300);
+            } else if (type === 'clonc') {
+                playTone(150, 'square', 0.15); // Short low thud
+            } else if (type === 'fanfare') {
+                playTone(523.25, 'triangle', 0.2); // C5
+                setTimeout(() => playTone(659.25, 'triangle', 0.2), 150); // E5
+                setTimeout(() => playTone(783.99, 'triangle', 0.2), 300); // G5
+                setTimeout(() => playTone(1046.50, 'triangle', 0.6), 450); // C6
             }
         }
 

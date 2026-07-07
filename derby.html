@@ -130,13 +130,13 @@
             }
 
             init() {
-                Casino.UI.showModal('derby-instr', 'L\'ARC DE VIVALDI', 
+                Casino.UI.showModal('derby-instr', 'L\'ARC DE VIVALDI',
                     'Guanya la cursa identificant ràpidament la figura rítmica demanada.<br><br>' +
-                    '<b>Sèrie de victòries:</b> Aconsegueix 5 victòries per desbloquejar l\'arc d\'en Vivaldi.', 'A LES PISTES');
-                
+                    '<b>Sèrie de victòries:</b> Aconsegueix 5 victòries per desbloquejar l\'arc d\'en Vivaldi.', 'A LES PISTES',
+                    () => this.startRace());
+
                 this.finishDist = document.querySelector('.track-container').offsetWidth - 130;
                 this.genNote();
-                this.startRace();
                 this.updateUI();
             }
 

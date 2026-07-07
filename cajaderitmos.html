@@ -81,7 +81,7 @@
 <body>
     <div class="casino-table">
         <div class="game-layout">
-            <div style="color:var(--gold); font-size:1.5rem; margin-bottom:10px;">ESTUDI DE GRAVACIÓ: NIVELL <span id="level">1</span> / 5</div>
+            <div style="color:var(--gold); font-size:1.5rem; margin-bottom:10px;">ESTUDI DE GRAVACIÓ: NIVELL <span id="level">1</span> / 3</div>
             
             <div class="score-box">
                 <img id="score-img" src="images/bateria1.png">
@@ -157,6 +157,9 @@
                 const lvl = LEVELS[this.level];
                 document.getElementById('level').textContent = this.level + 1;
                 document.getElementById('score-img').src = lvl.img;
+                // Neteja el grid del nivell anterior
+                this.grid.forEach(row => row.fill(0));
+                document.querySelectorAll('#sequencer .step.active').forEach(s => s.classList.remove('active'));
             }
 
             playTrack(r) {

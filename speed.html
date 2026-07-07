@@ -294,13 +294,11 @@
     <!-- Instructions Modal -->
     <div id="instructions-modal">
         <div class="instr-content">
-            <span class="instr-close"
-                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <span class="instr-close" onclick="closeInstructions()">×</span>
             <h2 style="color: var(--gold);">COM JUGAR</h2>
             <p style="font-size:1.2rem;">Sigues el més ràpid en descartar les teves cartes.</p>
             <p>Emparella les figures amb el mateix valor per guanyar!</p>
-            <button class="instr-btn"
-                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
+            <button class="instr-btn" onclick="closeInstructions()">JUGAR</button>
         </div>
     </div>
 
@@ -466,7 +464,7 @@
             slot.innerHTML = '';
             const el = document.createElement('div');
             el.className = 'card';
-            el.innerHTML = `<img src="${card.img}"><div class="card-val">${card.val}</div>`;
+            el.innerHTML = `<img src="${card.img}">`;
             slot.appendChild(el);
 
             // Pop anim
@@ -548,8 +546,11 @@
             if (e.code === 'Space') playerHit();
         });
 
-        // Start
-        setTimeout(startGame, 1000);
+        // Start (only when instructions modal is closed)
+        function closeInstructions() {
+            document.getElementById('instructions-modal').style.display = 'none';
+            if (!gameLoop) startGame();
+        }
 
     </script>
 </body>

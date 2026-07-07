@@ -266,8 +266,7 @@
     <!-- Instructions Modal -->
     <div id="instructions-modal" class="modal" style="display:flex;">
         <div class="modal-content">
-            <span class="close-btn"
-                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <span class="close-btn" onclick="game.start()">×</span>
             <h2>COM JUGAR A "PAI GOW RÍTMIC"</h2>
             <p>1. Reps <strong>7 Fitxes</strong>.</p>
             <p>2. Divideix-les en dues mans:</p>
@@ -289,7 +288,7 @@
             <h3>L'ARPA DE MARIANTÒNIA</h3>
             <p style="font-style: italic; color: #aaa;">"L'arpa de la reina Maria Antonieta (alumna de Gluck). Un
                 instrument que va sobreviure a la Revolució Francesa gràcies a la seva bellesa."</p>
-            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+            <button class="action-btn" onclick="location.href='menu.html'">TORNAR AL MENÚ</button>
         </div>
     </div>
 
@@ -384,6 +383,7 @@
             reset() {
                 this.deal();
                 document.getElementById('result-overlay').style.opacity = 0;
+                document.getElementById('btn-play').disabled = false;
             }
 
             deal() {
@@ -524,6 +524,9 @@
             }
 
             playHands() {
+                // Prevent replaying the same resolved hand
+                document.getElementById('btn-play').disabled = true;
+
                 // Calculate Sums
                 const highSum = this.calculateSum('high-hand');
                 const lowSum = this.calculateSum('low-hand');
@@ -570,6 +573,11 @@
                 overlay.textContent = msg;
                 overlay.style.color = color;
                 overlay.style.opacity = 1;
+
+                // Auto re-deal after each resolved hand
+                if (this.wins < 3) {
+                    setTimeout(() => this.reset(), 2500);
+                }
             }
 
             calculateSum(zoneId) {

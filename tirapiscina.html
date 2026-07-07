@@ -408,9 +408,15 @@
         const QUESTIONS = [
             { q: "Quant sumen una Blanca amb Puntet + una Semicorxera?", opts: ["3.25", "3.5", "4"], a: 0 },
             { q: "Quin compàs és d'amalgama?", opts: ["2/4", "5/8", "6/8"], a: 1 },
-            { q: "Quina figura val 1/3 de part en un treset de negres?", opts: ["Negra", "Corxera", "Blanca"], a: 0 },
-            { q: "Quants temps té un compàs de 9/8?", opts: ["3", "4.5", "9"], a: 1 }, // 9 corxeres = 4.5 negres
-            { q: "Què indica 'Da Capo'?", opts: ["Final", "Des del principi", "Repetir compàs"], a: 1 }
+            { q: "En un treset de corxeres, quantes corxeres sonen en UN temps?", opts: ["2", "3", "4"], a: 1 },
+            { q: "El 9/8 és un compàs compost. Quants temps té?", opts: ["3", "4", "9"], a: 0 }, // 3 temps de negra amb puntet
+            { q: "Què indica 'Da Capo'?", opts: ["Final", "Des del principi", "Repetir compàs"], a: 1 },
+            { q: "Quant val una Negra amb puntet?", opts: ["1.25", "1.5", "2"], a: 1 },
+            { q: "Quin d'aquests compassos és COMPOST?", opts: ["3/4", "4/4", "6/8"], a: 2 },
+            { q: "Quantes semicorxeres caben en una Negra?", opts: ["2", "4", "8"], a: 1 },
+            { q: "Quantes corxeres equivalen a una Rodona?", opts: ["4", "8", "16"], a: 1 },
+            { q: "Com s'anomena la nota (o notes) que sona abans del primer temps fort del primer compàs?", opts: ["Anacrusi", "Síncope", "Calderó"], a: 0 },
+            { q: "Què indica el calderó sobre una nota?", opts: ["Tocar-la més fort", "Allargar-la a voluntat de l'intèrpret", "Saltar-la"], a: 1 }
         ];
 
         class Game {
@@ -506,7 +512,6 @@
                 if (this.cursorPos >= 45 && this.cursorPos <= 55) {
                     this.dunk();
                 } else {
-                    playSound('miss');
                     playSound('miss');
                     this.showTaunt();
                     setTimeout(() => {

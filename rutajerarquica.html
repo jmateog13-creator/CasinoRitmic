@@ -213,13 +213,13 @@
             <!-- 6x6 Grid -->
         </div>
         <div id="status">Mou-te al DOBLE o la MEITAT del valor actual.</div>
+        <button class="action-btn" id="restart-btn" onclick="game.restartLevel()">REINICIAR NIVELL</button>
     </div>
 
     <!-- Instructions Modal -->
     <div id="instructions-modal" class="modal" style="display:flex;">
         <div class="modal-content">
-            <span class="close-btn"
-                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
+            <span class="close-btn" onclick="game.start()">×</span>
             <h2 style="color: var(--gold);">LA RUTA JERÀRQUICA</h2>
             <p>1. Comença a la casella INICI.</p>
             <p>2. Mou-te a una casella adjacent (H/V) només si el valor és el DOBLE o la MEITAT.</p>
@@ -236,7 +236,7 @@
             <h3 style="color: var(--gold);">LA PARTITURA DE L'OFRENA MUSICAL DE BACH</h3>
             <p style="font-style: italic; color: #aaa;">"Aquest manuscrit conté els cànons i puzles més intel·ligents de
                 J.S. Bach, un homenatge a la lògica de la música."</p>
-            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+            <button class="action-btn" onclick="location.href='menu.html'">TORNAR AL MENÚ</button>
         </div>
     </div>
 
@@ -312,6 +312,11 @@
 
             start() {
                 document.getElementById('instructions-modal').style.display = 'none';
+                this.generateLevel();
+            }
+
+            restartLevel() {
+                // Regenerates the current level without losing accumulated wins
                 this.generateLevel();
             }
 

@@ -282,7 +282,7 @@
             <h3 style="color: var(--gold);">EL TINTER DE FRANZ SCHUBERT</h3>
             <p style="font-style: italic; color: #aaa;">"El tinter original del compositor dels 'lieders' més famosos.
                 Un símbol del Romanticisme!"</p>
-            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+            <button class="action-btn" onclick="location.href='menu.html'">TORNAR AL MENÚ</button>
         </div>
     </div>
 
@@ -361,6 +361,7 @@
                 this.playerHand = [];
                 this.dealerHand = [];
                 this.gameOver = false;
+                this.dealerPlaying = false;
             }
 
             start() {
@@ -382,9 +383,12 @@
                 this.playerHand = [];
                 this.dealerHand = [];
                 this.gameOver = false;
+                this.dealerPlaying = false;
 
                 document.getElementById('btn-hit').style.display = 'inline-block';
                 document.getElementById('btn-stand').style.display = 'inline-block';
+                document.getElementById('btn-hit').disabled = false;
+                document.getElementById('btn-stand').disabled = false;
                 document.getElementById('btn-next').style.display = 'none';
                 document.getElementById('result-modal').style.display = 'none';
 
@@ -393,6 +397,11 @@
                 this.dealerHand.push(this.draw());
                 this.playerHand.push(this.draw());
                 this.dealerHand.push(this.draw());
+
+                // Re-deal if the initial 2 cards already bust (no player decision possible)
+                while (this.calculateScore(this.playerHand) > 7.5) {
+                    this.playerHand = [this.draw(), this.draw()];
+                }
 
                 this.render();
                 this.checkBust();
@@ -404,7 +413,7 @@
             }
 
             hit() {
-                if (this.gameOver) return;
+                if (this.gameOver || this.dealerPlaying) return;
                 this.playerHand.push(this.draw());
                 playSound('deal');
                 this.render();
@@ -412,11 +421,14 @@
             }
 
             stand() {
-                if (this.gameOver) return;
+                if (this.gameOver || this.dealerPlaying) return;
                 this.dealerTurn();
             }
 
             dealerTurn() {
+                this.dealerPlaying = true;
+                document.getElementById('btn-hit').disabled = true;
+                document.getElementById('btn-stand').disabled = true;
                 let dealerScore = this.calculateScore(this.dealerHand);
 
                 // Dealer hits until 7.0 or bust

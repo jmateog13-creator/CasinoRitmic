@@ -130,11 +130,11 @@
             }
 
             init() {
-                Casino.UI.showModal('bomb-instr', 'EL TEMPORITZADOR DE CAGE', 
+                Casino.UI.showModal('bomb-instr', 'EL TEMPORITZADOR DE CAGE',
                     'Has de desactivar la bomba rítmica! Talla els cables (notes) en l\'ordre correcte segons la seva durada.<br><br>' +
                     '<b>ORDRE:</b> De més llarg (Rodona) a més curt (Semicorxera).<br><br>' +
-                    'Completa 5 nivells per guanyar.', 'DESACTIVAR ARA');
-                this.startLevel();
+                    'Completa 5 nivells per guanyar.', 'DESACTIVAR ARA',
+                    () => this.startLevel());
             }
 
             startLevel() {

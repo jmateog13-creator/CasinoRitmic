@@ -140,8 +140,28 @@
                 this.discardPile.push(this.deck.pop());
             }
 
+            refillStock() {
+                if(this.deck.length > 0) return true;
+                if(this.discardPile.length > 1) {
+                    const top = this.discardPile.pop();
+                    this.deck = this.discardPile.sort(() => Math.random() - 0.5);
+                    this.discardPile = [top];
+                    return true;
+                }
+                return false;
+            }
+
+            endTie() {
+                Casino.Audio.playLose();
+                Casino.UI.showModal('conq-end', 'PARTIDA EN TAULES',
+                    'El maç s\'ha esgotat i no queden cartes per barallar. Ningú guanya la flauta... aquesta vegada.',
+                    'REINTENTAR', () => location.reload());
+            }
+
             draw(type) {
                 if(this.phase !== 'draw') return;
+                if(type === 'stock' && !this.refillStock()) { this.endTie(); return; }
+                if(type === 'discard' && this.discardPile.length === 0) return;
                 const card = type === 'stock' ? this.deck.pop() : this.discardPile.pop();
                 this.pHand.push(card);
                 this.phase = 'play';
@@ -191,9 +211,10 @@
             }
 
             aiTurn() {
+                if(!this.refillStock()) { this.endTie(); return; }
                 const c = this.deck.pop();
                 this.cHand.push(c);
-                if(Math.random() < 0.3) this.cHand.pop(); // Simulate meld
+                if(Math.random() < 0.3 && this.cHand.length > 1) this.cHand.pop(); // Simulate meld
                 this.discardPile.push(this.cHand.pop());
                 this.checkWin();
                 this.render();

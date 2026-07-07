@@ -58,7 +58,7 @@
 <body>
     <div class="casino-table">
         <div class="game-layout">
-            <canvas id="tetris-canvas" width="300" height="600"></canvas>
+            <canvas id="tetris-canvas" width="240" height="600"></canvas>
             
             <div class="side-panel">
                 <div class="stat-box">
@@ -96,7 +96,7 @@
         const nextCanvas = document.getElementById('next-canvas');
         const nextCtx = nextCanvas.getContext('2d');
 
-        const COLS = 10;
+        const COLS = 8;
         const ROWS = 20;
         const SIZE = 30;
 
@@ -123,7 +123,7 @@
 
         function init() {
             Casino.UI.showModal('tetris-instr', 'EL COMPASSADOR', 
-                'Completa línies horitzontals de 8 temps per guanyar punts. Cada tipus de nota ocupa una amplada diferent.<br><br>' +
+                'Completa línies horitzontals que formin un compàs de 4/4 (4 temps) per guanyar punts. Cada tipus de nota ocupa una amplada diferent.<br><br>' +
                 '<b>Rodona</b>: 8 blocs | <b>Blanca</b>: 4 | <b>Negra</b>: 2 | <b>Corxera</b>: 1', 
                 'INICIAR', () => {
                     gameActive = true;
@@ -220,6 +220,7 @@
             
             // Grid
             ctx.strokeStyle = '#111';
+            ctx.beginPath();
             for (let x = 0; x <= COLS; x++) { ctx.moveTo(x*SIZE, 0); ctx.lineTo(x*SIZE, canvas.height); }
             for (let y = 0; y <= ROWS; y++) { ctx.moveTo(0, y*SIZE); ctx.lineTo(canvas.width, y*SIZE); }
             ctx.stroke();

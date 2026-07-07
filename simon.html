@@ -114,11 +114,12 @@
         Casino.Audio.init('music/background_music_simon.mp3');
         Casino.UI.injectBasicUI('Simon Rítmic');
 
+        // Pols: negra = 0.5s. Cada pad sona la DURADA real de la seva figura.
         const NOTES = [
-            { freq: 261.63, img: 'images/rodona.jpg' }, // C4
-            { freq: 329.63, img: 'images/blanca.jpg' },  // E4
-            { freq: 392.00, img: 'images/negra.jpg' },   // G4
-            { freq: 523.25, img: 'images/corxera.jpg' }  // C5
+            { freq: 261.63, dur: 2.0, img: 'images/rodona.jpg' },   // C4 - Rodona (4 temps)
+            { freq: 329.63, dur: 1.0, img: 'images/blanca.jpg' },   // E4 - Blanca (2 temps)
+            { freq: 392.00, dur: 0.5, img: 'images/negra.jpg' },    // G4 - Negra (1 temps)
+            { freq: 523.25, dur: 0.25, img: 'images/corxera.jpg' }  // C5 - Corxera (1/2 temps)
         ];
 
         class SimonGame {
@@ -133,8 +134,9 @@
             }
 
             showInstructions() {
-                Casino.UI.showModal('simon-instr', 'EL SIMON BEETHOVEN', 
+                Casino.UI.showModal('simon-instr', 'EL SIMON BEETHOVEN',
                     'Observa i escolta la seqüència de figures rítmiques i repeteix-la exactament.<br><br>' +
+                    'Cada figura sona la seva DURADA real: la rodona és la més llarga i la corxera la més curta. Memoritza la frase rítmica!<br><br>' +
                     'Cada ronda s\'afegeix una nota més. Arriba a la ronda 10 per guanyar la relíquia!', 'ESTRENYER L\'OÏDA');
             }
 
@@ -158,7 +160,7 @@
                 await new Promise(r => setTimeout(r, 1000));
                 for (let i = 0; i < this.sequence.length; i++) {
                     await this.activatePad(this.sequence[i]);
-                    await new Promise(r => setTimeout(r, 300));
+                    await new Promise(r => setTimeout(r, 150)); // Silenci d'articulació entre figures
                 }
                 this.isPlayingSequence = false;
                 this.canInput = true;
@@ -166,9 +168,10 @@
 
             async activatePad(id) {
                 const pad = document.getElementById(`pad-${id}`);
+                const dur = NOTES[id].dur;
                 pad.classList.add('active');
-                Casino.Audio.playTone(NOTES[id].freq, 'sine', 0.4);
-                await new Promise(r => setTimeout(r, 400));
+                Casino.Audio.playTone(NOTES[id].freq, 'sine', dur);
+                await new Promise(r => setTimeout(r, dur * 1000));
                 pad.classList.remove('active');
             }
 

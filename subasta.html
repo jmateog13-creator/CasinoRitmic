@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Gran Subasta Rítmica</title>
+    <title>La Gran Subhasta Rítmica</title>
     <style>
         :root {
             --red: #8b0000;
@@ -251,7 +251,8 @@
             align-items: center;
         }
 
-        #bid-btn {
+        #bid-btn,
+        .modal-btn {
             padding: 15px 50px;
             font-size: 1.5rem;
             background: var(--gold);
@@ -263,9 +264,15 @@
             box-shadow: 0 5px 0 #b8860b;
         }
 
-        #bid-btn:active {
+        #bid-btn:active,
+        .modal-btn:active {
             transform: translateY(5px);
             box-shadow: none;
+        }
+
+        #bid-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         #current-bid {
@@ -355,7 +362,7 @@
 
     <div id="podium">
         <div id="auctioneer">👨‍⚖️</div>
-        <div id="lot-display">LOTE Nº 1<br>Objectiu: <span id="target-val">3.0</span> Temps</div>
+        <div id="lot-display">LOT Nº 1<br>Objectiu: <span id="target-val">3.0</span> Temps</div>
     </div>
 
     <div id="rival1" class="rival">
@@ -383,11 +390,11 @@
     <!-- Start Modal -->
     <div id="start-modal" class="modal" style="display: flex;">
         <div class="modal-content">
-            <h2 style="color: var(--gold);">LA GRAN SUBASTA</h2>
-            <p>Benvingut a la Casa de Subastes VIP.</p>
+            <h2 style="color: var(--gold);">LA GRAN SUBHASTA</h2>
+            <p>Benvingut a la Casa de Subhastes VIP.</p>
             <p>Has d'igualar el valor de l'objecte amb les teves notes.</p>
             <p>Acosta't el màxim possible sense passar-te!</p>
-            <button id="bid-btn" onclick="startGame()">ENTRAR A LA SALA</button>
+            <button class="modal-btn" onclick="startGame()">ENTRAR A LA SALA</button>
         </div>
     </div>
 
@@ -398,7 +405,7 @@
             <div class="relic-icon">🎹</div>
             <p style="font-size: 1.5rem; color: #dcb;">"EL CLAVICÈMBAL DAURAT DE SCARLATTI"</p>
             <p>Un instrument de teclat exquisit, pare del piano, usat a les corts reials del segle XVIII.</p>
-            <button id="bid-btn" onclick="location.reload()">TORNAR AL CASINO</button>
+            <button class="modal-btn" onclick="location.href='menu.html'">TORNAR AL CASINO</button>
         </div>
     </div>
 
@@ -407,7 +414,7 @@
         <div class="modal-content">
             <h2 id="round-title">RESULTAT</h2>
             <p id="round-msg">...</p>
-            <button id="bid-btn" onclick="nextRound()">SEGÜENT LOTE</button>
+            <button class="modal-btn" onclick="nextRound()">SEGÜENT LOT</button>
         </div>
     </div>
 
@@ -479,6 +486,7 @@
             document.getElementById('result-modal').style.display = 'none';
 
             // Reset UI
+            document.getElementById('bid-btn').disabled = false;
             document.getElementById('bubble1').style.opacity = 0;
             document.getElementById('bubble2').style.opacity = 0;
             selectedIndices.clear();
@@ -487,7 +495,7 @@
             // Set Target
             target = (Math.floor(Math.random() * 8) + 4) * 0.5; // Random between 2.0 and 6.0
             // document.getElementById('target-val').textContent = "???"; // Hidden for user
-            document.getElementById('lot-display').innerHTML = `LOTE Nº ${round}<br>Objectiu: <span style="color:var(--red); font-size:1.5rem;">${target}</span> TEMPS`;
+            document.getElementById('lot-display').innerHTML = `LOT Nº ${round}<br>Objectiu: <span style="color:var(--red); font-size:1.5rem;">${target}</span> TEMPS`;
 
             // Deal Hand (Random assortment)
             hand = [];
@@ -531,6 +539,11 @@
         }
 
         function submitBid() {
+            // Prevent spam clicks while the round is being resolved
+            const bidBtn = document.getElementById('bid-btn');
+            if (bidBtn.disabled) return;
+            bidBtn.disabled = true;
+
             // AI Logic
             // Baronessa (Conservative): Tries to get close but stays under. Error margin -0.5 to 0.
             let ai1Bid = target - (Math.random() * 0.5);
@@ -573,25 +586,22 @@
             let winner = null;
             let minDiff = 999;
 
-            if (pValid && pDiff < minDiff) { minDiff = pDiff; winner = 'player'; }
             if (a1Valid && a1Diff < minDiff) { minDiff = a1Diff; winner = 'baronessa'; }
             if (a2Valid && a2Diff < minDiff) { minDiff = a2Diff; winner = 'count'; }
-
-            // Tie breaker? Player wins ties.
-            if (pValid && a1Valid && pDiff === a1Diff) winner = 'player';
-            if (pValid && a2Valid && pDiff === a2Diff) winner = 'player';
+            // Player wins only if at least as close as the best rival (ties go to the player)
+            if (pValid && pDiff <= minDiff) { minDiff = pDiff; winner = 'player'; }
 
             let msg = "";
             if (winner === 'player') {
                 wins++;
-                msg = "HAS GUANYAT EL LOTE!";
+                msg = "HAS GUANYAT EL LOT!";
                 playSound('ding');
             } else if (winner === 'baronessa') {
-                msg = "La Baronessa s'emporta el lote.";
+                msg = "La Baronessa s'emporta el lot.";
             } else if (winner === 'count') {
-                msg = "El Comte s'emporta el lote.";
+                msg = "El Comte s'emporta el lot.";
             } else {
-                msg = "Tothom s'ha passat! Subasta deserta.";
+                msg = "Tothom s'ha passat! Subhasta deserta.";
             }
 
             if (!pValid) msg += " (T'has passat!)";

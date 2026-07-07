@@ -433,7 +433,7 @@
 
                 this.turn = 1;
                 this.render();
-                setTimeout(() => this.cpuTurn(), 1000);
+                if (this.trick.length < 4) setTimeout(() => this.cpuTurn(), 1000);
             }
 
             addToTrick(player, card) {
@@ -454,6 +454,7 @@
 
             cpuTurn() {
                 if (this.turn === 0) return;
+                if (this.trick.length >= 4 || this.hands[this.turn].length === 0) return;
 
                 const hand = this.hands[this.turn];
                 let playIdx = 0;

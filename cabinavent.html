@@ -142,18 +142,19 @@
             }
 
             init() {
-                Casino.UI.showModal('cabin-start', 'LA MISSIÓ DE SCHUBERT', 
+                Casino.UI.showModal('cabin-start', 'LA MISSIÓ DE SCHUBERT',
                     'Atrapa les notes indicades que volen per la cabina!<br><br>' +
                     '<b>Nivell 1:</b> Atrapa Corxeres i Semicorxeres (Notes ràpides).<br>' +
-                    '<b>Puntuació:</b> 1.500 punts per guanyar.', 'COMENÇAR VENT');
-                
-                this.isRunning = true;
-                this.loop();
-                this.timer = setInterval(() => {
-                    this.timeLeft--;
-                    document.getElementById('time').textContent = this.timeLeft;
-                    if(this.timeLeft <= 0) this.end(false);
-                }, 1000);
+                    '<b>Puntuació:</b> 1.500 punts per guanyar.', 'COMENÇAR VENT',
+                    () => {
+                        this.isRunning = true;
+                        this.loop();
+                        this.timer = setInterval(() => {
+                            this.timeLeft--;
+                            document.getElementById('time').textContent = this.timeLeft;
+                            if(this.timeLeft <= 0) this.end(false);
+                        }, 1000);
+                    });
             }
 
             click(e) {

@@ -174,8 +174,15 @@
                 Casino.Audio.playTone(600, 'square', 0.1);
 
                 setTimeout(() => {
-                    if(s >= 4) {
+                    if(s > 4) {
                         alert("Has superat el límit del compàs! Perds.");
+                        this.end();
+                    } else if(s === 4) {
+                        // Compàs natural: 4.0 exacte sense necessitar el Joker
+                        this.credits += 50; this.wins++;
+                        Casino.Audio.playTone(900, 'sine', 0.3);
+                        alert("COMPÀS NATURAL 4.0! Premi doble.");
+                        this.updateUI();
                         this.end();
                     } else {
                         this.askJoker(s);
@@ -236,7 +243,7 @@
 
             win() {
                 Casino.Audio.playWin();
-                Casino.Rewards.saveProgress('reward_jokewild');
+                Casino.Rewards.saveProgress('reward_joker');
                 Casino.UI.showVictory("Ets un mestre de l'harmonia secreta! El diari de Clara Schumann és teu.", () => location.href = 'menu.html');
             }
         }

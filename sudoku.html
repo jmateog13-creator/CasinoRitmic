@@ -317,7 +317,7 @@
             <div class="relic-icon">📯</div>
             <p style="font-size: 1.5rem;">"LA TROMPA DE CAÇA DE TELEMANN"</p>
             <p>Georg Philipp Telemann va ser el compositor més prolífic de la història.</p>
-            <button class="btn" onclick="location.reload()">TORNAR</button>
+            <button class="btn" onclick="location.href='menu.html'">TORNAR</button>
         </div>
     </div>
 
@@ -391,18 +391,6 @@
                     if (initialMap[r][c]) {
                         tempBoard[r][c] = { val: NOTES[SOLUTION[r][c]].val, fixed: true };
                     }
-                }
-            }
-
-            // Fill some cells (Make it easier: fill 8 cells instead of 5)
-            let filled = 0;
-            const targetFilled = currentLevel === 1 ? 8 : 5; // 8 for easy, 5 for difficult
-            while (filled < targetFilled) {
-                const r = Math.floor(Math.random() * 4);
-                const c = Math.floor(Math.random() * 4);
-                if (!tempBoard[r][c].fixed) { // Only fill if not already fixed by initialMap
-                    tempBoard[r][c] = { val: NOTES[SOLUTION[r][c]].val, fixed: true };
-                    filled++;
                 }
             }
 

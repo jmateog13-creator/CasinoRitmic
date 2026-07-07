@@ -582,7 +582,7 @@
             <button class="instr-btn"
                 onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
         </div>
-    </div>!-- Reward Button -->
+    </div><!-- Reward Button -->
     <div id="reward-container">
         <button id="btn-reward" onclick="game.showReward()">
             <span>🎻</span> <span id="reward-text">Aconseguir el primer violí Stradivarius (1000/5000)</span>
@@ -638,8 +638,7 @@
         <div id="modal-content">
             <h2>Felicitats!</h2>
             <p>Has demostrat ser un mestre del ritme i l'estratègia.</p>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Violin_Stradivarius_1703.jpg/640px-Violin_Stradivarius_1703.jpg"
-                alt="Stradivarius">
+            <div style="font-size: 6rem; margin-bottom: 20px;">🎻</div>
             <p>Aquí tens el teu premi: <strong>El Primer Violí Stradivarius</strong>.</p>
             <button class="btn-close" onclick="document.getElementById('modal').style.display='none'">Tancar</button>
         </div>
@@ -718,7 +717,7 @@
             { name: "Silenci Blanca", value: 2, type: "rest", img: "images/silenciblanca.jpg" },
             { name: "Silenci Negra", value: 1, type: "rest", img: "images/silencinegra.jpg" },
             { name: "Silenci Corxera", value: 0.5, type: "rest", img: "images/silencicorxera.jpg" },
-            { name: "Silenci Semicorxera", value: 0.25, type: "rest", img: "images/semicorxera.jpg" }
+            { name: "Silenci Semicorxera", value: 0.25, type: "rest", img: "images/silencisemicorxera.jpg" }
         ];
 
         // --- CLASSES ---
@@ -1106,6 +1105,13 @@
             }
 
             nextTurn() {
+                // If only one player remains, they win the pot without showdown
+                const active = this.players.filter(p => !p.folded);
+                if (active.length === 1) {
+                    this.winByFold(active[0]);
+                    return;
+                }
+
                 this.turnIdx = (this.turnIdx + 1) % 3;
 
                 // Check if round complete (simplified: everyone acted once)
@@ -1184,9 +1190,25 @@
                 }
 
                 setTimeout(() => {
-                    document.getElementById(bestPlayer?.id).style.boxShadow = "none";
+                    if (bestPlayer) document.getElementById(bestPlayer.id).style.boxShadow = "none";
                     this.startRound();
                 }, 5000);
+            }
+
+            winByFold(winner) {
+                this.phase = 'showdown';
+                this.showMessage(`Guanya ${winner.name}! Tots els altres s'han retirat.`);
+                winner.money += this.pot;
+                winner.updateUI();
+                this.playSound('win');
+                this.updateRewardUI();
+
+                document.getElementById(winner.id).style.boxShadow = "0 0 50px var(--gold)";
+
+                setTimeout(() => {
+                    document.getElementById(winner.id).style.boxShadow = "none";
+                    this.startRound();
+                }, 3000);
             }
 
             updateRewardUI() {

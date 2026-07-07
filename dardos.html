@@ -140,7 +140,7 @@
                 Casino.Audio.playTone(400, 'square', 0.1);
                 this.updateUI();
 
-                if(p.sum > this.target || p.darts === 0) {
+                if(p.sum >= this.target || p.darts === 0) {
                     setTimeout(() => this.nextTurn(), 1000);
                 }
             }
@@ -160,7 +160,7 @@
                     p.darts--;
                     Casino.Audio.playTone(300, 'square', 0.1);
                     this.updateUI();
-                    if(p.sum > this.target || p.darts === 0) {
+                    if(p.sum >= this.target || p.darts === 0) {
                         clearInterval(interval);
                         setTimeout(() => this.nextTurn(), 1000);
                     }

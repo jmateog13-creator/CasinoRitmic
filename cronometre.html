@@ -208,8 +208,9 @@
 <body>
 
     <div id="game-container">
-        <div id="ui-bar">
-            <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
+        <div id="ui-bar" style="position:absolute; top:15px; left:20px; z-index:10;">
+            <a href="menu.html" class="btn-menu"
+                style="color:var(--gold); text-decoration:none; font-size:1.3rem; font-weight:bold;">🏠 MENÚ</a>
         </div>
         <div id="score-board">
             <div class="score-dot" id="dot-0"></div>
@@ -263,13 +264,6 @@
 
         document.body.addEventListener('click', () => {
             if (bgMusic.paused) {
-                // Default volume if no slider, or add slider?
-                // Cronometre doesn't have a volume slider in the code I saw!
-                // Let's check the code again.
-                // It has no volume slider in HTML.
-                // I should add one or just play at default volume.
-                // "No cambies nada" -> maybe I shouldn't add UI elements.
-                // But I need to play music.
                 bgMusic.volume = 0.3;
                 bgMusic.play().catch(e => console.log(e));
             }

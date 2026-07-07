@@ -513,6 +513,13 @@
                 this.pyramid.forEach(card => {
                     if (card.isRemoved) return;
 
+                    // Extra hand cards (row < 0) are never covered by the pyramid
+                    if (card.row < 0) {
+                        card.el.classList.remove('blocked');
+                        card.isBlocked = false;
+                        return;
+                    }
+
                     let blocked = false;
                     // Check row below
                     const nextRow = card.row + 1;
@@ -645,6 +652,9 @@
             }
 
             removeDiscard() {
+                // Remove the matched card from the discard array so it doesn't return on recycle
+                const idx = this.discard.indexOf(this.currentDiscard);
+                if (idx !== -1) this.discard.splice(idx, 1);
                 document.getElementById('discard').innerHTML = '';
                 document.getElementById('discard').onclick = null;
                 this.currentDiscard = null;

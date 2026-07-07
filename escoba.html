@@ -97,6 +97,9 @@
                 this.cHand = [];
                 this.table = [];
                 this.escobas = 0;
+                this.pCaptures = 0;
+                this.cCaptures = 0;
+                this.gameOver = false;
                 this.selP = null;
                 this.selT = [];
                 this.turn = 'player';
@@ -116,7 +119,7 @@
             }
 
             deal() {
-                if(this.deck.length === 0) return;
+                if(this.deck.length === 0) { this.endGame(); return; }
                 this.pHand = this.deck.splice(0, 3);
                 this.cHand = this.deck.splice(0, 3);
                 this.render();
@@ -192,6 +195,9 @@
                 const ids = tCards.map(c => c.uid);
                 this.table = this.table.filter(c => !ids.includes(c.uid));
 
+                if(who === 'player') this.pCaptures += tCards.length + 1;
+                else this.cCaptures += tCards.length + 1;
+
                 Casino.Audio.playTone(800, 'sine', 0.2);
                 if(this.table.length === 0) {
                     this.showMsg();
@@ -214,7 +220,8 @@
                 this.selP = null; this.selT = [];
                 this.render();
                 if(this.pHand.length === 0 && this.cHand.length === 0) this.deal();
-                
+                if(this.gameOver) return;
+
                 if(this.turn === 'player') {
                     this.turn = 'cpu';
                     setTimeout(() => this.ai(), 1500);
@@ -224,14 +231,15 @@
             }
 
             ai() {
+                if(this.gameOver) return;
+                if(this.cHand.length === 0) { this.next(); return; }
                 let move = null;
                 for(let c of this.cHand) {
                     const subset = this.find(this.table, 2 - c.v);
-                    if(subset) { move = {c, t: subset}; break; }
+                    if(subset && subset.length > 0) { move = {c, t: subset}; break; }
                 }
-                if(move) this.capture(move.c, move.t, 'cpu');
-                else { this.table.push(this.cHand.pop()); }
-                this.next();
+                if(move) { this.capture(move.c, move.t, 'cpu'); }
+                else { this.table.push(this.cHand.pop()); this.next(); }
             }
 
             find(arr, target) {
@@ -244,7 +252,18 @@
                 return null;
             }
 
+            endGame() {
+                this.gameOver = true;
+                if(this.pCaptures > this.cCaptures) { this.win(); return; }
+                Casino.Audio.playLose();
+                const msg = this.pCaptures === this.cCaptures ?
+                    `S'han acabat les cartes! Empat a ${this.pCaptures} cartes capturades.` :
+                    `S'han acabat les cartes! La IA n'ha capturat ${this.cCaptures} i tu ${this.pCaptures}.`;
+                Casino.UI.showModal('escoba-end', 'FI DE LA PARTIDA', msg, 'REINTENTAR', () => location.reload());
+            }
+
             win() {
+                this.gameOver = true;
                 Casino.Audio.playWin();
                 Casino.Rewards.saveProgress('reward_escoba');
                 Casino.UI.showVictory("Ets un mestre del ritme flamenc! Les castanyoles d'en Falla són teves.", () => location.href = 'menu.html');

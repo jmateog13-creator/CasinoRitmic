@@ -264,7 +264,7 @@
             <h3 style="color: var(--gold);">EL VIOLÍ DE STAINER</h3>
             <p style="font-style: italic; color: #aaa;">"Jakob Stainer, el gran rival de Stradivari, els seus violins
                 són considerats una perfecció barroca. Símbol d'ordre i estructura!"</p>
-            <button class="action-btn" onclick="location.reload()">TORNAR AL MENÚ</button>
+            <button class="action-btn" onclick="location.href='menu.html'">TORNAR AL MENÚ</button>
         </div>
     </div>
 
@@ -577,6 +577,21 @@
             }
 
             render() {
+                // Stock
+                const stockEl = document.getElementById('stock');
+                stockEl.innerHTML = '';
+                if (this.deck.length > 0) {
+                    const back = document.createElement('div');
+                    back.className = 'card card-back';
+                    const count = document.createElement('div');
+                    count.style.cssText = 'position:absolute; bottom:5px; right:8px; color:var(--gold); font-weight:bold; text-shadow:1px 1px 2px #000;';
+                    count.textContent = this.deck.length;
+                    back.appendChild(count);
+                    stockEl.appendChild(back);
+                } else {
+                    stockEl.innerHTML = '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:2rem;">♻️</div>';
+                }
+
                 // Waste
                 const wasteEl = document.getElementById('waste');
                 wasteEl.innerHTML = '';

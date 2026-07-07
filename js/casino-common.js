@@ -175,12 +175,13 @@ window.Casino = (() => {
                 <div class="modal-content">
                     <h2 style="color: var(--gold);">${title}</h2>
                     <div class="modal-body">${content}</div>
-                    <button class="modal-btn">${bntText}</button>
+                    <button class="modal-btn modal-footer-btn">${bntText}</button>
                 </div>
             `;
-            
+
             modal.style.display = 'flex';
-            modal.querySelector('.modal-btn').onclick = () => {
+            // .modal-footer-btn: el contenido puede incluir sus propios .modal-btn — no secuestrarlos
+            modal.querySelector('.modal-footer-btn').onclick = () => {
                 modal.style.display = 'none';
                 if (callback) callback();
             };

@@ -146,17 +146,19 @@
             }
 
             init() {
-                Casino.UI.showModal('tir-instr', 'L\'ARC D\'ARCANGELO CORELLI', 
+                Casino.UI.showModal('tir-instr', 'L\'ARC D\'ARCANGELO CORELLI',
                     'Posa a prova la teva punteria disparant a les figures rítmiques sol·licitades.<br><br>' +
-                    '<b>Repte:</b> Aconsegueix 1500 punts per guanyar l\'arc de violí original de Corelli!', 'CARREGAR ARMA');
-                
+                    '<b>Repte:</b> Aconsegueix 1500 punts per guanyar l\'arc de violí original de Corelli!', 'CARREGAR ARMA',
+                    () => this.nextRound()); // No spawns until the modal is closed
+
                 this.canvas.addEventListener('mousedown', (e) => this.shoot(e));
-                this.nextRound();
                 this.loop();
             }
 
             nextRound() {
                 this.running = false;
+                this.targets = [];
+                this.spawnTimer = 0;
                 const goals = ['negra', 'corxera', 'blanca'];
                 this.targetKey = goals[this.round - 1];
                 document.getElementById('hint').textContent = `DISPARA A LES ${TYPES[this.targetKey].label}!`;
@@ -191,7 +193,13 @@
                     }
                 }
                 document.getElementById('score').textContent = this.score;
-                if(this.score >= 1500 && hit) this.win();
+                if(!hit) return;
+                if(this.score >= 1500) {
+                    this.win(); // Completar la ronda 3 (1500) = victòria
+                } else if(this.round < 3 && this.score >= this.round * 500) {
+                    this.round++; // Nova ronda cada 500 punts nets
+                    this.nextRound();
+                }
             }
 
             update() {
