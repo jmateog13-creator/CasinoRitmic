@@ -2,147 +2,75 @@
 <html lang="ca">
 
 <head>
+    <base href="/1.Gamificacion/CasinoRitmic/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Casino Rítmic</title>
+    <link rel="stylesheet" href="css/casino-common.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --felt-green: #2d5a27;
-            --felt-dark: #1a3c1a;
-            --wood-border: #5d4037;
-            --gold: #ffd700;
-            --text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-            /* COLOR overlay */
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #111;
-            font-family: 'Georgia', serif;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            user-select: none;
-        }
-
-        #main-container {
-            width: 95vw;
-            height: 90vh;
-            background: radial-gradient(circle at center, var(--felt-green), var(--felt-dark));
-            border: 20px solid var(--wood-border);
-            border-radius: 50px;
-            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.5);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        /* Texture overlay */
-        #main-container::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
-            pointer-events: none;
-            border-radius: 30px;
-        }
-
         h1 {
-            font-size: 5em;
-            margin-bottom: 0.2em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-            letter-spacing: 2px;
+            font-size: clamp(3rem, 10vw, 6rem);
+            margin-bottom: 0.1em;
+            text-shadow: var(--text-shadow);
+            color: var(--gold);
         }
 
         h2 {
-            font-size: 2em;
+            font-size: clamp(1.2rem, 4vw, 2rem);
             margin-top: 0;
             margin-bottom: 2em;
-            color: #e0e0e0;
+            color: #ccc;
             font-weight: normal;
             font-style: italic;
         }
 
         .warning-box {
-            border: 2px solid #ffd700;
-            padding: 20px;
-            border-radius: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            max-width: 600px;
+            border: 2px solid var(--gold);
+            padding: 25px;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            max-width: 700px;
             margin-bottom: 40px;
+            backdrop-filter: blur(5px);
         }
 
         .warning-title {
-            color: #ffd700;
+            color: var(--gold);
             font-weight: bold;
-            font-size: 1.2em;
-            margin-bottom: 10px;
+            font-size: 1.3em;
+            margin-bottom: 12px;
             display: block;
+            text-transform: uppercase;
         }
 
         .warning-text {
-            color: #e0e0e0;
-            font-size: 0.9em;
-            line-height: 1.5;
-        }
-
-        .btn-enter {
-            background: linear-gradient(to bottom, #ffd700, #b8860b);
-            border: 2px solid #fff;
-            color: #3e2723;
-            font-family: 'Georgia', serif;
-            font-size: 1.5em;
-            font-weight: bold;
-            padding: 15px 50px;
-            border-radius: 50px;
-            cursor: pointer;
-            text-decoration: none;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: inline-block;
-        }
-
-        .btn-enter:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+            color: #eee;
+            font-size: 1em;
+            line-height: 1.6;
         }
     </style>
 </head>
 
 <body>
-
-    <div id="main-container">
+    <div class="casino-table" style="align-items: center; justify-content: center; text-align: center;">
         <h1>CASINO RÍTMIC</h1>
         <h2>El Casino de Beethoven</h2>
 
         <div class="warning-box">
             <span class="warning-title">⚠️ AVÍS IMPORTANT:</span>
             <span class="warning-text">Aquests jocs són per a practicar les figures rítmiques. En cap moment s’està
-                fomentant el joc ni les apostes. S'ha de tenir molt de compte amb els jocs d’atzar.</span>
+                fomentant el joc ni les apostes. S'ha de tenir molt de compte amb els jocs d’atzar i l'addicció al joc.</span>
         </div>
 
-        <a href="menu.html" class="btn-enter" onclick="playMusic()">ENTRAR AL CASINO</a>
+        <a href="menu.html" class="modal-btn" style="text-decoration: none;">ENTRAR AL CASINO</a>
+    </div>
 
-        <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
-
-        <script>
-            function playMusic() {
-                // Actually, we can't persist audio across pages easily without SPA.
-                // But the user asked for music on both pages.
-                // We will just let menu.html start it again.
-            }
-        </script>
+    <script src="js/casino-common.js"></script>
+    <script>
+        // Init audio context on index just to be ready
+        Casino.Audio.init('music/background_music_main.mp3');
+    </script>
 </body>
 
 </html>

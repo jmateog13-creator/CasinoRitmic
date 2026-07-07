@@ -4,409 +4,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Martell del Saber</title>
+    <title>Martell Rítmic</title>
+    <link rel="stylesheet" href="css/casino-common.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --wood-dark: #3e2723;
-            --wood-light: #5d4037;
-            --gold: #ffd700;
-            --metal: #b0bec5;
-            --red-btn: #d32f2f;
-            --neon-glow: 0 0 10px var(--gold);
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #1a0505;
-            background-image: repeating-linear-gradient(45deg, #2b1b17 0, #2b1b17 10px, #1a0505 10px, #1a0505 20px);
-            font-family: 'Courier New', monospace;
-            color: #fff;
-            overflow: hidden;
-            height: 100vh;
+        .game-layout {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
+            justify-content: center;
+            flex: 1;
+            padding: 40px;
+            gap: 60px;
+            width: 100%;
         }
 
-        #game-container {
-            display: flex;
-            width: 90vw;
-            height: 90vh;
-            margin-top: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 10px solid var(--wood-light);
+        .quiz-panel {
+            flex: 1;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid var(--glass-border);
             border-radius: 20px;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
-            position: relative;
-        }
-
-        /* Left Side: Quiz */
-        #quiz-panel {
-            flex: 1;
-            padding: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            border-right: 5px solid var(--wood-light);
+            gap: 20px;
+            max-width: 500px;
         }
 
-        #question-box {
-            background: #000;
-            border: 2px solid var(--gold);
+        .question-box {
+            background: rgba(255,255,255,0.05);
             padding: 20px;
-            font-size: 1.5rem;
-            text-align: center;
-            margin-bottom: 20px;
-            box-shadow: var(--neon-glow);
-            min-height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #options-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-        }
-
-        .option-btn {
-            background: var(--wood-dark);
-            color: var(--gold);
-            border: 2px solid var(--gold);
-            padding: 15px;
+            border-radius: 15px;
             font-size: 1.2rem;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+        .opt-btn {
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--gold);
+            color: white;
+            border-radius: 8px;
             cursor: pointer;
+            text-align: left;
             transition: all 0.2s;
-            text-transform: uppercase;
-            font-weight: bold;
         }
+        .opt-btn:hover { background: var(--gold); color: #000; }
 
-        .option-btn:hover {
-            background: var(--gold);
-            color: #000;
-        }
-
-        /* Right Side: High Striker Tower */
-        #striker-panel {
-            flex: 1;
+        .tower-panel {
+            width: 300px;
+            height: 500px;
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-end;
-            padding-bottom: 50px;
-            background: linear-gradient(to right, #1a1a1a, #2a2a2a);
         }
 
-        #tower {
-            width: 60px;
-            height: 70%;
-            background: linear-gradient(to bottom, #ff0000, #ffff00, #00ff00);
-            border: 4px solid #555;
+        .tower {
+            width: 40px;
+            height: 100%;
+            background: linear-gradient(to bottom, #d32f2f, #fbc02d, #388e3c);
+            border: 4px solid #333;
             border-radius: 10px;
             position: relative;
-            margin-bottom: 20px;
         }
 
-        #weight {
-            width: 80px;
-            height: 40px;
-            background: radial-gradient(circle, #fff, #888);
+        .weight {
+            width: 60px;
+            height: 20px;
+            background: silver;
             border: 2px solid #000;
-            border-radius: 5px;
             position: absolute;
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            transition: bottom 1s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: bottom 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 2;
         }
 
-        #bell {
-            width: 80px;
-            height: 80px;
+        .bell {
+            width: 100px;
+            height: 100px;
             background: radial-gradient(circle, var(--gold), #b8860b);
             border-radius: 50%;
             position: absolute;
             top: -50px;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 4px solid #fff;
-            box-shadow: 0 0 20px var(--gold);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
-            z-index: 1;
+            font-size: 3rem;
+            border: 5px solid white;
+            box-shadow: 0 0 30px var(--gold);
         }
 
-        #hammer-area {
-            position: relative;
-            height: 150px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-        }
-
-        #base-plate {
-            width: 100px;
-            height: 20px;
-            background: #555;
-            border-radius: 50%;
-            margin-bottom: 10px;
-        }
-
-        #hammer {
+        .hammer {
             font-size: 6rem;
             position: absolute;
-            bottom: 50px;
-            right: 50px;
-            transform-origin: bottom right;
+            bottom: -20px;
+            right: -100px;
             transform: rotate(45deg);
             transition: transform 0.2s;
         }
-
-        .hammer-hit {
-            animation: hit 0.3s forwards;
-        }
-
-        @keyframes hit {
-            0% {
-                transform: rotate(45deg);
-            }
-
-            50% {
-                transform: rotate(-45deg);
-            }
-
-            100% {
-                transform: rotate(45deg);
-            }
-        }
-
-        #force-bar-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 200px;
-            height: 30px;
-            background: #333;
-            border: 2px solid var(--gold);
-            border-radius: 15px;
-            overflow: hidden;
-            display: none;
-            /* Hide old bar */
-        }
-
-        /* New Vertical Scale */
-        #scale-container {
-            position: absolute;
-            right: 20px;
-            top: 50px;
-            bottom: 50px;
-            width: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .scale-mark {
-            font-size: 1.5rem;
-            color: var(--gold);
-            font-weight: bold;
-            text-shadow: 2px 2px 0 #000;
-            position: relative;
-        }
-
-        .scale-mark::after {
-            content: "";
-            position: absolute;
-            left: -10px;
-            top: 50%;
-            width: 8px;
-            height: 2px;
-            background: var(--gold);
-        }
-
-        #force-bar-fill {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(to right, #ff0000, #ffff00, #00ff00);
-            transition: width 0.5s;
-        }
-
-        /* ... existing styles ... */
-
-        #force-bar-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 200px;
-            height: 30px;
-            background: #333;
-            border: 2px solid var(--gold);
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
-        #force-bar-fill {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(to right, #ff0000, #ffff00, #00ff00);
-            transition: width 0.5s;
-        }
-
-        /* UI Elements */
-        #ui-bar {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 100;
-        }
-
-        .btn-menu {
-            text-decoration: none;
-            color: var(--gold);
-            font-size: 1.2rem;
-            border: 2px solid var(--gold);
-            padding: 5px 15px;
-            background: rgba(0, 0, 0, 0.5);
-        }
-
-        #audio-controls {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 100;
-        }
-
-        input[type=range] {
-            width: 100px;
-        }
-
-        /* Modals */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: #1a0f0a;
-            padding: 40px;
-            border: 4px solid var(--gold);
-            text-align: center;
-            max-width: 600px;
-            color: #fff;
-            box-shadow: 0 0 50px var(--gold);
-        }
-
-        .btn-start {
-            background: var(--gold);
-            color: #000;
-            font-size: 1.5rem;
-            padding: 10px 30px;
-            border: none;
-            cursor: pointer;
-            margin-top: 20px;
-            font-weight: bold;
-        }
-
-        .relic-icon {
-            font-size: 5rem;
-            margin: 20px 0;
-        }
+        .hammer.hit-anim { transform: rotate(-45deg); }
     </style>
 </head>
 
 <body>
-
-    <div id="ui-bar">
-        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
-    </div>
-
-    <div id="audio-controls">
-        <span>🔊</span>
-        <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5">
-    </div>
-
-    <div id="game-container">
-        <div id="quiz-panel">
-            <h2 style="color:var(--gold); text-align:center;">FASE DE PREGUNTES</h2>
-            <div id="question-box">Pregunta...</div>
-            <div id="options-grid">
-                <!-- Options injected here -->
+    <div class="casino-table">
+        <div class="game-layout">
+            <div class="quiz-panel" id="quiz-ui">
+                <div style="color:var(--gold); font-size:0.8rem; text-transform:uppercase; letter-spacing:2px;">Pregunta <span id="q-idx">1</span>/10</div>
+                <div class="question-box" id="question">Carregant preguntes...</div>
+                <div class="options-list" id="options"></div>
             </div>
-            <div style="margin-top:20px; text-align:center; color:#aaa;">
-                Pregunta <span id="q-num">1</span>/10
-            </div>
-        </div>
 
-        <div id="striker-panel">
-            <div id="scale-container">
-                <!-- Numbers injected by JS -->
-            </div>
-            <div id="bell">🔔</div>
-            <div id="tower">
-                <div id="weight"></div>
-            </div>
-            <div id="hammer-area">
-                <div id="base-plate"></div>
-                <div id="hammer">🔨</div>
+            <div class="tower-panel">
+                <div class="bell">🔔</div>
+                <div class="tower">
+                    <div class="weight" id="weight"></div>
+                </div>
+                <div class="hammer" id="hammer">🔨</div>
             </div>
         </div>
     </div>
 
-    <!-- Intro Modal -->
-    <div id="intro-modal" class="modal">
-        <div class="modal-content">
-            <h1 style="color:var(--gold)">EL MARTELL DEL SABER</h1>
-            <p>Benvingut a la prova de força musical definitiva.</p>
-            <p>Respon correctament per acumular força.</p>
-            <p>Si falles, el martell colpejarà amb la força que tinguis.</p>
-            <p>Arriba al <strong>100% (10 encerts)</strong> per guanyar la relíquia!</p>
-            <button class="btn-start" onclick="startGame()">COMENÇAR</button>
-        </div>
-    </div>
-
-    <!-- Result Modal -->
-    <div id="result-modal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h2 id="result-title">RESULTAT</h2>
-            <p id="result-msg">...</p>
-            <button class="btn-start" onclick="location.reload()">TORNAR A PROVAR</button>
-        </div>
-    </div>
-
-    <!-- Win Modal -->
-    <div id="win-modal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h2 style="color:var(--gold)">COMIAT FATAL!</h2>
-            <div class="relic-icon">🔨</div>
-            <p style="font-size:1.2rem; color:var(--gold)">EL MARTELL DE LA SIMFONIA Nº 6 DE MAHLER</p>
-            <p>L'instrument massís que Gustav Mahler va utilitzar per simbolitzar els cops del destí.</p>
-            <p>Has dominat la força del ritme!</p>
-            <button class="btn-start" onclick="location.href='menu.html'">TORNAR AL MENÚ</button>
-        </div>
-    </div>
-
+    <script src="js/casino-common.js"></script>
     <script>
-        // Game Data
+        Casino.Audio.init('music/background_music_main.mp3');
+        Casino.UI.injectBasicUI('Martell Rítmic');
+
         const QUESTIONS = [
             { q: "Quantes Negres caben en una Rodona?", opts: ["2", "4", "8"], a: 1 },
             { q: "Quina figura dura 0.5 temps?", opts: ["Negra", "Corxera", "Blanca"], a: 1 },
@@ -420,166 +150,82 @@
             { q: "Com es diu el silenci de negra?", opts: ["Z", "Barret", "Rodona"], a: 0 }
         ];
 
-        let currentQ = 0;
-        let force = 0;
-        let audioCtx;
-
-        // Init Scale
-        const scaleContainer = document.getElementById('scale-container');
-        for (let i = 10; i >= 1; i--) {
-            const mark = document.createElement('div');
-            mark.className = 'scale-mark';
-            mark.textContent = i;
-            scaleContainer.appendChild(mark);
-        }
-
-        function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-        }
-
-
-
-        function playSound(type) {
-            if (!audioCtx) return;
-            const vol = document.getElementById('volume').value;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            const now = audioCtx.currentTime;
-
-            if (type === 'correct') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(440, now);
-                osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
-                gain.gain.setValueAtTime(vol * 0.3, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.2);
-                osc.start();
-                osc.stop(now + 0.2);
-            } else if (type === 'hit') {
-                // Big thud
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(100, now);
-                osc.frequency.exponentialRampToValueAtTime(10, now + 0.3);
-                gain.gain.setValueAtTime(vol, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                osc.start();
-                osc.stop(now + 0.3);
-            } else if (type === 'ding') {
-                // Bell
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(2000, now);
-                gain.gain.setValueAtTime(vol * 0.5, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
-                osc.start();
-                osc.stop(now + 1.5);
-            }
-        }
-
-        function startGame() {
-            document.getElementById('intro-modal').style.display = 'none';
-            initAudio();
-            loadQuestion();
-        }
-
-        function loadQuestion() {
-            if (currentQ >= QUESTIONS.length) {
-                // All correct!
-                resolveGame(true);
-                return;
+        class StrikerGame {
+            constructor() {
+                this.cur = 0;
+                this.force = 0;
+                this.init();
             }
 
-            const q = QUESTIONS[currentQ];
-            document.getElementById('question-box').textContent = q.q;
-            document.getElementById('q-num').textContent = currentQ + 1;
-
-            const grid = document.getElementById('options-grid');
-            grid.innerHTML = '';
-
-            q.opts.forEach((opt, idx) => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                btn.textContent = opt;
-                btn.onclick = () => checkAnswer(idx);
-                grid.appendChild(btn);
-            });
-        }
-
-        function checkAnswer(idx) {
-            if (idx === QUESTIONS[currentQ].a) {
-                // Correct
-                force++;
-                // Update Progress Bar (Visual Weight)
-                // The weight animation handles the visual feedback
-                playSound('correct');
-                currentQ++;
-                loadQuestion();
-            } else {
-                // Wrong - End Game immediately
-                resolveGame(false);
+            init() {
+                Casino.UI.showModal('strik-instr', 'EL MARTELL DE MAHLER', 
+                    'Posa a prova els teus coneixements musicals per carregar el martell de Gustav Mahler.<br><br>' +
+                    '<b>Repte:</b> Respon 10 preguntes correctament per tocar la campana i guanyar el martell del destí.', 'DEMOSTRAR FORÇA');
+                
+                this.load();
             }
-        }
 
-        function resolveGame(perfect) {
-            // Disable buttons
-            document.getElementById('options-grid').innerHTML = '';
-            document.getElementById('question-box').textContent = "RESOLENT...";
+            load() {
+                if(this.cur >= QUESTIONS.length) { this.resolve(); return; }
+                const q = QUESTIONS[this.cur];
+                document.getElementById('q-idx').textContent = this.cur + 1;
+                document.getElementById('question').textContent = q.q;
+                const opts = document.getElementById('options');
+                opts.innerHTML = '';
+                q.opts.forEach((o, i) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'opt-btn';
+                    btn.textContent = o;
+                    btn.onclick = () => this.answer(i);
+                    opts.appendChild(btn);
+                });
+            }
 
-            // Animate Hammer
-            const hammer = document.getElementById('hammer');
-            hammer.classList.add('hammer-hit');
+            answer(idx) {
+                if(idx === QUESTIONS[this.cur].a) {
+                    this.force++;
+                    Casino.Audio.playTone(800, 'sine', 0.1);
+                    this.cur++;
+                    this.load();
+                } else {
+                    Casino.Audio.playTone(100, 'sawtooth', 0.5);
+                    this.resolve();
+                }
+            }
 
-            setTimeout(() => {
-                playSound('hit');
-                // Animate Weight
-                const weight = document.getElementById('weight');
-                const towerHeight = document.getElementById('tower').offsetHeight;
-                // Calculate percentage (max 10)
-                const percentage = (force / 10) * 100;
-                // Adjust for weight height relative to tower
-                weight.style.bottom = `${percentage}%`;
-
+            resolve() {
+                document.getElementById('quiz-ui').style.opacity = '0.5';
+                document.getElementById('quiz-ui').style.pointerEvents = 'none';
+                
+                const h = document.getElementById('hammer');
+                h.classList.add('hit-anim');
+                
                 setTimeout(() => {
-                    if (force === 10) {
-                        playSound('ding');
-                        setTimeout(showWin, 1000);
+                    Casino.Audio.playTone(100, 'square', 0.3);
+                    const w = document.getElementById('weight');
+                    const pct = (this.force / 10) * 100;
+                    w.style.bottom = pct + '%';
+                    
+                    if(this.force === 10) {
+                        setTimeout(() => this.win(), 1000);
                     } else {
-                        showResult();
+                        setTimeout(() => {
+                            alert(`Has aconseguit ${this.force} punts de força. Necessites 10 per guanyar!`);
+                            location.reload();
+                        }, 1500);
                     }
-                }, 1000);
-            }, 300);
-        }
-
-        function showResult() {
-            const modal = document.getElementById('result-modal');
-            const title = document.getElementById('result-title');
-            const msg = document.getElementById('result-msg');
-
-            if (force < 4) {
-                title.textContent = "NIVELL PRINCIPIANT";
-                msg.textContent = `Has aconseguit ${force} punts. Et falta pràctica!`;
-            } else if (force < 8) {
-                title.textContent = "NIVELL INTERMEDI";
-                msg.textContent = `Has aconseguit ${force} punts. No està malament!`;
-            } else {
-                title.textContent = "NIVELL EXPERT";
-                msg.textContent = `Has aconseguit ${force} punts. Gairebé toques la campana!`;
+                }, 300);
             }
-            modal.style.display = 'flex';
+
+            win() {
+                Casino.Audio.playTone(1500, 'sine', 1); // Bell sound
+                Casino.Audio.playWin();
+                Casino.Rewards.saveProgress('reward_highstriker');
+                Casino.UI.showVictory("Has dominat el martell del destí! La relíquia de Mahler és teva.", () => location.href = 'menu.html');
+            }
         }
 
-        function showWin() {
-            // Save Reward
-            const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-            rewards['reward_highstriker'] = true;
-            sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
-
-            document.getElementById('win-modal').style.display = 'flex';
-        }
+        const game = new StrikerGame();
     </script>
 </body>
-
 </html>

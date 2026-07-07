@@ -5,339 +5,137 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tetris Rítmic</title>
+    <link rel="stylesheet" href="css/casino-common.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --gold: #ffd700;
-            --neon-blue: #00ffff;
-            --felt-green: #004d00;
-            --dark-red: #8b0000;
-            --bg: #111;
-        }
-
-        /* Instructions Modal */
-        #instructions-modal {
+        .game-layout {
             display: flex;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
+            gap: 30px;
+            align-items: flex-start;
             justify-content: center;
-            align-items: center;
-        }
-
-        .instr-content {
-            background: #1a0505;
-            padding: 40px;
-            border: 4px double var(--gold);
-            text-align: center;
-            max-width: 600px;
-            color: #fff;
-            position: relative;
-        }
-
-        .instr-close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #aaa;
-            font-size: 2rem;
-            cursor: pointer;
-        }
-
-        .instr-btn {
-            padding: 10px 30px;
-            font-size: 1.2rem;
-            background: var(--gold);
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #1a0505;
-            margin-top: 20px;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg);
-            color: #fff;
-            font-family: 'Georgia', serif;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        #game-container {
-            display: flex;
-            gap: 20px;
-            border: 10px solid #4a2c0f;
-            /* Wood frame */
+            flex: 1;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-            background: radial-gradient(circle, var(--felt-green), #002200);
         }
 
-        canvas {
-            border: 2px solid var(--gold);
-            background: rgba(0, 0, 0, 0.5);
+        #tetris-canvas {
+            border: 4px solid var(--gold);
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
 
-        #sidebar {
-            width: 200px;
+        .side-panel {
             display: flex;
             flex-direction: column;
             gap: 20px;
+            width: 220px;
         }
 
-        .panel {
-            background: rgba(0, 0, 0, 0.6);
+        .stat-box {
+            background: rgba(0, 0, 0, 0.5);
             border: 1px solid var(--gold);
             padding: 15px;
-            border-radius: 5px;
-            text-align: center;
-        }
-
-        h2 {
-            margin: 0 0 10px 0;
-            color: var(--gold);
-            font-size: 1.2rem;
-            text-shadow: 1px 1px 0 #000;
-        }
-
-        .stat-val {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        /* Modals */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .modal-content {
-            background: #1a0f0a;
-            padding: 40px;
-            border: 4px solid var(--gold);
             border-radius: 10px;
             text-align: center;
-            max-width: 500px;
-            box-shadow: 0 0 50px var(--gold);
         }
 
-        .btn {
-            background: linear-gradient(to bottom, #ffd700, #b8860b);
-            color: #000;
-            border: 2px solid #fff;
-            padding: 10px 30px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
+        .stat-label { font-size: 0.9rem; color: var(--gold); text-transform: uppercase; margin-bottom: 5px; }
+        .stat-val { font-size: 1.8rem; font-weight: bold; }
+
+        #next-canvas {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,215,0,0.3);
+            margin-top: 10px;
         }
 
-        .relic-icon {
-            font-size: 5rem;
-            margin: 20px 0;
+        .controls-hint {
+            font-size: 0.8rem;
+            color: #aaa;
+            line-height: 1.5;
         }
     </style>
 </head>
 
 <body>
-
-    <div id="game-container">
-        <canvas id="tetris" width="320" height="600"></canvas>
-        <div id="sidebar">
-            <div class="panel">
-                <h2>PUNTUACIÓ</h2>
-                <div id="score" class="stat-val">0</div>
-                <div>OBJECTIU: 2000</div>
-            </div>
-            <div class="panel">
-                <h2>SEGÜENT</h2>
-                <canvas id="next" width="100" height="100"></canvas>
-            </div>
-            <div class="panel">
-                <h2>CONTROLS</h2>
-                <p>⬅️ ➡️ Moure</p>
-                <p>⬇️ Baixar</p>
-            </div>
-            <div class="panel">
-                <h2>ÀUDIO</h2>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <button id="mute-btn"
-                        style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">🔊</button>
-                    <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5"
-                        style="width: 80px; accent-color: var(--gold);">
+    <div class="casino-table">
+        <div class="game-layout">
+            <canvas id="tetris-canvas" width="300" height="600"></canvas>
+            
+            <div class="side-panel">
+                <div class="stat-box">
+                    <div class="stat-label">Punts</div>
+                    <div id="score" class="stat-val">0</div>
+                    <div style="font-size:0.7rem; margin-top:5px; opacity:0.6;">OBJECTIU: 2000</div>
                 </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">Següent</div>
+                    <canvas id="next-canvas" width="120" height="120"></canvas>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-label">Controls</div>
+                    <div class="controls-hint">
+                        ⬅️ ➡️ Moure Lateral<br>
+                        ⬇️ Baixada Ràpida<br>
+                        Pausa: (En desenvolupament)
+                    </div>
+                </div>
+
+                <button class="modal-btn" onclick="location.reload()">REINICIAR</button>
             </div>
-            <div class="panel">
-                <a href="menu.html" class="btn" style="text-decoration:none; display:block; margin-top:0;">SORTIR</a>
-            </div>
         </div>
     </div>
 
-    <!-- Start Modal -->
-    <div id="start-modal" class="modal" style="display: flex;">
-        <div class="modal-content">
-            <h2 style="color: var(--neon-purple);">TETRIS RÍTMIC</h2>
-            <p>Completa compassos de 4/4.</p>
-            <p>Amplada total = 4 Temps (8 blocs).</p>
-            <p>Rodona = 8 blocs, Blanca = 4, Negra = 2, Corxera = 1.</p>
-            <button class="btn" onclick="startGame()">START</button>
-        </div>
-    </div>
-
-    <!-- Win Modal -->
-    <div id="win-modal" class="modal">
-        <div class="modal-content">
-            <h2 style="color: var(--neon-blue);">VISIÓ DIVINA!</h2>
-            <div class="relic-icon">🪶</div>
-            <p style="font-size: 1.5rem;">"LA PLOMA MÍSTICA DE HILDEGARD"</p>
-            <p>La pluma de la gran abadessa i compositora medieval. Deia que la música era el record del Paradís!</p>
-            <button class="btn" onclick="location.reload()">TORNAR</button>
-        </div>
-    </div>
-
-    <!-- Game Over Modal -->
-    <div id="lose-modal" class="modal">
-        <div class="modal-content">
-            <h2 style="color: red;">GAME OVER</h2>
-            <p>El tauler s'ha omplert.</p>
-            <button class="btn" onclick="location.reload()">REINTENTAR</button>
-        </div>
-    </div>
-
-    <audio id="bg-music" src="music/background_music_tetris.mp3" loop></audio>
+    <script src="js/casino-common.js"></script>
     <script>
-        // Background Music
-        const bgMusic = document.getElementById('bg-music');
-        const muteBtn = document.getElementById('mute-btn');
-        let isMuted = false;
-        let previousVolume = 0.5;
+        Casino.Audio.init('music/background_music_tetris.mp3');
+        Casino.UI.injectBasicUI('Tetris Rítmic');
 
-        document.body.addEventListener('click', () => {
-            if (bgMusic.paused && !isMuted) {
-                bgMusic.volume = document.getElementById('volume').value * 0.5;
-                bgMusic.play().catch(e => console.log(e));
-            }
-        }, { once: true });
-
-        document.getElementById('volume').addEventListener('input', (e) => {
-            if (isMuted) {
-                isMuted = false;
-                muteBtn.textContent = '🔊';
-            }
-            bgMusic.volume = e.target.value * 0.5;
-        });
-
-        muteBtn.addEventListener('click', () => {
-            isMuted = !isMuted;
-            if (isMuted) {
-                previousVolume = bgMusic.volume;
-                bgMusic.volume = 0;
-                muteBtn.textContent = '🔇';
-            } else {
-                bgMusic.volume = document.getElementById('volume').value * 0.5;
-                muteBtn.textContent = '🔊';
-            }
-        });
-
-        const canvas = document.getElementById('tetris');
+        const canvas = document.getElementById('tetris-canvas');
         const ctx = canvas.getContext('2d');
-        const nextCanvas = document.getElementById('next');
+        const nextCanvas = document.getElementById('next-canvas');
         const nextCtx = nextCanvas.getContext('2d');
 
         const COLS = 10;
-        const ROWS = 15; // Shorter board (was 20)
-        const BLOCK_SIZE = 30;
+        const ROWS = 20;
+        const SIZE = 30;
 
-        canvas.width = COLS * BLOCK_SIZE;
-        canvas.height = ROWS * BLOCK_SIZE;
-
-        // Images
-        const IMGS = {
-            'rodona': new Image(),
-            'blanca': new Image(),
-            'negra': new Image(),
-            'corxera': new Image()
-        };
-        IMGS.rodona.src = 'images/rodona.jpg';
-        IMGS.blanca.src = 'images/blanca.jpg';
-        IMGS.negra.src = 'images/negra.jpg';
-        IMGS.corxera.src = 'images/corxera.jpg';
-
-        // Pieces: width in blocks
         const PIECES = [
-            { type: 'corxera', width: 1, color: '#ff00ff' },
-            { type: 'negra', width: 2, color: '#00ffff' },
-            { type: 'blanca', width: 4, color: '#ffff00' },
-            { type: 'rodona', width: 8, color: '#ff0000' } // Very hard to place!
+            { type: 'corxera', width: 1, color: '#ff4444' },
+            { type: 'negra', width: 2, color: '#44ff44' },
+            { type: 'blanca', width: 4, color: '#4444ff' },
+            { type: 'rodona', width: 8, color: '#ffff44' }
         ];
 
         let board = Array(ROWS).fill().map(() => Array(COLS).fill(null));
         let score = 0;
         let currentPiece = null;
-        let nextPieceType = null;
-        let gameLoop = null;
-        let dropInterval = 1000;
-        let lastTime = 0;
+        let nextPiece = null;
+        let gameActive = false;
         let dropCounter = 0;
+        let lastTime = 0;
 
-        // Audio
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
+        const IMGS = {};
+        ['rodona', 'blanca', 'negra', 'corxera'].forEach(t => {
+            IMGS[t] = new Image();
+            IMGS[t].src = `images/${t}.jpg`;
+        });
 
-            if (type === 'move') {
-                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.05);
-            } else if (type === 'drop') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.1);
-            } else if (type === 'line') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(1200, audioCtx.currentTime + 0.2);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.3);
-            }
-        }
-
-        function startGame() {
-            document.getElementById('start-modal').style.display = 'none';
-            nextPieceType = PIECES[Math.floor(Math.random() * PIECES.length)];
-            spawnPiece();
-            update(0);
+        function init() {
+            Casino.UI.showModal('tetris-instr', 'EL COMPASSADOR', 
+                'Completa línies horitzontals de 8 temps per guanyar punts. Cada tipus de nota ocupa una amplada diferent.<br><br>' +
+                '<b>Rodona</b>: 8 blocs | <b>Blanca</b>: 4 | <b>Negra</b>: 2 | <b>Corxera</b>: 1', 
+                'INICIAR', () => {
+                    gameActive = true;
+                    spawnPiece();
+                    requestAnimationFrame(update);
+                });
         }
 
         function spawnPiece() {
-            const p = nextPieceType;
+            const p = nextPiece || PIECES[Math.floor(Math.random() * PIECES.length)];
+            nextPiece = PIECES[Math.floor(Math.random() * PIECES.length)];
+            
             currentPiece = {
                 type: p.type,
                 width: p.width,
@@ -346,193 +144,125 @@
                 y: 0
             };
 
-            // Check collision on spawn
-            if (collide(board, currentPiece)) {
-                gameOver();
-                return;
+            if (collide()) {
+                gameActive = false;
+                Casino.Audio.playLose();
+                Casino.UI.showModal('gameover', 'FI DEL RITME', `Has aconseguit ${score} punts.`, 'REINTENTAR', () => location.reload());
             }
-
-            // Weighted random for next piece (less Rodonas)
-            let r = Math.random();
-            if (r < 0.4) nextPieceType = PIECES[0]; // Corxera
-            else if (r < 0.7) nextPieceType = PIECES[1]; // Negra
-            else if (r < 0.9) nextPieceType = PIECES[2]; // Blanca
-            else nextPieceType = PIECES[3]; // Rodona
-
             drawNext();
         }
 
-        function collide(b, p) {
-            for (let i = 0; i < p.width; i++) {
-                let bx = p.x + i;
-                let by = p.y;
-                if (bx < 0 || bx >= COLS || by >= ROWS) return true;
-                if (b[by][bx]) return true;
+        function collide() {
+            for (let i = 0; i < currentPiece.width; i++) {
+                const x = currentPiece.x + i;
+                const y = currentPiece.y;
+                if (x < 0 || x >= COLS || y >= ROWS || (y >= 0 && board[y][x])) return true;
             }
             return false;
         }
 
-        function merge(b, p) {
-            for (let i = 0; i < p.width; i++) {
-                b[p.y][p.x + i] = { type: p.type, color: p.color };
+        function merge() {
+            for (let i = 0; i < currentPiece.width; i++) {
+                board[currentPiece.y][currentPiece.x + i] = currentPiece;
             }
         }
 
-        function arenaSweep() {
+        function sweep() {
             let rowCount = 0;
-            outer: for (let y = ROWS - 1; y > 0; --y) {
-                for (let x = 0; x < COLS; ++x) {
-                    if (!board[y][x]) {
-                        continue outer;
-                    }
+            outer: for (let y = ROWS - 1; y >= 0; y--) {
+                for (let x = 0; x < COLS; x++) {
+                    if (!board[y][x]) continue outer;
                 }
                 const row = board.splice(y, 1)[0].fill(null);
                 board.unshift(row);
-                ++y;
+                y++;
                 rowCount++;
             }
             if (rowCount > 0) {
-                score += rowCount * 100;
-                if (rowCount >= 4) score += 400; // Bonus
+                score += rowCount * 100 * (rowCount === 4 ? 2 : 1);
                 document.getElementById('score').textContent = score;
-                playSound('line');
-
+                Casino.Audio.playTone(600 + (rowCount * 100), 'sine', 0.3);
                 if (score >= 2000) {
-                    winGame();
+                    gameActive = false;
+                    Casino.Rewards.saveProgress('reward_tetris');
+                    Casino.UI.showVictory("Has harmonitzat el caos medieval! La Ploma de Hildegard és teva.", () => location.href = 'menu.html');
                 }
             }
         }
 
+        function update(time = 0) {
+            if (!gameActive) return;
+            const dt = time - lastTime;
+            lastTime = time;
+            dropCounter += dt;
+            if (dropCounter > 1000) {
+                drop();
+            }
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        function drop() {
+            currentPiece.y++;
+            if (collide()) {
+                currentPiece.y--;
+                merge();
+                sweep();
+                spawnPiece();
+                Casino.Audio.playTone(200, 'square', 0.1);
+            }
+            dropCounter = 0;
+        }
+
         function draw() {
-            // Clear
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+            
             // Grid
-            ctx.strokeStyle = '#222';
-            ctx.beginPath();
-            for (let i = 0; i <= COLS; i++) { ctx.moveTo(i * BLOCK_SIZE, 0); ctx.lineTo(i * BLOCK_SIZE, canvas.height); }
-            for (let i = 0; i <= ROWS; i++) { ctx.moveTo(0, i * BLOCK_SIZE); ctx.lineTo(canvas.width, i * BLOCK_SIZE); }
+            ctx.strokeStyle = '#111';
+            for (let x = 0; x <= COLS; x++) { ctx.moveTo(x*SIZE, 0); ctx.lineTo(x*SIZE, canvas.height); }
+            for (let y = 0; y <= ROWS; y++) { ctx.moveTo(0, y*SIZE); ctx.lineTo(canvas.width, y*SIZE); }
             ctx.stroke();
 
             // Board
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
-                    if (board[y][x]) {
-                        drawBlock(x, y, board[y][x].type, board[y][x].color);
-                    }
+                    if (board[y][x]) drawBlock(ctx, x, y, board[y][x]);
                 }
             }
-
-            // Current Piece
-            if (currentPiece) {
-                // Draw as one big block or multiple?
-                // Draw individual blocks but maybe overlay image
-                for (let i = 0; i < currentPiece.width; i++) {
-                    drawBlock(currentPiece.x + i, currentPiece.y, currentPiece.type, currentPiece.color, i, currentPiece.width);
-                }
+            // Current
+            for (let i = 0; i < currentPiece.width; i++) {
+                drawBlock(ctx, currentPiece.x + i, currentPiece.y, currentPiece);
             }
         }
 
-        function drawBlock(x, y, type, color, partIndex = 0, totalWidth = 1) {
-            ctx.fillStyle = color;
-            ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-            ctx.strokeStyle = '#000';
-            ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-
-            // Draw Image overlay?
-            // If it's a multi-block piece, we want to draw the image centered over the whole span
-            // This is tricky in a cell-based loop.
-            // Simplified: Draw icon in every cell or just color.
-            // Better: If partIndex is defined, we are drawing the active piece.
-
-            // For board items, they are individual cells. We lost the "whole piece" info upon merge.
-            // So just draw the icon scaled to fit the cell? No, a Rodona shouldn't look like 8 small rodonas.
-            // But for Tetris mechanics, once locked, they are blocks.
-            // Let's just draw the icon in the block for visual flair.
+        function drawBlock(c, x, y, piece) {
+            c.fillStyle = piece.color;
+            c.fillRect(x * SIZE, y * SIZE, SIZE, SIZE);
+            c.strokeStyle = '#000';
+            c.strokeRect(x * SIZE, y * SIZE, SIZE, SIZE);
             try {
-                ctx.drawImage(IMGS[type], x * BLOCK_SIZE + 2, y * BLOCK_SIZE + 2, BLOCK_SIZE - 4, BLOCK_SIZE - 4);
-            } catch (e) { }
+                c.drawImage(IMGS[piece.type], x * SIZE + 2, y * SIZE + 2, SIZE - 4, SIZE - 4);
+            } catch (e) {}
         }
 
         function drawNext() {
             nextCtx.fillStyle = '#000';
             nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
-            if (!nextPieceType) return;
-
-            const p = nextPieceType;
-            const scale = 20;
-            const startX = (100 - p.width * scale) / 2;
-            const startY = 40;
-
+            const p = nextPiece;
+            const startX = (nextCanvas.width - p.width * 15) / 2;
             nextCtx.fillStyle = p.color;
-            nextCtx.fillRect(startX, startY, p.width * scale, scale);
-            try {
-                nextCtx.drawImage(IMGS[p.type], startX, startY, p.width * scale, scale);
-            } catch (e) { }
+            nextCtx.fillRect(startX, 50, p.width * 15, 15);
         }
 
-        function update(time = 0) {
-            const deltaTime = time - lastTime;
-            lastTime = time;
-            dropCounter += deltaTime;
-
-            if (dropCounter > dropInterval) {
-                playerDrop();
-            }
-
-            draw();
-            if (!gameEnded) requestAnimationFrame(update);
-        }
-
-        function playerDrop() {
-            currentPiece.y++;
-            if (collide(board, currentPiece)) {
-                currentPiece.y--;
-                merge(board, currentPiece);
-                playSound('drop');
-                arenaSweep();
-                spawnPiece();
-            }
-            dropCounter = 0;
-        }
-
-        function playerMove(dir) {
-            currentPiece.x += dir;
-            if (collide(board, currentPiece)) {
-                currentPiece.x -= dir;
-            } else {
-                playSound('move');
-            }
-        }
-
-        let gameEnded = false;
-        function gameOver() {
-            gameEnded = true;
-            document.getElementById('lose-modal').style.display = 'flex';
-        }
-
-        function winGame() {
-            gameEnded = true;
-            // Save Reward
-            const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-            rewards['reward_tetris'] = true;
-            sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
-            document.getElementById('win-modal').style.display = 'flex';
-        }
-
-        document.addEventListener('keydown', event => {
-            if (gameEnded) return;
-            if (event.keyCode === 37) { // Left
-                playerMove(-1);
-            } else if (event.keyCode === 39) { // Right
-                playerMove(1);
-            } else if (event.keyCode === 40) { // Down
-                playerDrop();
-            }
+        window.addEventListener('keydown', e => {
+            if (!gameActive) return;
+            if (e.key === 'ArrowLeft') { currentPiece.x--; if(collide()) currentPiece.x++; else Casino.Audio.playTone(400, 'triangle', 0.05); }
+            if (e.key === 'ArrowRight') { currentPiece.x++; if(collide()) currentPiece.x--; else Casino.Audio.playTone(400, 'triangle', 0.05); }
+            if (e.key === 'ArrowDown') drop();
         });
 
+        init();
     </script>
 </body>
-
 </html>

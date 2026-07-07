@@ -5,637 +5,206 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La Cabina de Vent Rítmica</title>
+    <link rel="stylesheet" href="css/casino-common.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --glass-blue: rgba(200, 230, 255, 0.3);
-            --gold: #ffd700;
-            --neon-white: #ffffff;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #050510;
-            font-family: 'Arial Black', sans-serif;
-            color: white;
+        .game-layout {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
-            user-select: none;
-            overflow: hidden;
+            justify-content: space-around;
+            flex: 1;
+            padding: 20px;
         }
 
-        /* Stage */
-        #stage {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at center, #222, #000);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* Spotlights */
-        .spotlight {
-            position: absolute;
-            top: -100px;
-            width: 200px;
-            height: 800px;
-            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent);
-            transform-origin: top center;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .spot-left {
-            left: 20%;
-            transform: rotate(15deg);
-        }
-
-        .spot-right {
-            right: 20%;
-            transform: rotate(-15deg);
-        }
-
-        /* Cabin */
         #cabin {
             width: 600px;
             height: 700px;
-            background: var(--glass-blue);
+            background: rgba(200, 230, 255, 0.1);
             border: 10px solid var(--gold);
             border-radius: 20px;
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.5), inset 0 0 50px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3), inset 0 0 100px rgba(255,255,255,0.1);
             position: relative;
             z-index: 10;
             overflow: hidden;
             cursor: crosshair;
+            backdrop-filter: blur(5px);
         }
 
-        /* LED Panel */
-        #led-panel {
-            position: absolute;
-            top: 20px;
-            width: 800px;
-            background: #111;
-            border: 4px solid #333;
-            padding: 10px;
+        #gameCanvas { display: block; background: transparent; }
+
+        .led-panel {
+            width: 100%;
+            max-width: 600px;
+            background: #000;
+            border: 2px solid #0f0;
+            padding: 5px;
             text-align: center;
-            border-radius: 10px;
-            z-index: 20;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
-        }
-
-        /* LED Panel */
-        #led-panel {
-            position: absolute;
-            top: 20px;
-            width: 800px;
-            background: #111;
-            border: 4px solid #333;
-            padding: 10px;
-            text-align: center;
-            border-radius: 10px;
-            z-index: 20;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
-        }
-
-        #led-text {
             color: #0f0;
             font-family: 'Courier New', monospace;
-            font-size: 1.5rem;
-            text-shadow: 0 0 5px #0f0;
-            animation: marquee 5s linear infinite;
-            white-space: nowrap;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            box-shadow: 0 0 15px rgba(0,255,0,0.5);
         }
 
-        /* HUD */
-        #hud {
-            position: absolute;
-            bottom: 20px;
+        .stats-hud {
             display: flex;
             gap: 50px;
-            z-index: 20;
-            font-size: 2rem;
-            text-shadow: 2px 2px 0 #000;
-        }
-
-        .hud-item span {
-            color: var(--gold);
-        }
-
-        /* Canvas */
-        canvas {
-            display: block;
-        }
-
-        /* Controls */
-        .volume-control {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            z-index: 100;
-            display: flex;
-            gap: 10px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 20px;
-        }
-
-        input[type=range] {
-            accent-color: var(--gold);
-        }
-
-        /* Instructions Modal */
-        #instructions-modal {
-            display: flex;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .instr-content {
-            background: #1a0505;
-            padding: 40px;
-            border: 4px double var(--gold);
-            text-align: center;
-            max-width: 600px;
-            color: #fff;
-            position: relative;
-        }
-
-        .instr-close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #aaa;
-            font-size: 2rem;
-            cursor: pointer;
-        }
-
-        .instr-btn {
-            padding: 10px 30px;
-            font-size: 1.2rem;
-            background: var(--gold);
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #1a0505;
-            margin-top: 20px;
-        }
-
-        /* Modals */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(200, 230, 255, 0.2);
-            /* Windy/Glassy feel */
-            backdrop-filter: blur(5px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 3000;
-        }
-
-        .modal-content {
-            background: rgba(0, 0, 0, 0.8);
-            padding: 60px;
-            border-radius: 50%;
-            /* Round like a fan or tunnel */
-            border: 10px solid var(--gold);
-            text-align: center;
-            width: 600px;
-            height: 600px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 100px var(--glass-blue);
-            animation: spinIn 0.5s;
-        }
-
-        @keyframes spinIn {
-            from {
-                transform: scale(0) rotate(-180deg);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1) rotate(0);
-                opacity: 1;
-            }
-        }
-
-        .relic-icon {
-            font-size: 5rem;
-            margin: 20px 0;
-        }
-
-        .action-btn {
-            background: var(--gold);
-            color: #000;
-            border: none;
-            padding: 20px 50px;
             font-size: 1.5rem;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
+            color: var(--gold);
             margin-top: 20px;
-            box-shadow: 0 0 30px var(--gold);
-            transition: transform 0.2s;
-        }
-
-        .action-btn:hover {
-            transform: scale(1.1);
-        }
-
-        /* Menu Button */
-        #btn-menu {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: 1px solid #aaa;
-            padding: 10px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: bold;
         }
     </style>
 </head>
 
 <body>
+    <div class="casino-table">
+        <div class="game-layout">
+            <div class="led-panel" id="led-msg">ATRAPA LES NOTES RÀPIDES (MENYS D'1 TEMPS)!</div>
+            
+            <div id="cabin">
+                <canvas id="gameCanvas" width="600" height="700"></canvas>
+            </div>
 
-    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
-
-    <!-- Instructions Modal -->
-    <div id="instructions-modal">
-        <div class="instr-content">
-            <span class="instr-close"
-                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
-            <h2 style="color: var(--gold);">COM JUGAR</h2>
-            <p style="font-size:1.2rem;">Atrapa les notes valuoses que volen per la cabina!</p>
-            <p>Evita les penalitzacions i aconsegueix la màxima puntuació.</p>
-            <button class="instr-btn"
-                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
-        </div>
-    </div>
-
-    <div id="stage">
-        <div class="spotlight spot-left"></div>
-        <div class="spotlight spot-right"></div>
-
-        <div id="led-panel">
-            <div id="led-text">ATRAPA LES NOTES RÀPIDES! (MENYS D'1 TEMPS)</div>
-        </div>
-
-        <div id="cabin">
-            <canvas id="gameCanvas" width="600" height="700"></canvas>
-        </div>
-
-        <div id="hud">
-            <div class="hud-item">PUNTS: <span id="score">0</span></div>
-            <div class="hud-item">TEMPS: <span id="time">45</span></div>
-        </div>
-
-        <div class="volume-control">
-            <span>🔊</span>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
-        </div>
-    </div>
-
-    <!-- Start Screen -->
-    <div id="start-screen" class="modal" style="display: flex;">
-        <div class="modal-content">
-            <h1 style="color: var(--gold); font-size: 3rem; text-shadow: 0 0 20px var(--gold);">LA CABINA DE VENT</h1>
-            <p>Tria el teu desafiament:</p>
-            <div style="display:flex; gap:20px; justify-content:center;">
-                <button class="action-btn" onclick="game.setLevel(1)">NIVELL 1<br><span style="font-size:0.8rem">Ràpides
-                        (Corxeres)</span></button>
-                <button class="action-btn" onclick="game.setLevel(2)">NIVELL 2<br><span style="font-size:0.8rem">Grans
-                        (Blanques/Rodones)</span></button>
+            <div class="stats-hud">
+                <div>PUNTS: <span id="score">0</span> / 1500</div>
+                <div>TEMPS: <span id="time">45</span>s</div>
             </div>
         </div>
     </div>
 
-    <!-- Win Modal -->
-    <div id="win-modal" class="modal">
-        <div class="modal-content">
-            <h2 style="color: var(--gold);">VISIÓ ROMÀNTICA!</h2>
-            <div class="relic-icon">👓</div>
-            <h3 style="color: var(--gold);">LES ULLERES DE FRANZ SCHUBERT</h3>
-            <p style="font-style: italic; color: #aaa;">"Schubert componia tant que fins i tot dormia amb les ulleres
-                posades per si es despertava amb una melodia al cap!"</p>
-            <button class="action-btn" onclick="location.reload()">TORNAR A JUGAR</button>
-        </div>
-    </div>
-
-    <!-- Lose Modal -->
-    <div id="lose-modal" class="modal">
-        <div class="modal-content">
-            <h2 style="color: #ff4444;">TEMPS ESGOTAT</h2>
-            <p>No has aconseguit els punts necessaris.</p>
-            <button class="action-btn" onclick="location.reload()">REINTENTAR</button>
-        </div>
-    </div>
-
-    <audio id="bg-music" src="music/background_music_cabinavent.mp3" loop></audio>
-
+    <script src="js/casino-common.js"></script>
     <script>
-        // --- AUDIO ENGINE ---
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioContext();
-        const bgMusic = document.getElementById('bg-music');
+        Casino.Audio.init('music/background_music_cabinavent.mp3');
+        Casino.UI.injectBasicUI('La Cabina de Vent');
 
-        document.body.addEventListener('click', () => {
-            if (bgMusic.paused) {
-                bgMusic.volume = document.getElementById('volume-slider').value * 0.5;
-                bgMusic.play().catch(e => console.log(e));
-            }
-        }, { once: true });
-
-        document.getElementById('volume-slider').addEventListener('input', (e) => {
-            bgMusic.volume = e.target.value * 0.5;
-        });
         const NOTES = [
-            { id: 'rodona', img: 'images/rodona.jpg', val: 4, type: 'bad' },
-            { id: 'blanca', img: 'images/blanca.jpg', val: 2, type: 'bad' },
-            { id: 'negra', img: 'images/negra.jpg', val: 1, type: 'bad' },
-            { id: 'corxera', img: 'images/corxera.jpg', val: 0.5, type: 'good' },
-            { id: 'semicorxera', img: 'images/semicorxera.jpg', val: 0.25, type: 'good' }
+            { id: 'rodona', val: 4, img: 'images/rodona.jpg' },
+            { id: 'blanca', val: 2, img: 'images/blanca.jpg' },
+            { id: 'negra', val: 1, img: 'images/negra.jpg' },
+            { id: 'corxera', val: 0.5, img: 'images/corxera.jpg' },
+            { id: 'semicorxera', val: 0.25, img: 'images/semicorxera.jpg' }
         ];
 
-        // --- AUDIO ENGINE ---
-        let windSound = null;
-
-        function playTone(freq, type, duration, vol = 0.1) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const masterVol = parseFloat(document.getElementById('volume-slider').value);
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(vol * masterVol, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-        }
-
-        function playWind() {
-            if (windSound) return;
-            // White noise buffer
-            const bufferSize = audioCtx.sampleRate * 2;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1;
-            }
-
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buffer;
-            noise.loop = true;
-
-            const gain = audioCtx.createGain();
-            const masterVol = parseFloat(document.getElementById('volume-slider').value);
-            gain.gain.value = 0.1 * masterVol;
-
-            // Lowpass filter for wind effect
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 400;
-
-            noise.connect(filter);
-            filter.connect(gain);
-            gain.connect(audioCtx.destination);
-            noise.start();
-
-            windSound = { noise, gain };
-        }
-
-        function stopWind() {
-            if (windSound) {
-                windSound.noise.stop();
-                windSound = null;
-            }
-        }
-
-        function playCatch() { playTone(1000, 'sine', 0.1, 0.2); }
-        function playError() { playTone(100, 'sawtooth', 0.3, 0.3); }
-
-        // --- GAME LOGIC ---
         class Particle {
             constructor(level) {
                 const note = NOTES[Math.floor(Math.random() * NOTES.length)];
                 this.val = note.val;
                 this.img = new Image();
                 this.img.src = note.img;
-                this.x = Math.random() * 550;
-                this.y = 700; // Start at bottom
-
-                // Speed based on Level
-                let speedMult = 1;
-                if (level === 1) speedMult = 1.5; // Faster for Level 1 (Windy)
-
-                this.vx = (Math.random() - 0.5) * 5 * speedMult;
-                this.vy = (-Math.random() * 10 - 3) * speedMult;
-
-                // Random Size: Normal (50) or Large (80)
-                this.r = Math.random() < 0.5 ? 50 : 80;
-
-                this.rotation = Math.random() * Math.PI;
+                this.x = Math.random() * 500 + 50;
+                this.y = 750;
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = -(Math.random() * 8 + 4);
+                this.rotation = Math.random() * Math.PI * 2;
                 this.rotSpeed = (Math.random() - 0.5) * 0.1;
+                this.size = Math.random() < 0.3 ? 80 : 50;
                 this.active = true;
             }
 
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
+                this.vy += 0.05; // Light gravity
+                this.vx += (Math.random() - 0.5) * 0.5; // Wind gust
                 this.rotation += this.rotSpeed;
-
-                // Gravity/Wind Turbulence
-                this.vy += 0.1; // Reduced Gravity
-                this.vx += (Math.random() - 0.5) * 1; // Reduced Wind gusts
-
-                // Bounce walls
                 if (this.x < 0 || this.x > 600) this.vx *= -1;
-
-                // Remove if falls out bottom
-                if (this.y > 750) this.active = false;
+                if (this.y > 800) this.active = false;
             }
 
             draw(ctx) {
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.rotation);
-
-                // Draw paper/card background - Dynamic Size
-                const w = this.r * 1.4;
-                const h = this.r * 2;
                 ctx.fillStyle = 'white';
-                ctx.fillRect(-w / 2, -h / 2, w, h);
-                ctx.strokeStyle = '#ccc';
-                ctx.strokeRect(-w / 2, -h / 2, w, h);
-
-                // Draw Note - Dynamic Size
-                try {
-                    const imgSize = this.r * 1.2;
-                    ctx.drawImage(this.img, -imgSize / 2, -imgSize / 2, imgSize, imgSize);
-                } catch (e) { }
-
-                // Debug color border
-                // ctx.strokeStyle = this.type === 'good' ? 'green' : 'red';
-                // ctx.strokeRect(-22, -32, 44, 64);
-
+                ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                try { ctx.drawImage(this.img, -this.size/2.5, -this.size/2.5, this.size/1.25, this.size/1.25); } catch(e){}
                 ctx.restore();
             }
 
-            checkClick(x, y) {
-                const dx = x - this.x;
-                const dy = y - this.y;
-                return Math.sqrt(dx * dx + dy * dy) < this.r + 10; // Hitbox based on size
+            hit(x, y) {
+                return (Math.abs(x - this.x) < this.size/2 && Math.abs(y - this.y) < this.size/2);
             }
         }
 
-        class Game {
+        class CabinGame {
             constructor() {
+                this.score = 0;
+                this.timeLeft = 45;
+                this.particles = [];
+                this.level = 1;
+                this.isRunning = false;
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
-                this.particles = [];
-                this.score = 0;
-                this.timeLeft = 45;
-                this.isRunning = false;
-                this.level = 1; // 1: Fast, 2: Big
-
-                this.canvas.addEventListener('mousedown', (e) => this.click(e));
+                
+                this.canvas.onclick = (e) => this.click(e);
+                this.init();
             }
 
-            setLevel(lvl) {
-                this.level = lvl;
-                document.getElementById('start-screen').style.display = 'none';
-                this.start();
-            }
-
-            start() {
+            init() {
+                Casino.UI.showModal('cabin-start', 'LA MISSIÓ DE SCHUBERT', 
+                    'Atrapa les notes indicades que volen per la cabina!<br><br>' +
+                    '<b>Nivell 1:</b> Atrapa Corxeres i Semicorxeres (Notes ràpides).<br>' +
+                    '<b>Puntuació:</b> 1.500 punts per guanyar.', 'COMENÇAR VENT');
+                
                 this.isRunning = true;
-                this.score = 0;
-                this.timeLeft = 45;
-                document.getElementById('score').textContent = '0';
-                document.getElementById('time').textContent = '45';
-
-                playWind();
                 this.loop();
-                this.timerInterval = setInterval(() => {
+                this.timer = setInterval(() => {
                     this.timeLeft--;
                     document.getElementById('time').textContent = this.timeLeft;
-                    if (this.timeLeft <= 0) this.endGame();
+                    if(this.timeLeft <= 0) this.end(false);
                 }, 1000);
             }
 
             click(e) {
-                if (!this.isRunning) return;
+                if(!this.isRunning) return;
                 const rect = this.canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
 
-                for (let i = this.particles.length - 1; i >= 0; i--) {
+                for(let i=this.particles.length-1; i>=0; i--) {
                     const p = this.particles[i];
-                    if (p.checkClick(x, y)) {
-                        let correct = false;
-
-                        if (this.level === 1) {
-                            // Catch Fast (Corxera, Semi)
-                            if (p.val < 1) correct = true;
-                        } else {
-                            // Catch Big (Blanca, Rodona)
-                            if (p.val > 1) correct = true;
-                        }
-
-                        if (correct) {
+                    if(p.hit(x, y)) {
+                        const target = p.val < 1; // Level 1 logic
+                        if(target) {
                             this.score += 100;
-                            playCatch();
-                            this.createSparkle(p.x, p.y);
+                            Casino.Audio.playTone(1000, 'sine', 0.1);
                         } else {
                             this.score -= 50;
-                            playError();
-                            this.flashRed();
+                            Casino.Audio.playLose();
                         }
                         this.particles.splice(i, 1);
                         document.getElementById('score').textContent = this.score;
-
-                        if (this.score >= 1500) {
-                            this.endGame();
-                        }
-                        break; // Click one at a time
+                        if(this.score >= 1500) this.end(true);
+                        break;
                     }
                 }
             }
 
-            createSparkle(x, y) {
-                // Visual FX placeholder
-            }
-
-            flashRed() {
-                const stage = document.getElementById('stage');
-                stage.style.boxShadow = 'inset 0 0 100px red';
-                setTimeout(() => stage.style.boxShadow = 'none', 100);
-            }
-
             loop() {
-                if (!this.isRunning) return;
-
+                if(!this.isRunning) return;
                 this.ctx.clearRect(0, 0, 600, 700);
-
-                // Spawn
-                if (Math.random() < 0.1) { // Spawn rate
-                    this.particles.push(new Particle(this.level));
-                }
-
-                // Update & Draw
-                this.particles.forEach(p => p.update());
+                if(Math.random() < 0.1) this.particles.push(new Particle(this.level));
+                this.particles.forEach(p => { p.update(); p.draw(this.ctx); });
                 this.particles = this.particles.filter(p => p.active);
-                this.particles.forEach(p => p.draw(this.ctx));
-
                 requestAnimationFrame(() => this.loop());
             }
 
-            endGame() {
+            end(win) {
                 this.isRunning = false;
-                clearInterval(this.timerInterval);
-                stopWind();
-
-                if (this.score >= 1500) {
-                    // Save Reward
-                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                    rewards['reward_cabina'] = true;
-                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
-
-                    document.getElementById('win-modal').style.display = 'flex';
+                clearInterval(this.timer);
+                if(win) {
+                    Casino.Audio.playWin();
+                    Casino.Rewards.saveProgress('reward_cabinavent');
+                    Casino.UI.showVictory("Ets un mestre de l'aire! Les ulleres de Schubert són teves.", () => location.href = 'menu.html');
                 } else {
-                    document.getElementById('lose-modal').style.display = 'flex';
+                    Casino.Audio.playLose();
+                    Casino.UI.showModal('fail', 'TEMPS ESGOTAT', 'No has atrapat prou notes. El vent ha parat.', 'REINTENTAR', () => location.reload());
                 }
             }
         }
 
-        const game = new Game();
-
+        const game = new CabinGame();
     </script>
 </body>
-
 </html>

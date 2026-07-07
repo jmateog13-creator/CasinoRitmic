@@ -5,198 +5,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2048 Rítmic</title>
+    <link rel="stylesheet" href="css/casino-common.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
-
         :root {
-            --gold: #d4af37;
-            --dark: #0a0a12;
-            --grid-bg: #1a1a24;
-            --cell-empty: #2a2a35;
-            --text: #f5f5dc;
+            --grid-bg: rgba(0, 0, 0, 0.4);
+            --cell-empty: rgba(255, 255, 255, 0.1);
         }
 
-        /* Instructions Modal */
-        #instructions-modal {
-            display: flex;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .instr-content {
-            background: #1a0505;
-            padding: 40px;
-            border: 4px double var(--gold);
-            text-align: center;
-            max-width: 600px;
-            color: #fff;
-            position: relative;
-        }
-
-        .instr-close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #aaa;
-            font-size: 2rem;
-            cursor: pointer;
-        }
-
-        .instr-btn {
-            padding: 10px 30px;
-            font-size: 1.2rem;
-            background: var(--gold);
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #1a0505;
-            margin-top: 20px;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--dark);
-            color: var(--text);
-            font-family: 'Playfair Display', serif;
+        #game-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
-        }
-
-        /* Background */
-        body::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 50% 30%, #1a1a2e, #000);
-            z-index: -1;
-        }
-
-        /* UI Bar */
-        #ui-bar {
-            width: 100%;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-sizing: border-box;
-        }
-
-        /* Instructions Modal */
-        #instructions-modal {
-            display: flex;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
             justify-content: center;
-            align-items: center;
+            flex: 1;
         }
 
-        .instr-content {
-            background: #1a0505;
-            padding: 40px;
-            border: 4px double var(--gold);
-            text-align: center;
-            max-width: 600px;
-            color: #fff;
-            position: relative;
-        }
-
-        .instr-close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #aaa;
-            font-size: 2rem;
-            cursor: pointer;
-        }
-
-        .instr-btn {
-            padding: 10px 30px;
-            font-size: 1.2rem;
-            background: var(--gold);
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #1a0505;
-            margin-top: 20px;
-        }
-
-        .btn-menu {
-            text-decoration: none;
-            color: var(--gold);
-            font-size: 2rem;
-        }
-
-        /* Score Board */
-        #score-board {
+        .score-container {
             display: flex;
             gap: 20px;
             margin-bottom: 20px;
         }
 
         .score-box {
-            background: var(--grid-bg);
-            border: 2px solid var(--gold);
+            background: rgba(0, 0, 0, 0.5);
             padding: 10px 20px;
-            border-radius: 5px;
+            border-radius: 10px;
+            border: 1px solid var(--gold);
             text-align: center;
-            min-width: 100px;
         }
 
-        .score-label {
-            font-size: 0.8rem;
-            color: #aaa;
-            text-transform: uppercase;
-        }
+        .score-label { font-size: 0.8rem; color: var(--gold); text-transform: uppercase; }
+        .score-val { font-size: 1.5rem; font-weight: bold; }
 
-        .score-val {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--gold);
-        }
-
-        /* Game Grid */
-        #game-container {
+        #grid-container {
             position: relative;
             width: 400px;
             height: 400px;
             background: var(--grid-bg);
-            border: 5px solid var(--gold);
             border-radius: 10px;
             padding: 10px;
-            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
-            touch-action: none;
-            /* Prevent scroll on mobile */
-        }
-
-        .grid-bg {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             grid-template-rows: repeat(4, 1fr);
             gap: 10px;
-            width: 100%;
-            height: 100%;
+            border: 2px solid var(--wood-border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .grid-cell {
@@ -204,7 +58,7 @@
             border-radius: 5px;
         }
 
-        .tile-container {
+        #tile-container {
             position: absolute;
             top: 10px;
             left: 10px;
@@ -216,7 +70,6 @@
         .tile {
             position: absolute;
             width: 87.5px;
-            /* (400 - 20pad - 30gap) / 4 */
             height: 87.5px;
             background: #fff;
             border-radius: 5px;
@@ -225,269 +78,57 @@
             align-items: center;
             transition: transform 0.1s ease-in-out;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
         }
 
-        .tile img {
-            width: 70%;
-            height: 70%;
-            object-fit: contain;
-        }
+        .tile img { width: 85%; height: 85%; object-fit: contain; }
 
-        .tile-new {
-            animation: pop 0.2s;
-        }
-
-        .tile-merged {
-            animation: bounce 0.2s;
-            z-index: 10;
-        }
+        .tile-2 { background: #eee4da; }
+        .tile-4 { background: #ede0c8; }
+        .tile-8 { background: #f2b179; }
+        .tile-16 { background: #f59563; }
+        .tile-32 { background: #f67c5f; } /* Rodona - Win */
 
         @keyframes pop {
-            0% {
-                transform: scale(0);
-            }
-
-            100% {
-                transform: scale(1);
-            }
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
         }
-
-        @keyframes bounce {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.2);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
-        /* Tile Levels */
-        .tile-2 {
-            background: #eee4da;
-        }
-
-        /* Semicorxera */
-        .tile-4 {
-            background: #ede0c8;
-        }
-
-        /* Corxera */
-        .tile-8 {
-            background: #f2b179;
-        }
-
-        /* Negra */
-        .tile-16 {
-            background: #f59563;
-        }
-
-        /* Blanca */
-        .tile-32 {
-            background: #f67c5f;
-        }
-
-        /* Rodona (WIN) */
-        /* Higher levels just in case */
-        .tile-64 {
-            background: #f65e3b;
-        }
-
-        .tile-128 {
-            background: #edcf72;
-        }
-
-        /* Modals */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: #1a0505;
-            padding: 40px;
-            border: 4px double var(--gold);
-            text-align: center;
-            max-width: 500px;
-            color: var(--text);
-        }
-
-        .relic-icon {
-            font-size: 4rem;
-            margin: 20px;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 1.2rem;
-            background: var(--gold);
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: 'Playfair Display', serif;
-            font-weight: bold;
-            color: #1a0505;
-            margin-top: 20px;
-        }
-
-        button:hover {
-            filter: brightness(1.2);
-        }
+        .tile-new { animation: pop 0.2s; }
     </style>
 </head>
 
 <body>
+    <div class="casino-table">
+        <div id="game-container">
+            <div class="score-container">
+                <div class="score-box">
+                    <div class="score-label">Punts</div>
+                    <div class="score-val" id="score">0</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-label">Millor</div>
+                    <div class="score-val" id="best-score">0</div>
+                </div>
+            </div>
 
-    <div id="ui-bar">
-        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
-        <h1 style="color:var(--gold); margin:0;">2048 RÍTMIC</h1>
-        <div style="display:flex; align-items:center; gap:10px; color:var(--gold);">
-            <span>🔊</span>
-            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5" style="accent-color: var(--gold);">
+            <div id="grid-container">
+                <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+                <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+                <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+                <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+                <div id="tile-container"></div>
+            </div>
+            
+            <button class="modal-btn" onclick="initGame()" style="margin-top:20px;">REINICIAR JOC</button>
         </div>
     </div>
 
-    <div id="score-board">
-        <div class="score-box">
-            <div class="score-label">Punts</div>
-            <div class="score-val" id="score">0</div>
-        </div>
-        <div class="score-box">
-            <div class="score-label">Rècord</div>
-            <div class="score-val" id="best-score">0</div>
-        </div>
-    </div>
-
-    <div id="game-container">
-        <div class="grid-bg">
-            <!-- 16 empty cells -->
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-            <div class="grid-cell"></div>
-        </div>
-        <div class="tile-container" id="tile-container">
-            <!-- Tiles JS -->
-        </div>
-    </div>
-
-    <p style="color:#aaa; margin-top:20px;">Usa les FLETXES o LLISCA per moure les fitxes.</p>
-
-    <!-- Win Modal -->
-    <div id="win-modal" class="modal">
-        <div class="modal-content">
-            <h2 style="color: var(--gold);">ARQUITECTURA MUSICAL!</h2>
-            <div class="relic-icon">🎼</div>
-            <p style="font-size: 1.5rem; font-weight:bold;">"L'ART DE LA FUGA DE J.S. BACH"</p>
-            <p>L'obra mestra inacabada de Bach. Una construcció matemàtica perfecta, igual que la teva partida.</p>
-            <button onclick="location.reload()">TORNAR A JUGAR</button>
-        </div>
-    </div>
-
-    <!-- Lose Modal -->
-    <div id="lose-modal" class="modal">
-        <div class="modal-content">
-            <h2 style="color: red;">GAME OVER</h2>
-            <p>El tauler està ple. No hi ha més moviments.</p>
-            <button onclick="location.reload()">REINTENTAR</button>
-        </div>
-    </div>
-
-    <audio id="bg-music" src="music/High Stakes Heart.mp3" loop></audio>
-
+    <script src="js/casino-common.js"></script>
     <script>
-        // Audio
-        const bgMusic = document.getElementById('bg-music');
-        document.body.addEventListener('click', () => {
-            if (bgMusic.paused) {
-                bgMusic.volume = document.getElementById('volume').value * 0.5;
-                bgMusic.play().catch(e => console.log(e));
-            }
-        }, { once: true });
+        // --- Setup ---
+        Casino.Audio.init('music/background_music_main.mp3');
+        Casino.UI.injectBasicUI('2048 Rítmic');
 
-        document.getElementById('volume').addEventListener('input', (e) => {
-            bgMusic.volume = e.target.value * 0.5;
-        });
-
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioContext();
-
-        function playSound(type) {
-            const vol = document.getElementById('volume').value;
-            if (vol <= 0) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            const now = audioCtx.currentTime;
-
-            if (type === 'move') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.linearRampToValueAtTime(300, now + 0.1);
-                gain.gain.setValueAtTime(vol * 0.2, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.1);
-                osc.start();
-                osc.stop(now + 0.1);
-            } else if (type === 'merge') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(440, now);
-                osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
-                gain.gain.setValueAtTime(vol * 0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                osc.start();
-                osc.stop(now + 0.2);
-            } else if (type === 'win') {
-                // Major Chord
-                [523.25, 659.25, 783.99].forEach((freq, i) => {
-                    const o = audioCtx.createOscillator();
-                    const g = audioCtx.createGain();
-                    o.connect(g);
-                    g.connect(audioCtx.destination);
-                    o.type = 'triangle';
-                    o.frequency.value = freq;
-                    g.gain.setValueAtTime(vol * 0.3, now);
-                    g.gain.linearRampToValueAtTime(0, now + 1);
-                    o.start();
-                    o.stop(now + 1);
-                });
-            }
-        }
-
-        // Game Logic
-        const GRID_SIZE = 4;
-        let grid = [];
-        let score = 0;
-        let bestScore = localStorage.getItem('2048_best') || 0;
-        let won = false;
-
-        // Tile Values: 2, 4, 8, 16, 32 (Win)
         const IMAGES = {
             2: 'images/semicorxera.jpg',
             4: 'images/corxera.jpg',
@@ -496,6 +137,13 @@
             32: 'images/rodona.jpg'
         };
 
+        const GRID_SIZE = 4;
+        let grid = [];
+        let score = 0;
+        let bestScore = localStorage.getItem('2048_best') || 0;
+        let won = false;
+
+        // --- Logic ---
         function initGame() {
             grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
             score = 0;
@@ -504,7 +152,10 @@
             addRandomTile();
             addRandomTile();
             renderGrid();
-            setupInput();
+            
+            Casino.UI.showModal('instr-2048', 'COM JUGAR', 
+                'Utilitza les fletxes del teclat per moure les fitxes. Quan dues fitxes amb la mateixa figura musical xoquen, es fusionen en una de valor superior!<br><br><b>Objectiu: Arribar a la RODONA (32)</b>', 
+                'COMENÇAR');
         }
 
         function addRandomTile() {
@@ -523,31 +174,14 @@
         function renderGrid() {
             const container = document.getElementById('tile-container');
             container.innerHTML = '';
-
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
                     const val = grid[r][c];
                     if (val > 0) {
                         const tile = document.createElement('div');
-                        tile.className = `tile tile-${val}`;
-                        // Calculate pos: 10px gap. Cell size approx 87.5px
-                        // Gap 10.
-                        // 0: 0
-                        // 1: 87.5 + 10 = 97.5
-                        const cellSize = 87.5;
-                        const gap = 10;
-                        const x = c * (cellSize + gap);
-                        const y = r * (cellSize + gap);
-
-                        tile.style.transform = `translate(${x}px, ${y}px)`;
-
-                        // Image fallback
-                        if (IMAGES[val]) {
-                            tile.innerHTML = `<img src="${IMAGES[val]}">`;
-                        } else {
-                            tile.textContent = val;
-                        }
-
+                        tile.className = `tile tile-${val} tile-new`;
+                        tile.style.transform = `translate(${c * 97.5}px, ${r * 97.5}px)`;
+                        tile.innerHTML = `<img src="${IMAGES[val]}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'50\' height=\'50\'%3E%3Ctext y=\'25\' x=\'10\'%3E${val}%3C/text%3E%3C/svg%3E'">`;
                         container.appendChild(tile);
                     }
                 }
@@ -565,139 +199,74 @@
 
         function move(direction) {
             if (won) return;
-
             let moved = false;
-            const newGrid = JSON.parse(JSON.stringify(grid));
-            let mergedScore = 0;
+            let rotatedGrid = JSON.parse(JSON.stringify(grid));
+            const rotMap = { 'ArrowLeft': 0, 'ArrowDown': 1, 'ArrowRight': 2, 'ArrowUp': 3 };
+            const rotations = rotMap[direction];
+            if (rotations === undefined) return;
 
-            // Rotate grid to simplify logic (always move left)
-            let rotated = newGrid;
-            const rotations = { 'Left': 0, 'Down': 1, 'Right': 2, 'Up': 3 };
-            for (let i = 0; i < rotations[direction]; i++) {
-                rotated = rotateGrid(rotated);
-            }
-
-            // Process rows (move left)
+            for (let i = 0; i < rotations; i++) rotatedGrid = rotateGrid(rotatedGrid);
+            
             for (let r = 0; r < GRID_SIZE; r++) {
-                const row = rotated[r].filter(val => val !== 0);
-                const newRow = [];
-                let skip = false;
-
+                const row = rotatedGrid[r].filter(v => v !== 0);
+                const nextRow = [];
                 for (let c = 0; c < row.length; c++) {
-                    if (skip) {
-                        skip = false;
-                        continue;
-                    }
                     if (c + 1 < row.length && row[c] === row[c + 1]) {
-                        const mergedVal = row[c] * 2;
-                        newRow.push(mergedVal);
-                        mergedScore += mergedVal;
-                        skip = true;
-                        if (mergedVal === 32 && !won) {
-                            winGame();
-                        }
+                        const merged = row[c] * 2;
+                        nextRow.push(merged);
+                        score += merged;
+                        moved = true;
+                        if (merged === 32) winGame();
+                        c++;
                     } else {
-                        newRow.push(row[c]);
+                        nextRow.push(row[c]);
                     }
                 }
-
-                // Pad with zeros
-                while (newRow.length < GRID_SIZE) newRow.push(0);
-                rotated[r] = newRow;
+                while (nextRow.length < GRID_SIZE) nextRow.push(0);
+                if (JSON.stringify(rotatedGrid[r]) !== JSON.stringify(nextRow)) moved = true;
+                rotatedGrid[r] = nextRow;
             }
 
-            // Rotate back
-            for (let i = 0; i < (4 - rotations[direction]) % 4; i++) {
-                rotated = rotateGrid(rotated);
-            }
+            for (let i = 0; i < (4 - rotations) % 4; i++) rotatedGrid = rotateGrid(rotatedGrid);
+            grid = rotatedGrid;
 
-            // Check if changed
-            if (JSON.stringify(grid) !== JSON.stringify(rotated)) {
-                grid = rotated;
-                score += mergedScore;
-                updateScore();
+            if (moved) {
+                Casino.Audio.playClick();
                 addRandomTile();
                 renderGrid();
-                playSound(mergedScore > 0 ? 'merge' : 'move');
-
-                if (isGameOver()) {
-                    setTimeout(() => document.getElementById('lose-modal').style.display = 'flex', 500);
-                }
+                updateScore();
+                if (checkGameOver()) showGameOver();
             }
         }
 
-        function rotateGrid(matrix) {
-            return matrix[0].map((val, index) => matrix.map(row => row[index]).reverse());
+        function rotateGrid(g) {
+            return g[0].map((_, i) => g.map(row => row[i]).reverse());
         }
 
-        function isGameOver() {
+        function winGame() {
+            won = true;
+            Casino.Rewards.saveProgress('reward_2048');
+            Casino.UI.showVictory("Has dominat les sumes rítmiques i has assolit la Rodona!", () => location.href = 'menu.html');
+        }
+
+        function checkGameOver() {
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
                     if (grid[r][c] === 0) return false;
-                    if (c < GRID_SIZE - 1 && grid[r][c] === grid[r][c + 1]) return false;
-                    if (r < GRID_SIZE - 1 && grid[r][c] === grid[r + 1][c]) return false;
+                    if (c + 1 < GRID_SIZE && grid[r][c] === grid[r][c + 1]) return false;
+                    if (r + 1 < GRID_SIZE && grid[r][c] === grid[r + 1][c]) return false;
                 }
             }
             return true;
         }
 
-        function winGame() {
-            won = true;
-            playSound('win');
-
-            // Save Reward
-            const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-            rewards['reward_2048'] = true;
-            sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
-
-            setTimeout(() => {
-                document.getElementById('win-modal').style.display = 'flex';
-            }, 500);
+        function showGameOver() {
+            Casino.Audio.playLose();
+            Casino.UI.showModal('gameover', 'GAME OVER', `Has aconseguit ${score} punts. Segueix practicant!`, 'REINICIAR', () => initGame());
         }
 
-        function setupInput() {
-            window.addEventListener('keydown', (e) => {
-                if (e.key === 'ArrowUp') move('Up');
-                else if (e.key === 'ArrowDown') move('Down');
-                else if (e.key === 'ArrowLeft') move('Left');
-                else if (e.key === 'ArrowRight') move('Right');
-            });
-
-            // Swipe support
-            let touchStartX = 0;
-            let touchStartY = 0;
-            const gameArea = document.getElementById('game-container');
-
-            gameArea.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].screenX;
-                touchStartY = e.changedTouches[0].screenY;
-            }, { passive: false });
-
-            gameArea.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                const touchEndX = e.changedTouches[0].screenX;
-                const touchEndY = e.changedTouches[0].screenY;
-
-                const dx = touchEndX - touchStartX;
-                const dy = touchEndY - touchStartY;
-
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    if (Math.abs(dx) > 30) {
-                        if (dx > 0) move('Right');
-                        else move('Left');
-                    }
-                } else {
-                    if (Math.abs(dy) > 30) {
-                        if (dy > 0) move('Down');
-                        else move('Up');
-                    }
-                }
-            }, { passive: false });
-        }
-
+        window.addEventListener('keydown', e => move(e.key));
         initGame();
-
     </script>
 </body>
-
 </html>

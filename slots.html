@@ -5,683 +5,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Slots Rítmics</title>
+    <link rel="stylesheet" href="css/casino-common.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --felt-green: #2d5a27;
-            --felt-dark: #1a3c1a;
-            --wood-border: #5d4037;
-            --gold: #ffd700;
-            --text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-            --danger-red: #ff0033;
-            --wood-mahogany: #4a3728;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #111;
-            font-family: 'Georgia', serif;
-            overflow: hidden;
-            height: 100vh;
+        .game-layout {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            color: white;
-            user-select: none;
+            justify-content: space-around;
+            flex: 1;
         }
 
-        /* Start Screen */
-        #start-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1a0000 0%, #000000 100%);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-        }
-
-        #start-screen h1 {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            color: var(--gold);
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-            text-align: center;
-        }
-
-        button.start-btn {
-            background: linear-gradient(to bottom, #ffd700, #b8860b);
-            border: 2px solid #fff;
-            padding: 20px 40px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            transition: transform 0.1s, filter 0.2s;
-            font-family: 'Georgia', serif;
-            color: #3e2723;
-        }
-
-        button.start-btn:hover {
-            filter: brightness(1.1);
-            transform: translateY(-2px);
-        }
-
-        /* Reward Button */
-        #btn-reward {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #333;
-            color: #888;
-            border: 2px solid #555;
-            padding: 10px 20px;
-            border-radius: 15px;
-            cursor: not-allowed;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1rem;
-            z-index: 100;
-            transition: all 0.5s ease;
-            max-width: 250px;
-            text-align: left;
-            line-height: 1.2;
-        }
-
-        #btn-reward.unlocked {
-            background: linear-gradient(to bottom, #ffd700, #b8860b);
-            color: #3e2723;
-            border-color: #fff;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
-            animation: shine 2s infinite;
-        }
-
-        @keyframes shine {
-            0% {
-                filter: brightness(1);
-            }
-
-            50% {
-                filter: brightness(1.3);
-            }
-
-            100% {
-                filter: brightness(1);
-            }
-        }
-
-        /* Main Game Table */
-        #game-table {
-            width: 95vw;
-            height: 90vh;
-            background: radial-gradient(circle at center, var(--felt-green), var(--felt-dark));
-            border: 20px solid var(--wood-border);
-            border-radius: 50px;
-            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.5);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        /* Texture overlay */
-        #game-table::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
-            pointer-events: none;
-            border-radius: 30px;
-        }
-
-        #btn-menu {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            /* Moved to Left */
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: 1px solid #ffd700;
-            padding: 10px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-            text-decoration: none;
-            font-family: 'Georgia', serif;
-            z-index: 1000;
-            transition: background 0.2s;
-        }
-
-        #btn-menu:hover {
-            background: rgba(255, 215, 0, 0.2);
-        }
-
-        /* Game Container */
-        header {
-            width: 100%;
-            text-align: center;
-            z-index: 10;
-            margin-bottom: 20px;
-        }
-
-        h1.game-title {
-            font-size: 3rem;
-            margin: 0;
-            color: var(--gold);
-            text-shadow: var(--text-shadow);
-            letter-spacing: 2px;
-        }
-
-        .stats-bar {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            font-size: 1.5rem;
-            margin-top: 10px;
-            text-shadow: var(--text-shadow);
-            z-index: 10;
-        }
-
-        .stat-item {
-            background: rgba(0, 0, 0, 0.4);
-            padding: 5px 20px;
-            border-radius: 15px;
-            border: 1px solid var(--gold);
-        }
-
-        /* Volume Control - Top Left */
-        .volume-control {
-            position: absolute;
-            top: 30px;
-            left: 30px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 200;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 20px;
-            border: 1px solid var(--gold);
-        }
-
-        input[type=range] {
-            width: 100px;
-            accent-color: var(--gold);
-        }
-
-        /* Slot Machine Container */
         #slot-machine {
+            background: rgba(0,0,0,0.5);
+            border: 10px solid var(--wood-border);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
             position: relative;
-            width: 700px;
-            height: 400px;
-            background: var(--wood-mahogany);
-            border-radius: 30px;
-            border: 8px solid #2a1d15;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 0 50px rgba(0, 0, 0, 0.5);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            z-index: 10;
         }
 
-        /* Reels */
         .reels-frame {
-            width: 550px;
-            height: 250px;
-            background: #fff;
-            border: 8px solid var(--gold);
-            border-radius: 10px;
-            position: relative;
-            overflow: hidden;
             display: flex;
-            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+            gap: 15px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 10px;
+            border: 5px solid #333;
+            height: 200px;
+            align-items: center;
         }
 
         .reel {
-            flex: 1;
-            height: 100%;
-            border-right: 2px solid #ccc;
-            position: relative;
+            width: 120px;
+            height: 180px;
+            background: #f0f0f0;
+            border: 2px solid #ccc;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .reel:last-child {
-            border-right: none;
-        }
-
-        .symbol {
-            width: 100%;
-            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
         .symbol img {
-            width: 80%;
+            width: 90%;
             height: auto;
-            max-height: 80%;
-            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+            max-height: 100%;
+            object-fit: contain;
+            transition: transform 0.1s;
         }
 
         .blur-spin {
             filter: blur(5px);
+            animation: spinFast 0.1s infinite linear;
         }
 
-        /* Payline */
-        .payline {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--danger-red);
-            z-index: 5;
-            box-shadow: 0 0 10px var(--danger-red);
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        /* Lever */
-        .lever-base {
-            position: absolute;
-            right: -50px;
-            top: 80px;
-            width: 30px;
-            height: 120px;
-            background: #333;
-            border-radius: 0 15px 15px 0;
-            border: 4px solid #111;
-            border-left: none;
+        @keyframes spinFast {
+            from { transform: translateY(-5px); }
+            to { transform: translateY(5px); }
         }
 
         .lever-arm {
             position: absolute;
-            bottom: 15px;
-            left: 5px;
-            width: 15px;
-            height: 100px;
+            right: -60px;
+            top: 50px;
+            width: 20px;
+            height: 120px;
             background: silver;
+            border-radius: 10px;
             transform-origin: bottom center;
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
+            transition: transform 0.5s;
         }
 
         .lever-knob {
-            position: absolute;
-            top: -25px;
-            left: -10px;
-            width: 35px;
-            height: 35px;
-            background: var(--danger-red);
+            width: 40px;
+            height: 40px;
+            background: #ff4444;
             border-radius: 50%;
-            box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.5);
+            position: absolute;
+            top: -20px;
+            left: -10px;
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5);
         }
 
-        .lever-pulled {
-            animation: pullLever 0.5s ease-in-out;
-        }
-
-        @keyframes pullLever {
-            0% {
-                transform: rotateX(0deg);
-            }
-
-            50% {
-                transform: rotateX(60deg) scaleY(0.8);
-            }
-
-            100% {
-                transform: rotateX(0deg);
-            }
-        }
-
-        /* Controls */
-        #controls-area {
-            margin-top: 20px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            z-index: 10;
-        }
+        .pulled { transform: rotateX(60deg) scaleY(0.8); }
 
         .bet-panel {
             display: flex;
             gap: 10px;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 10px;
-            border-radius: 15px;
-            border: 1px solid var(--wood-border);
+            margin-top: 20px;
         }
 
-        .bet-btn {
-            background: linear-gradient(to bottom, #444, #222);
-            color: #fff;
-            border: 2px solid #666;
-            padding: 10px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-family: 'Georgia', serif;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-
-        .bet-btn:hover {
-            background: #555;
-            border-color: #888;
-        }
-
-        .bet-btn.active {
-            background: var(--gold);
-            color: #000;
-            border-color: #fff;
-            box-shadow: 0 0 10px var(--gold);
-        }
-
-        .bet-btn.max-bet {
-            background: linear-gradient(to bottom, #ff4444, #cc0000);
-            border-color: #ff0000;
-        }
-
-        .bet-btn.max-bet.active {
-            background: #ff0000;
-            box-shadow: 0 0 15px #ff0000;
-            color: #fff;
-        }
-
-        .boost-btn {
-            background: linear-gradient(to bottom, #9c27b0, #7b1fa2);
-            color: #fff;
-            border: 2px solid #e1bee7;
-            padding: 12px 25px;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(156, 39, 176, 0.5);
-            font-family: 'Georgia', serif;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.05);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
-        /* Message Area */
         #message-area {
-            margin-top: 15px;
-            height: 30px;
             font-size: 1.5rem;
             color: var(--gold);
-            text-shadow: 1px 1px 2px #000;
+            height: 2rem;
             text-align: center;
             font-weight: bold;
-        }
-
-        /* Modals */
-        #quiz-modal,
-        #reward-modal,
-        #gameover-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 500;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, #2d5a27, #1a3316);
-            border: 4px solid var(--gold);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 600px;
-            color: #fff;
-            box-shadow: 0 0 50px var(--gold);
-        }
-
-        .quiz-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .quiz-btn {
-            background: #fff;
-            color: #000;
-            border: none;
-            padding: 15px;
-            font-size: 1.2rem;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: transform 0.1s;
-            font-family: 'Georgia', serif;
-        }
-
-        .quiz-btn:hover {
-            transform: scale(1.05);
-            background: var(--gold);
-        }
-
-        /* Confetti */
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background-color: var(--gold);
-            animation: fall linear forwards;
-            z-index: 1000;
-        }
-
-        @keyframes fall {
-            to {
-                transform: translateY(100vh) rotate(720deg);
-            }
-        }
-
-        /* Instructions Modal Styles */
-        #instructions-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .instr-content {
-            background: #1a0505;
-            padding: 40px;
-            border: 4px double var(--gold);
-            text-align: center;
-            max-width: 600px;
-            color: #fff;
-            position: relative;
-        }
-
-        .instr-close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #aaa;
-            font-size: 2rem;
-            cursor: pointer;
-        }
-
-        .instr-btn {
-            padding: 10px 30px;
-            font-size: 1.2rem;
-            background: var(--gold);
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #1a0505;
-            margin-top: 20px;
+            margin-top: 15px;
         }
     </style>
 </head>
 
 <body>
-
-    <div id="start-screen">
-        <h1>SLOTS RÍTMICS</h1>
-        <p style="font-size: 1.5rem; margin-bottom: 30px;">Benvingut al Casino de Beethoven</p>
-        <button class="start-btn" onclick="initGame()">ENTRAR AL CASINO</button>
-    </div>
-
-    <!-- Reward Button -->
-    <button id="btn-reward" onclick="claimReward()">
-        <span style="font-size: 1.5rem;">🔒</span>
-        <span>Aconseguir el Fonògraf d'Edison (5000 🪙)</span>
-    </button>
-
-    <!-- Menu Button -->
-    <a href="menu.html" id="btn-menu">🏠 MENÚ</a>
-
-    <div id="game-table">
-        <!-- Instructions Modal -->
-        <div id="instructions-modal">
-            <div class="instr-content">
-                <span class="instr-close"
-                    onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
-                <h2 style="color: var(--gold);">COM JUGAR</h2>
-                <p style="font-size:1.2rem;">Fes girar els rodets i aconsegueix combinacions de figures musicals!</p>
-                <p>Aconsegueix 3 figures iguals per guanyar premis.</p>
-                <p>Arriba a 5000 fitxes per desbloquejar la relíquia!</p>
-                <button class="instr-btn"
-                    onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
-            </div>
-        </div>
-
-        <!-- Volume Control -->
-        <div class="volume-control">
-            <button id="mute-btn" onclick="toggleMute()"
-                style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">🔊</button>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
-        </div>
-
-        <header>
-            <h1 class="game-title">SLOTS RÍTMICS</h1>
-            <div class="stats-bar">
-                <div class="stat-item">FITXES: <span id="balance">1000</span> 🪙</div>
-                <div class="stat-item">APOSTA: <span id="current-bet-display">100</span> 🪙</div>
-            </div>
-        </header>
-
-        <div id="slot-machine">
-            <div class="reels-frame">
-                <div class="payline"></div>
-                <div class="reel" id="reel-1">
-                    <div class="symbol"></div>
-                </div>
-                <div class="reel" id="reel-2">
-                    <div class="symbol"></div>
-                </div>
-                <div class="reel" id="reel-3">
-                    <div class="symbol"></div>
-                </div>
+    <div class="casino-table">
+        <div class="game-layout">
+            <div style="display:flex; justify-content:space-around; width:100%; font-size:1.5rem; color:var(--gold);">
+                <div>FITXES: <span id="balance">1000</span> 🪙</div>
+                <div>APOSTA: <span id="current-bet-display">100</span> 🪙</div>
             </div>
 
-            <div class="lever-base">
-                <div class="lever-arm" id="lever">
+            <div id="slot-machine">
+                <div class="reels-frame">
+                    <div class="reel" id="reel-1"><div class="symbol"></div></div>
+                    <div class="reel" id="reel-2"><div class="symbol"></div></div>
+                    <div class="reel" id="reel-3"><div class="symbol"></div></div>
+                </div>
+
+                <div class="lever-arm" id="lever" onclick="game.spin()">
                     <div class="lever-knob"></div>
                 </div>
+
+                <div id="message-area">Tira de la palanca!</div>
             </div>
 
-            <div id="message-area">Prem la palanca per girar!</div>
-
-            <div id="controls-area">
-                <div class="bet-panel">
-                    <button class="bet-btn" data-bet="50">50</button>
-                    <button class="bet-btn active" data-bet="100">100</button>
-                    <button class="bet-btn" data-bet="250">250</button>
-                    <button class="bet-btn max-bet" data-bet="500">TOT O RES</button>
-                </div>
-                <button class="boost-btn" id="boost-btn">BOOST DE SORT ✨</button>
+            <div class="bet-panel">
+                <button class="modal-btn" style="min-width:80px;" onclick="game.setBet(50)">50</button>
+                <button class="modal-btn" style="min-width:80px;" onclick="game.setBet(100)">100</button>
+                <button class="modal-btn" style="min-width:80px;" onclick="game.setBet(250)">250</button>
+                <button class="modal-btn" style="min-width:120px; background:#ff4444; color:white;" onclick="game.setBet(500)">TOT O RES</button>
             </div>
+            
+            <button class="modal-btn" style="background:var(--felt-dark); color:white;" onclick="game.boost()">✨ BOOST DE SORT</button>
         </div>
     </div>
 
-    <!-- Quiz Modal -->
-    <div id="quiz-modal">
-        <div class="modal-content">
-            <h2 style="color: var(--gold);">PREGUNTA RÍTMICA</h2>
-            <p id="quiz-question" style="font-size: 1.5rem; margin: 20px 0;">Pregunta...</p>
-            <div class="quiz-options" id="quiz-options">
-                <!-- Options -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Reward Modal -->
-    <div id="reward-modal">
-        <div class="modal-content">
-            <div style="font-size: 5rem;">📻</div>
-            <h2 style="color: var(--gold);">PREMI HISTÒRIC!</h2>
-            <p>Has aconseguit 5000 fitxes!</p>
-            <p>Aquí tens la teva relíquia:</p>
-            <h3 style="color: var(--gold); font-size: 2rem;">EL FONÒGRAF D'EDISON</h3>
-            <p style="font-size: 1rem; opacity: 0.8;">"La primera màquina capaç de gravar i reproduir so (1877)."</p>
-            <button class="quiz-btn" onclick="location.reload()">TORNAR A JUGAR</button>
-        </div>
-    </div>
-
-    <!-- Game Over Modal -->
-    <div id="gameover-modal">
-        <div class="modal-content">
-            <h2 style="color: #ff4444;">SENSE FITXES...</h2>
-            <p>La casa sempre guanya.</p>
-            <button class="quiz-btn" onclick="location.reload()">REINICIAR</button>
-        </div>
-    </div>
-
-    <!-- Audio -->
-    <audio id="bg-music" loop>
-        <source src="music/background_music_tragaperras.mp3" type="audio/mpeg">
-    </audio>
-
+    <script src="js/casino-common.js"></script>
     <script>
-        // --- DATA ---
+        Casino.Audio.init('music/background_music_tragaperras.mp3');
+        Casino.UI.injectBasicUI('Slots Rítmics');
+
         const SYMBOLS = [
             { id: 'rodona', val: 50, img: 'images/rodona.jpg', name: 'RODONA' },
             { id: 'blanca', val: 20, img: 'images/blanca.jpg', name: 'BLANCA' },
@@ -690,375 +154,130 @@
             { id: 'semicorxera', val: 2, img: 'images/semicorxera.jpg', name: 'SEMICORXERA' }
         ];
 
-        const QUIZ_DATA = [
-            { q: "Quant sumen Blanca + Negra?", a: ["3 Temps", "2 Temps", "4 Temps", "1.5 Temps"], correct: 0 },
-            { q: "Quina figura val la meitat d'una Rodona?", a: ["Blanca", "Negra", "Corxera", "Semicorxera"], correct: 0 },
-            { q: "Quant val una Negra?", a: ["1 Temps", "2 Temps", "0.5 Temps", "4 Temps"], correct: 0 },
-            { q: "Dues Corxeres equivalen a...", a: ["Una Negra", "Una Blanca", "Una Semicorxera", "Tres Negres"], correct: 0 },
-            { q: "Quina figura és la més ràpida?", a: ["Semicorxera", "Corxera", "Negra", "Blanca"], correct: 0 }
-        ];
+        class SlotsGame {
+            constructor() {
+                this.balance = 1000;
+                this.currentBet = 100;
+                this.isSpinning = false;
+                this.isBoosted = false;
 
-        // --- STATE ---
-        let state = {
-            balance: 1000,
-            currentBet: 100,
-            isSpinning: false,
-            isBoosted: false,
-            boostMultiplier: 1,
-            isSpinning: false,
-            isBoosted: false,
-            boostMultiplier: 1,
-            rewardUnlocked: false,
-            isMuted: false,
-            previousVolume: 0.5
-        };
-
-        // --- AUDIO ---
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        let audioCtx;
-        const bgMusic = document.getElementById('bg-music');
-
-        function initGame() {
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('instructions-modal').style.display = 'flex';
-            audioCtx = new AudioContext();
-            bgMusic.volume = 0.5;
-            bgMusic.play().catch(e => console.log("Music failed", e));
-
-            // Init Reels with random symbols
-            [1, 2, 3].forEach(i => {
-                const rand = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-                setReelSymbol(i - 1, rand);
-            });
-        }
-
-        function playSound(type) {
-            if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            const now = audioCtx.currentTime;
-
-            switch (type) {
-                case 'spin':
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(100, now);
-                    osc.frequency.linearRampToValueAtTime(50, now + 0.1);
-                    gain.gain.setValueAtTime(0.1, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.1);
-                    break;
-                case 'stop':
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(200, now);
-                    gain.gain.setValueAtTime(0.2, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.05);
-                    break;
-                case 'win':
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(800, now);
-                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
-                    gain.gain.setValueAtTime(0.3, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.5);
-                    break;
-                case 'jackpot':
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(600, now);
-                    osc.frequency.linearRampToValueAtTime(1200, now + 0.5);
-                    osc.frequency.linearRampToValueAtTime(600, now + 1.0);
-                    gain.gain.setValueAtTime(0.3, now);
-                    gain.gain.linearRampToValueAtTime(0, now + 2.0);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now);
-                    osc.stop(now + 2.0);
-                    break;
-            }
-        }
-
-        // --- DOM ---
-        const balanceEl = document.getElementById('balance');
-        const betDisplayEl = document.getElementById('current-bet-display');
-        const lever = document.getElementById('lever');
-        const messageArea = document.getElementById('message-area');
-        const boostBtn = document.getElementById('boost-btn');
-        const quizModal = document.getElementById('quiz-modal');
-        const rewardModal = document.getElementById('reward-modal');
-        const gameoverModal = document.getElementById('gameover-modal');
-        const volumeSlider = document.getElementById('volume-slider');
-        const btnReward = document.getElementById('btn-reward');
-
-        // --- EVENTS ---
-        document.querySelectorAll('.bet-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (state.isSpinning) return;
-                document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.currentBet = parseInt(btn.dataset.bet);
-                betDisplayEl.textContent = state.currentBet;
-            });
-        });
-
-        lever.addEventListener('click', spin);
-        boostBtn.addEventListener('click', startQuiz);
-
-        volumeSlider.addEventListener('input', (e) => {
-            const val = e.target.value;
-
-            if (state.isMuted) {
-                state.isMuted = false;
-                document.getElementById('mute-btn').textContent = "🔊";
+                // Initial symbols
+                [1,2,3].forEach(i => this.setReel(i, SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)]));
+                setTimeout(() => this.showInstructions(), 500);
             }
 
-            bgMusic.volume = val;
-            updateMuteIcon(val);
-        });
-
-        function toggleMute() {
-            state.isMuted = !state.isMuted;
-            const icon = document.getElementById('mute-btn');
-
-            if (state.isMuted) {
-                state.previousVolume = bgMusic.volume;
-                bgMusic.volume = 0;
-                icon.textContent = "🔇";
-            } else {
-                bgMusic.volume = volumeSlider.value;
-                updateMuteIcon(bgMusic.volume);
-            }
-        }
-
-        function updateMuteIcon(val) {
-            const icon = document.getElementById('mute-btn');
-            if (val == 0) icon.textContent = "🔇";
-            else if (val < 0.5) icon.textContent = "🔉";
-            else icon.textContent = "🔊";
-        }
-
-        // --- LOGIC ---
-
-        function startQuiz() {
-            if (state.isSpinning) return;
-            const q = QUIZ_DATA[Math.floor(Math.random() * QUIZ_DATA.length)];
-            document.getElementById('quiz-question').textContent = q.q;
-            const optsDiv = document.getElementById('quiz-options');
-            optsDiv.innerHTML = '';
-
-            let answers = q.a.map((ans, i) => ({ txt: ans, isCorrect: i === q.correct }));
-            answers.sort(() => Math.random() - 0.5);
-
-            answers.forEach(ans => {
-                const btn = document.createElement('button');
-                btn.className = 'quiz-btn';
-                btn.textContent = ans.txt;
-                btn.onclick = () => resolveQuiz(ans.isCorrect);
-                optsDiv.appendChild(btn);
-            });
-
-            quizModal.style.display = 'flex';
-        }
-
-        function resolveQuiz(correct) {
-            quizModal.style.display = 'none';
-            if (correct) {
-                state.isBoosted = true;
-                messageArea.textContent = "SORT AUGMENTADA AL MÀXIM! ✨";
-                messageArea.style.color = "#00ff00";
-                boostBtn.disabled = true;
-                boostBtn.style.opacity = 0.5;
-            } else {
-                messageArea.textContent = "MALA SORT... Bloqueig temporal.";
-                messageArea.style.color = "#ff0000";
-                lever.style.pointerEvents = 'none';
-                setTimeout(() => {
-                    lever.style.pointerEvents = 'auto';
-                    messageArea.textContent = "Prem la palanca per girar!";
-                    messageArea.style.color = "var(--gold)";
-                }, 2000);
-            }
-        }
-
-        async function spin() {
-            if (state.isSpinning) return;
-            if (state.balance < state.currentBet) {
-                messageArea.textContent = "No tens prous fitxes!";
-                return;
+            showInstructions() {
+                Casino.UI.showModal('slots-instr', 'LES MÀQUINES DE L\'ATZAR', 
+                    'Fes girar els rodets i aconsegueix combinacions de figures musicals!<br><br>' +
+                    '<b>3 IGUALS</b>: Premi segons la figura.<br>' +
+                    '<b>2 IGUALS</b>: Recuperes l\'aposta.<br><br>' +
+                    'Monedes per guanyar: 5.000.', 'PROVAR SORT');
             }
 
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            setBet(val) {
+                if (this.isSpinning) return;
+                this.currentBet = val;
+                document.getElementById('current-bet-display').textContent = this.currentBet;
+                Casino.Audio.playClick();
+            }
 
-            state.isSpinning = true;
-            state.balance -= state.currentBet;
-            updateUI();
-            messageArea.textContent = "Girant...";
-            messageArea.style.color = "var(--gold)";
+            setReel(id, sym) {
+                document.getElementById(`reel-${id}`).querySelector('.symbol').innerHTML = `<img src="${sym.img}">`;
+            }
 
-            lever.classList.add('lever-pulled');
-            setTimeout(() => lever.classList.remove('lever-pulled'), 500);
+            boost() {
+                if (this.isSpinning || this.isBoosted) return;
+                Casino.UI.showModal('quiz', 'PREGUNTA RÍTMICA', 
+                    'Si encertes la pregunta, la teva propera tirada tindrà una sort espectacular!', 
+                    'COMENÇAR RECTO', () => {
+                        const q = "Quant sumen Blanca + Negra?";
+                        Casino.UI.showModal('quiz-q', 'PREGUNTA', q + '<br><br><button class="modal-btn" onclick="game.resolveQuiz(true)">3 Temps</button> <button class="modal-btn" onclick="game.resolveQuiz(false)">2 Temps</button>', 'CANCELLAR');
+                    });
+            }
 
-            // Determine Result
-            let result = [
-                Math.floor(Math.random() * SYMBOLS.length),
-                Math.floor(Math.random() * SYMBOLS.length),
-                Math.floor(Math.random() * SYMBOLS.length)
-            ];
-
-            if (state.isBoosted) {
-                if (Math.random() > 0.5) {
-                    const sym = Math.floor(Math.random() * 3);
-                    result = [sym, sym, sym];
+            resolveQuiz(correct) {
+                if (correct) {
+                    this.isBoosted = true;
+                    Casino.Audio.playWin();
+                    document.getElementById('message-area').textContent = "✨ SORT AUGMENTADA!";
+                    document.getElementById('message-area').style.color = "#00ff00";
                 } else {
-                    const sym = Math.floor(Math.random() * SYMBOLS.length);
-                    result = [sym, sym, (sym + 1) % SYMBOLS.length];
+                    Casino.Audio.playLose();
+                    document.getElementById('message-area').textContent = "MALA SORT...";
                 }
-                state.isBoosted = false;
-                boostBtn.disabled = false;
-                boostBtn.style.opacity = 1;
             }
 
-            // Spin Animation
-            const spinDuration = 2000;
-            const reels = [0, 1, 2];
+            async spin() {
+                if (this.isSpinning) return;
+                if (this.balance < this.currentBet) return alert("No tens prous fitxes!");
 
-            // Start spinning sound loop
-            const spinInterval = setInterval(() => playSound('spin'), 100);
+                this.isSpinning = true;
+                this.balance -= this.currentBet;
+                this.updateUI();
 
-            // Animate reels
-            const animations = reels.map((reelIdx, i) => {
-                return new Promise(resolve => {
-                    const reelEl = document.getElementById(`reel-${reelIdx + 1}`).querySelector('.symbol');
-                    // Rapidly change image
-                    const animInt = setInterval(() => {
-                        const randSym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-                        reelEl.innerHTML = `<img src="${randSym.img}" style="width:90%; height:auto;" class="blur-spin">`;
-                    }, 100);
+                const lever = document.getElementById('lever');
+                lever.classList.add('pulled');
+                Casino.Audio.playTone(100, 'sawtooth', 0.1);
+                setTimeout(() => lever.classList.remove('pulled'), 500);
 
-                    // Stop after delay
-                    setTimeout(() => {
-                        clearInterval(animInt);
-                        setReelSymbol(reelIdx, SYMBOLS[result[reelIdx]]);
-                        playSound('stop');
-                        resolve();
-                    }, spinDuration + (i * 500));
+                let result = [Math.floor(Math.random()*5), Math.floor(Math.random()*5), Math.floor(Math.random()*5)];
+                if (this.isBoosted && Math.random() > 0.5) result = [0,0,0]; // Force Rodona Jackpot half time
+                this.isBoosted = false;
+
+                const reels = [1,2,3];
+                const animations = reels.map((id, i) => {
+                    return new Promise(resolve => {
+                        const img = document.getElementById(`reel-${id}`).querySelector('img');
+                        img.classList.add('blur-spin');
+                        
+                        setTimeout(() => {
+                            img.classList.remove('blur-spin');
+                            this.setReel(id, SYMBOLS[result[i]]);
+                            Casino.Audio.playTone(200, 'square', 0.1);
+                            resolve();
+                        }, 2000 + (i * 500));
+                    });
                 });
-            });
 
-            await Promise.all(animations);
-
-            clearInterval(spinInterval);
-            checkWin(result);
-            state.isSpinning = false;
-        }
-
-        function setReelSymbol(reelIndex, symbolObj) {
-            const reelEl = document.getElementById(`reel-${reelIndex + 1}`).querySelector('.symbol');
-            reelEl.innerHTML = `<img src="${symbolObj.img}" style="width:90%; height:auto;">`;
-        }
-
-        function checkWin(result) {
-            const s1 = SYMBOLS[result[0]];
-            const s2 = SYMBOLS[result[1]];
-            const s3 = SYMBOLS[result[2]];
-
-            let winAmount = 0;
-            let message = "";
-            let isJackpot = false;
-
-            if (s1.id === s2.id && s2.id === s3.id) {
-                winAmount = state.currentBet * getMultiplier(s1.id);
-                message = `TRIPLE ${s1.name}! +${winAmount}`;
-                isJackpot = s1.id === 'rodona';
-                playSound(isJackpot ? 'jackpot' : 'win');
-            } else if (s1.id === s2.id || s2.id === s3.id || s1.id === s3.id) {
-                winAmount = state.currentBet;
-                message = "PARELLA! Recuperes l'aposta.";
-                playSound('stop');
-            } else {
-                message = "Res... Torna-ho a provar.";
+                await Promise.all(animations);
+                this.checkWin(result);
+                this.isSpinning = false;
             }
 
-            if (winAmount > 0) {
-                state.balance += winAmount;
-                messageArea.style.color = "#00ff00";
-                if (isJackpot) createConfetti();
-            } else {
-                messageArea.style.color = "#fff";
+            checkWin(res) {
+                const s1 = SYMBOLS[res[0]], s2 = SYMBOLS[res[1]], s3 = SYMBOLS[res[2]];
+                let win = 0, msg = "Res...";
+
+                if (s1.id === s2.id && s2.id === s3.id) {
+                    win = this.currentBet * s1.val;
+                    msg = `TRIPLE ${s1.name}! +${win} 🪙`;
+                    Casino.Audio.playWin();
+                } else if (s1.id === s2.id || s2.id === s3.id || s1.id === s3.id) {
+                    win = this.currentBet;
+                    msg = "PARELLA! Recuperes l'aposta.";
+                    Casino.Audio.playTone(440, 'sine', 0.2);
+                } else {
+                    Casino.Audio.playTone(100, 'square', 0.3);
+                }
+
+                this.balance += win;
+                document.getElementById('message-area').textContent = msg;
+                document.getElementById('message-area').style.color = win > 0 ? "#00ff00" : "#fff";
+                this.updateUI();
             }
 
-            updateUI();
-            messageArea.textContent = message;
-
-            if (state.balance <= 0) {
-                setTimeout(() => {
-                    gameoverModal.style.display = 'flex';
-                }, 1000);
+            updateUI() {
+                document.getElementById('balance').textContent = this.balance;
+                if (this.balance >= 5000) {
+                    Casino.Rewards.saveProgress('reward_slots');
+                    Casino.UI.showVictory("Has buidat la banca! El Fonògraf d'Edison és teu.", () => location.href = 'menu.html');
+                } else if (this.balance <= 0) {
+                    Casino.UI.showModal('gameover', 'SENSE FITXES', 'Torna demà amb més quartos!', 'OK', () => location.reload());
+                }
             }
         }
 
-        function updateUI() {
-            balanceEl.textContent = state.balance;
-
-            // Check Reward Unlock
-            if (state.balance >= 5000 && !state.rewardUnlocked) {
-                state.rewardUnlocked = true;
-                btnReward.classList.add('unlocked');
-                btnReward.innerHTML = '<span style="font-size: 1.5rem;">📻</span><span>Aconseguir el Fonògraf d\'Edison</span>';
-                playSound('jackpot');
-                createConfetti();
-
-                // Save Reward
-                const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                rewards['reward_slots'] = true;
-                sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
-
-                // Redirect
-                // setTimeout(() => {
-                //     window.location.href = 'menu.html';
-                // }, 4000);
-            }
-        }
-
-        function claimReward() {
-            if (state.rewardUnlocked) {
-                rewardModal.style.display = 'flex';
-                playSound('jackpot');
-                createConfetti();
-            }
-        }
-
-        function getMultiplier(id) {
-            switch (id) {
-                case 'rodona': return 50;
-                case 'blanca': return 20;
-                case 'negra': return 10;
-                case 'corxera': return 5;
-                case 'semicorxera': return 2;
-                default: return 0;
-            }
-        }
-
-        function createConfetti() {
-            for (let i = 0; i < 100; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.style.left = Math.random() * 100 + 'vw';
-                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                document.body.appendChild(confetti);
-            }
-        }
-
+        const game = new SlotsGame();
     </script>
 </body>
-
 </html>

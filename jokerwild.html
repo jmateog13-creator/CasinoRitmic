@@ -4,696 +4,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Poker: Joker Wild</title>
+    <title>Joker Poker Rítmic</title>
+    <link rel="stylesheet" href="css/casino-common.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-        :root {
-            --blue-bg: #00008b;
-            --neon-yellow: #ffff00;
-            --neon-green: #00ff00;
-            --card-white: #ffffff;
-            --felt-blue: #00008b;
-            --gold: #ffd700;
-        }
-
-        /* Instructions Modal */
-        #instructions-modal {
-            display: flex;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .instr-content {
-            background: #1a0505;
-            padding: 40px;
-            border: 4px double var(--gold);
-            text-align: center;
-            max-width: 600px;
-            color: #fff;
-            position: relative;
-        }
-
-        .instr-close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #aaa;
-            font-size: 2rem;
-            cursor: pointer;
-        }
-
-        .instr-btn {
-            padding: 10px 30px;
-            font-size: 1.2rem;
-            background: var(--gold);
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #1a0505;
-            margin-top: 20px;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: var(--neon-yellow);
-            font-family: 'Press Start 2P', cursive;
-            overflow: hidden;
+        .game-layout {
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
-            user-select: none;
-        }
-
-        /* CRT Effect */
-        body::after {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2;
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
-        }
-
-        #ui-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+            justify-content: center;
+            flex: 1;
             padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-sizing: border-box;
-            z-index: 10;
-        }
-
-        .btn-menu {
-            text-decoration: none;
-            color: var(--neon-yellow);
-            border: 4px solid var(--neon-yellow);
-            padding: 10px;
-            background: #000;
-            font-size: 1rem;
-        }
-
-        #game-container {
-            width: 900px;
-            height: 700px;
-            background-color: var(--blue-bg);
-            border: 20px solid #444;
-            border-radius: 20px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 40px;
-            box-shadow: 0 0 50px rgba(0, 0, 255, 0.5);
-            margin-top: 50px;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            color: var(--neon-yellow);
-            text-shadow: 4px 4px 0 #ff0000;
-            margin: 0;
-            text-align: center;
-        }
-
-        #paytable {
             width: 100%;
-            display: flex;
-            justify-content: space-around;
-            background: #000044;
-            padding: 10px;
-            border: 2px solid var(--neon-yellow);
-            font-size: 0.8rem;
-            color: #fff;
-        }
-
-        .pay-row {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .pay-row.highlight {
-            background: #ff0000;
-            color: #ffff00;
-            animation: blink 0.5s infinite;
-        }
-
-        @keyframes blink {
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        #cards-area {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin: 40px 0;
-        }
-
-        .card {
-            width: 120px;
-            height: 180px;
-            background: var(--card-white);
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            cursor: pointer;
-            border: 4px solid transparent;
-            transition: transform 0.1s;
-        }
-
-        .card img {
-            width: 80px;
-            height: 80px;
-            object-fit: contain;
-        }
-
-        .card.held {
-            border-color: #ff0000;
-            transform: translateY(-20px);
-        }
-
-        .held-label {
-            position: absolute;
-            bottom: -30px;
-            color: #ff0000;
-            font-weight: bold;
-            display: none;
-        }
-
-        .card.held .held-label {
-            display: block;
-        }
-
-        .card-val {
-            font-size: 1.5rem;
-            color: #000;
-            margin-top: 10px;
-        }
-
-        .joker-card {
-            background: linear-gradient(135deg, #fff, #ffffaa);
-            border: 4px solid #ff00ff;
-        }
-
-        #controls {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .btn-action {
-            background: #ff0000;
-            color: #fff;
-            border: 4px solid #fff;
-            padding: 20px 40px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 1.2rem;
-            cursor: pointer;
-            box-shadow: 5px 5px 0 #000;
-        }
-
-        .btn-action:active {
-            transform: translate(4px, 4px);
-            box-shadow: 1px 1px 0 #000;
-        }
-
-        .btn-action:disabled {
-            background: #555;
-            color: #aaa;
-            cursor: not-allowed;
-        }
-
-        #status-bar {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            background: #000;
-            padding: 10px;
-            border: 2px solid #fff;
-            font-size: 1rem;
-        }
-
-        /* Modals */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .modal-content {
             background: #00008b;
-            padding: 40px;
-            border: 4px solid var(--neon-yellow);
-            text-align: center;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .pay-table {
+            background: #000044;
+            border: 2px solid var(--gold);
+            padding: 15px;
+            display: flex;
+            gap: 40px;
+            margin-bottom: 30px;
+            font-size: 0.7rem;
+            color: white;
+        }
+
+        .cards-hand {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .poker-card {
+            width: 110px;
+            height: 160px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            border: 4px solid transparent;
+        }
+        .poker-card img { width: 60%; pointer-events: none; }
+        .poker-card .val { font-size: 1rem; color: #000; margin-top: 10px; }
+        .poker-card.joker { background: linear-gradient(135deg, #fff, #ffdfba); border: 2px solid #ff00ff; }
+        .poker-card.joker .emoji { font-size: 3rem; }
+
+        .game-hud {
+            width: 100%;
             max-width: 600px;
-        }
-
-        .option-btn {
-            background: #00ff00;
-            color: #000;
-            border: 2px solid #fff;
+            background: rgba(0,0,0,0.8);
+            border: 2px solid white;
             padding: 10px 20px;
-            margin: 10px;
-            font-family: 'Press Start 2P';
-            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--neon-yellow);
+            margin-bottom: 20px;
         }
 
-        .relic-icon {
-            font-size: 4rem;
-            margin: 20px;
+        .btn-poker {
+            background: #ff0000;
+            color: white;
+            border: 4px solid white;
+            padding: 15px 30px;
+            font-family: 'Press Start 2P', cursive;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 #000;
         }
+        .btn-poker:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
+
+        .joker-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            text-align: center;
+        }
+        .joker-opts { display: flex; gap: 20px; margin-top: 30px; }
     </style>
 </head>
 
 <body>
-
-    <!-- Instructions Modal -->
-    <div id="instructions-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button"
-                onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
-            <h2 style="color: var(--neon-yellow);">COM JUGAR</h2>
-            <p style="font-size:1.2rem;">Video Poker amb un comodín (Joker).</p>
-            <p>Assigna al Joker el valor necessari per completar el compàs de 4 temps.</p>
-            <button class="btn-action"
-                onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
-        </div>
-    </div>
-
-    <div id="ui-bar">
-        <a href="menu.html" class="btn-menu">🏠 MENÚ</a>
-        <div style="display:flex; align-items:center; gap:10px;">
-            <button id="mute-btn" style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">🔊</button>
-            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5"
-                style="accent-color: var(--neon-yellow);">
-        </div>
-    </div>
-
-    <div id="game-container">
-        <h1>JOKER WILD</h1>
-
-        <div id="paytable">
-            <div class="pay-row" id="pay-natural">
-                <span>NATURAL 4</span>
-                <span>x5</span>
+    <div class="casino-table">
+        <div class="game-layout">
+            <div class="pay-table">
+                <div>NATURAL 4.0 <span style="color:var(--gold)">x10</span></div>
+                <div>JOKER 4.0 <span style="color:var(--gold)">x5</span></div>
             </div>
-            <div class="pay-row" id="pay-joker">
-                <span>JOKER 4</span>
-                <span>x3</span>
+
+            <div class="cards-hand" id="hand"></div>
+
+            <div class="game-hud">
+                <div>SALDO: <span id="credits">100</span></div>
+                <div>VICTÒRIES: <span id="wins">0</span>/5</div>
             </div>
-        </div>
 
-        <div id="cards-area">
-            <!-- 5 Cards -->
-            <div class="card" onclick="toggleHold(0)"></div>
-            <div class="card" onclick="toggleHold(1)"></div>
-            <div class="card" onclick="toggleHold(2)"></div>
-            <div class="card" onclick="toggleHold(3)"></div>
-            <div class="card" onclick="toggleHold(4)"></div>
-        </div>
-
-        <div id="status-bar">
-            <div>CRÈDITS: <span id="credits">100</span></div>
-            <div>APOSTA: <span id="bet">5</span></div>
-            <div>GUANYADES: <span id="wins">0</span>/5</div>
-        </div>
-
-        <div id="controls">
-            <button class="btn-action" id="btn-deal" onclick="deal()">REPARTIR</button>
+            <button class="btn-poker" id="btn-deal" onclick="game.play()">REPARTIR MÀ</button>
         </div>
     </div>
 
-    <!-- Joker Modal -->
-    <div id="joker-modal" class="modal">
-        <div class="modal-content">
-            <h2>JOKER WILD!</h2>
-            <p id="joker-text">Tens X. Quant ha de valer el Joker per sumar 4?</p>
-            <div id="joker-options">
-                <!-- Options generated via JS -->
-            </div>
-        </div>
+    <!-- Joker Calculation Modal -->
+    <div class="joker-modal" id="j-modal">
+        <h2 style="color:var(--gold); margin-bottom:20px;">JOKER WILD!</h2>
+        <div id="j-equation" style="font-size:1.5rem; margin-bottom:20px;">X + 2.0 = 4.0</div>
+        <p>Quin valor ha de tenir el Joker per completar el compàs?</p>
+        <div class="joker-opts" id="j-opts"></div>
     </div>
 
-    <!-- Win Modal -->
-    <div id="win-modal" class="modal">
-        <div class="modal-content">
-            <h2 style="color: var(--neon-yellow);">ROMANTICISME SECRET!</h2>
-            <div class="relic-icon">📖</div>
-            <p>"EL DIARI SECRET DE CLARA SCHUMANN"</p>
-            <p style="font-size: 0.8rem;">La millor pianista del segle XIX. En aquest diari narrava la seva vida amb
-                Robert Schumann i l'amistat amb Brahms.</p>
-            <button class="btn-action" onclick="location.reload()">TORNAR</button>
-        </div>
-    </div>
-
-    <!-- Lose Modal -->
-    <div id="lose-modal" class="modal">
-        <div class="modal-content">
-            <h2 style="color: red;">GAME OVER</h2>
-            <p id="lose-msg">Has perdut.</p>
-            <button class="btn-action" onclick="location.reload()">REINTENTAR</button>
-        </div>
-    </div>
-
-    <audio id="bg-music" src="music/background_music_jokerwild.mp3" loop></audio>
-
+    <script src="js/casino-common.js"></script>
     <script>
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioContext();
+        Casino.Audio.init('music/background_music_jokerwild.mp3');
+        Casino.UI.injectBasicUI('Joker Poker Rítmic');
 
-        // Background Music
-        // Background Music
-        const bgMusic = document.getElementById('bg-music');
-        const muteBtn = document.getElementById('mute-btn');
-        let isMuted = false;
-        let previousVolume = 0.5;
-
-        document.body.addEventListener('click', () => {
-            if (bgMusic.paused && !isMuted) {
-                bgMusic.volume = document.getElementById('volume').value * 0.5;
-                bgMusic.play().catch(e => console.log(e));
-            }
-        }, { once: true });
-
-        document.getElementById('volume').addEventListener('input', (e) => {
-            if (isMuted) {
-                isMuted = false;
-                muteBtn.textContent = '🔊';
-            }
-            bgMusic.volume = e.target.value * 0.5;
-        });
-
-        muteBtn.addEventListener('click', () => {
-            isMuted = !isMuted;
-            if (isMuted) {
-                previousVolume = bgMusic.volume;
-                bgMusic.volume = 0;
-                muteBtn.textContent = '🔇';
-            } else {
-                bgMusic.volume = document.getElementById('volume').value * 0.5;
-                muteBtn.textContent = '🔊';
-            }
-        });
-
-        // Game State
-        let deck = [];
-        let hand = [];
-        let held = [false, false, false, false, false];
-        let state = 'DEAL'; // DEAL or DRAW
-        let credits = 100;
-        let bet = 5;
-        let wins = 0;
-
-        const CARDS = [
-            { name: 'RODONA', val: 4, img: 'images/rodona.jpg' },
-            { name: 'BLANCA', val: 2, img: 'images/blanca.jpg' },
-            { name: 'NEGRA', val: 1, img: 'images/negra.jpg' },
-            { name: 'CORXERA', val: 0.5, img: 'images/corxera.jpg' },
-            { name: 'SEMICORXERA', val: 0.25, img: 'images/semicorxera.jpg' },
-            { name: 'JOKER', val: 0, img: '', isJoker: true }
+        const TYPES = [
+            { id: 'rodona', v: 4, img: 'images/rodona.jpg' },
+            { id: 'blanca', v: 2, img: 'images/blanca.jpg' },
+            { id: 'negra', v: 1, img: 'images/negra.jpg' },
+            { id: 'corxera', v: 0.5, img: 'images/corxera.jpg' },
+            { id: 'semicorxera', v: 0.25, img: 'images/semicorxera.jpg' }
         ];
 
-        function initDeck() {
-            deck = [];
-            // Create a balanced deck
-            for (let i = 0; i < 10; i++) deck.push(CARDS[2]); // 10 Negres
-            for (let i = 0; i < 8; i++) deck.push(CARDS[3]); // 8 Corxeres
-            for (let i = 0; i < 6; i++) deck.push(CARDS[1]); // 6 Blanques
-            for (let i = 0; i < 4; i++) deck.push(CARDS[0]); // 4 Rodones
-            for (let i = 0; i < 4; i++) deck.push(CARDS[4]); // 4 Semicorxeres
-            for (let i = 0; i < 2; i++) deck.push(CARDS[5]); // 2 Jokers
-            shuffle(deck);
-        }
-
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+        class PokerGame {
+            constructor() {
+                this.credits = 100;
+                this.wins = 0;
+                this.hand = [];
+                this.init();
             }
-        }
 
-        function deal() {
-            if (credits < bet) {
-                alert("No tens prous crèdits!");
-                return;
+            init() {
+                Casino.UI.showModal('jok-instr', 'EL DIARI DE CLARA SCHUMANN', 
+                    'Aconsegueix una mà que sumi exactament 4 temps. Si et surt el Joker, hauràs de calcular quin valor li falta a la teva mà.<br><br>' +
+                    '<b>Repte:</b> Guanya 5 partides per obtenir el diari secret de Clara Schumann.', 'INSERIR CRÈDITS');
+                this.updateUI();
             }
-            credits -= bet;
-            updateUI();
 
-            // Generate Solvable Hand
-            // We need 4 cards + 1 Joker.
-            // Sum of 4 cards must be < 4 (so X > 0).
-            // Let's pick a target X first (e.g. 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3).
-            // Actually, let's just pick 4 random cards until sum < 4.
+            updateUI() {
+                document.getElementById('credits').textContent = this.credits;
+                document.getElementById('wins').textContent = this.wins;
+            }
 
-            let sum = 0;
-            let attempts = 0;
-            hand = [];
+            play() {
+                if(this.credits < 5) return;
+                this.credits -= 5; this.updateUI();
+                document.getElementById('btn-deal').style.display = 'none';
 
-            while (true) {
-                hand = [];
-                sum = 0;
-                // Pick 4 cards
-                for (let i = 0; i < 4; i++) {
-                    // Random card from CARDS (excluding Joker)
-                    const c = CARDS[Math.floor(Math.random() * 5)]; // 0-4 are notes
-                    hand.push(c);
-                    sum += c.val;
+                this.hand = [];
+                let s = 0;
+                for(let i=0; i<4; i++) {
+                    const c = TYPES[Math.floor(Math.random()*5)];
+                    this.hand.push(c);
+                    s += c.v;
                 }
+                this.hand.push({ id:'joker', isJoker:true });
+                this.hand.sort(() => Math.random()-0.5);
 
-                if (sum < 4 && sum >= 0.5) break; // Valid sum
-                attempts++;
-                if (attempts > 100) {
-                    // Fallback
-                    hand = [CARDS[2], CARDS[2], CARDS[2], CARDS[3]]; // 1+1+1+0.5 = 3.5 (X=0.5)
-                    sum = 3.5;
-                    break;
-                }
-            }
-
-            // Add Joker
-            hand.push(CARDS[5]);
-
-            // Shuffle hand position so Joker isn't always last
-            shuffle(hand);
-
-            renderHand();
-            playSound('deal');
-
-            // Immediately ask Equation
-            setTimeout(() => {
-                checkWin();
-            }, 1000);
-        }
-
-        function renderHand() {
-            const container = document.getElementById('cards-area');
-            container.innerHTML = '';
-            hand.forEach((card, i) => {
-                const el = document.createElement('div');
-                el.className = 'card';
-                if (card.isJoker) el.classList.add('joker-card');
-
-                // No click handler needed for holding
-
-                if (card.isJoker) {
-                    el.innerHTML = `<div style="font-size:2rem; color:#ff00ff;">🤡</div><div class="card-val">JOKER</div>`;
-                } else {
-                    el.innerHTML = `<img src="${card.img}"><div class="card-val">${card.val}</div>`;
-                }
-
-                container.appendChild(el);
-            });
-        }
-
-        // Removed toggleHold function as it is no longer needed
-
-        function checkWin() {
-            // Calculate Sum
-            let sum = 0;
-            let hasJoker = false;
-
-            hand.forEach(c => {
-                if (c.isJoker) hasJoker = true;
-                else sum += c.val;
-            });
-
-            if (hasJoker) {
-                // Joker Algebra
-                // We need to find if there is a value X such that sum + X = 4.
-                // X = 4 - sum.
-                // If X is valid (e.g. > 0), we ask user.
-                const needed = 4 - sum;
-                if (needed > 0) {
-                    askJoker(sum, needed);
-                } else {
-                    gameOver("BUST! (Ja sumes més de 4 sense el Joker)");
-                }
-            } else {
-                if (Math.abs(sum - 4) < 0.01) {
-                    win(5, 'natural');
-                } else {
-                    gameOver(`SUMA: ${sum}`);
-                }
-            }
-        }
-
-        function askJoker(currentSum, needed) {
-            const modal = document.getElementById('joker-modal');
-            const text = document.getElementById('joker-text');
-            const opts = document.getElementById('joker-options');
-
-            text.innerHTML = `<span style="font-size:2rem">${currentSum} + <span style="color:#ff00ff">X</span> = 4</span><br>Quant val X?`;
-            opts.innerHTML = '';
-
-            // Generate options: Correct + 2 wrong
-            const options = [needed];
-            while (options.length < 3) {
-                const r = [0.5, 1, 2, 4][Math.floor(Math.random() * 4)];
-                if (!options.includes(r)) options.push(r);
-            }
-            shuffle(options);
-
-            options.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                btn.textContent = opt;
-                btn.onclick = () => resolveJoker(opt, needed);
-                opts.appendChild(btn);
-            });
-
-            modal.style.display = 'flex';
-        }
-
-        function resolveJoker(selected, correct) {
-            document.getElementById('joker-modal').style.display = 'none';
-            if (Math.abs(selected - correct) < 0.01) {
-                win(3, 'joker');
-            } else {
-                gameOver("ERROR DE CÀLCUL!");
-            }
-        }
-
-        function win(mult, type) {
-            const amount = bet * mult;
-            credits += amount;
-            wins++;
-            updateUI();
-            playSound('win');
-
-            // Highlight paytable
-            const row = document.getElementById(type === 'natural' ? 'pay-natural' : 'pay-joker');
-            row.classList.add('highlight');
-            setTimeout(() => row.classList.remove('highlight'), 2000);
-
-            if (wins >= 5) {
-                // Save Reward
-                const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                rewards['reward_joker'] = true;
-                sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                this.render();
+                Casino.Audio.playTone(600, 'square', 0.1);
 
                 setTimeout(() => {
-                    document.getElementById('win-modal').style.display = 'flex';
+                    if(s >= 4) {
+                        alert("Has superat el límit del compàs! Perds.");
+                        this.end();
+                    } else {
+                        this.askJoker(s);
+                    }
                 }, 1000);
             }
-        }
 
-        function gameOver(msg) {
-            playSound('lose');
-            document.getElementById('lose-msg').textContent = msg;
-            document.getElementById('lose-modal').style.display = 'flex';
-        }
+            render() {
+                const h = document.getElementById('hand'); h.innerHTML = '';
+                this.hand.forEach(c => {
+                    const el = document.createElement('div');
+                    el.className = 'poker-card' + (c.isJoker ? ' joker' : '');
+                    if(c.isJoker) el.innerHTML = '<div class="emoji">🤡</div><div class="val">JOKER</div>';
+                    else el.innerHTML = `<img src="${c.img}"><div class="val">${c.v}</div>`;
+                    h.appendChild(el);
+                });
+            }
 
-        function updateUI() {
-            document.getElementById('credits').textContent = credits;
-            document.getElementById('wins').textContent = wins + "/5";
-        }
+            askJoker(sum) {
+                const modal = document.getElementById('j-modal');
+                const needed = 4 - sum;
+                document.getElementById('j-equation').textContent = `${sum} + X = 4.0`;
+                
+                const opts = document.getElementById('j-opts');
+                opts.innerHTML = '';
+                const vals = [needed, needed*2, needed/2, 1];
+                const final = [...new Set(vals)].sort(() => Math.random()-0.5).slice(0,3);
+                if(!final.includes(needed)) final[0] = needed;
+                
+                final.sort(() => Math.random()-0.5).forEach(v => {
+                    const b = document.createElement('button');
+                    b.className = 'btn-poker';
+                    b.textContent = v;
+                    b.onclick = () => this.resolve(v, needed);
+                    opts.appendChild(b);
+                });
+                modal.style.display = 'flex';
+            }
 
-        // Audio
-        function playSound(type) {
-            const vol = document.getElementById('volume').value;
-            if (vol <= 0) return;
+            resolve(val, target) {
+                document.getElementById('j-modal').style.display = 'none';
+                if(Math.abs(val - target) < 0.01) {
+                    this.credits += 25; this.wins++;
+                    Casino.Audio.playTone(800, 'sine', 0.2);
+                    alert("CORRECTE! Joker aplicat.");
+                } else {
+                    Casino.Audio.playTone(100, 'sawtooth', 0.4);
+                    alert(`ERROR! El valor necessari era ${target}.`);
+                }
+                this.updateUI();
+                this.end();
+            }
 
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
+            end() {
+                if(this.wins >= 5) this.win();
+                else document.getElementById('btn-deal').style.display = 'block';
+            }
 
-            const now = audioCtx.currentTime;
-
-            if (type === 'deal') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(600, now);
-                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-                gain.gain.setValueAtTime(vol * 0.3, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.1);
-                osc.start();
-                osc.stop(now + 0.1);
-            } else if (type === 'ding') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(1200, now);
-                gain.gain.setValueAtTime(vol * 0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start();
-                osc.stop(now + 0.1);
-            } else if (type === 'win') {
-                // Arpeggio
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(523, now);
-                osc.frequency.setValueAtTime(659, now + 0.1);
-                osc.frequency.setValueAtTime(784, now + 0.2);
-                gain.gain.setValueAtTime(vol * 0.5, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.5);
-                osc.start();
-                osc.stop(now + 0.5);
-            } else if (type === 'lose') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(100, now);
-                osc.frequency.linearRampToValueAtTime(50, now + 0.5);
-                gain.gain.setValueAtTime(vol * 0.5, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.5);
-                osc.start();
-                osc.stop(now + 0.5);
+            win() {
+                Casino.Audio.playWin();
+                Casino.Rewards.saveProgress('reward_jokewild');
+                Casino.UI.showVictory("Ets un mestre de l'harmonia secreta! El diari de Clara Schumann és teu.", () => location.href = 'menu.html');
             }
         }
 
+        const game = new PokerGame();
     </script>
 </body>
-
 </html>
