@@ -118,7 +118,7 @@ Cualquiera es recuperable desde `extras_eliminados/` — la mayoría exigiría *
 ## ⚠️ Pendientes conocidos (no bloqueantes)
 
 - **Deuda de arquitectura**: ~2/3 de los juegos no usan `casino-common.js` — duplican audio, modales y guardado inline (~200 líneas/juego). Las claves de sessionStorage sí son compatibles, así que todo funciona, pero cualquier cambio de la librería no les llega.
-- **Layout del menú** en ventanas estrechas: la barra de UI y el grid se descolocan (preexistente).
+- ~~**Layout del menú** en ventanas estrechas: la barra de UI y el grid se descolocan (preexistente).~~ **RESUELTO (jul 2026)**: `injectBasicUI()` hacía `document.body.prepend(header)` y, como el `<body>` es `display:flex` (fila), la barra competía en anchura con `.casino-table` (95vw) y quedaba aplastada a la izquierda (afectaba al menú y a los 27 juegos con `injectBasicUI`). Ahora la barra se inserta **dentro de `.casino-table`** (que es `flex-column`), como cabecera. Añadido reflow responsive de la barra en `#casino-ui-bar` (`css/casino-common.css`) para móvil vertical. Cache-bust `?v=2` en las refs a `casino-common.js`/`.css` de los 28 HTML.
 - Las "IAs" rivales son aleatorias o falsas en casi todos los juegos con oponente (ganables, pero sin desafío real).
 - `escalada.html` entrena **altura** (intervalos), no ritmo — valorar si renombrarlo o moverlo a otra cualidad del Gimnàs.
 - Bancos de preguntas pequeños y memorizables en varios quiz (ruleta, highstriker, scalextric, cascada).

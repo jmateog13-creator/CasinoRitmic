@@ -135,7 +135,11 @@ window.Casino = (() => {
                     <input type="range" id="casino-volume-slider" min="0" max="1" step="0.1" value="${STATE.volume}">
                 </div>
             `;
-            document.body.prepend(header);
+            // La barra és la CAPÇALERA de la taula (dins de .casino-table, que és flex-column).
+            // Abans es feia body.prepend → com que el <body> és flex-row, la barra competia
+            // en amplada amb la taula (95vw) i quedava esclafada a l'esquerra.
+            const table = document.querySelector('.casino-table');
+            (table || document.body).prepend(header);
 
             // Events
             const slider = document.getElementById('casino-volume-slider');

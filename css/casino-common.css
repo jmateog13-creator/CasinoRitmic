@@ -83,6 +83,19 @@ body {
     padding: 10px 20px;
     z-index: 100;
     box-sizing: border-box;
+    gap: 10px;
+    flex-shrink: 0;
+}
+#casino-ui-bar h1 {
+    font-size: clamp(1.1rem, 3.5vw, 2rem);
+    text-align: center;
+    line-height: 1.1;
+}
+/* En pantalles estretes (mòbil vertical) la barra reflueix perquè el control
+   de volum no quedi tallat pel títol. */
+@media (max-width: 560px) {
+    #casino-ui-bar { flex-wrap: wrap; row-gap: 6px; padding: 8px 12px; }
+    #casino-ui-bar h1 { order: 3; flex-basis: 100%; }
 }
 
 .btn-menu {
