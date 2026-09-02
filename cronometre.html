@@ -257,6 +257,7 @@
 
     <audio id="bg-music" src="music/background_music_cronometre.mp3" loop></audio>
 
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const audioCtx = new AudioContext();
@@ -332,9 +333,7 @@
         function setupRound() {
             if (round >= LEVELS.length) {
                 // Win Game
-                const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                rewards['reward_cronometre'] = true;
-                sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                Casino.Rewards.saveProgress('reward_cronometre');
                 document.getElementById('win-modal').style.display = 'flex';
                 return;
             }

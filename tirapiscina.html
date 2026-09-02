@@ -354,6 +354,7 @@
 
     <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
 
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // --- AUDIO ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -544,9 +545,7 @@
             }
 
             win() {
-                const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                rewards['reward_piscina'] = true;
-                sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                Casino.Rewards.saveProgress('reward_piscina');
                 document.getElementById('win-modal').style.display = 'flex';
             }
         }

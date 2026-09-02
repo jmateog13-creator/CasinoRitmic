@@ -465,6 +465,7 @@
     </div>
 
     <audio id="bg-music" src="music/background_music_prestamista.mp3" loop></audio>
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // Background Music
         // Background Music
@@ -681,9 +682,7 @@
                     loadLevel();
                 } else {
                     // Game Win
-                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                    rewards['reward_prestamista'] = true;
-                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    Casino.Rewards.saveProgress('reward_prestamista');
                     document.getElementById('win-modal').style.display = 'flex';
                 }
             } else {

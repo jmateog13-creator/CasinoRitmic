@@ -3,6 +3,41 @@
  * @description Centralized library for CasinoRitmic: Audio, Rewards, and UI.
  */
 
+// PONT AULATECH · contracte v1, inline (les 26 taules que fan servir aquest
+// motor no inclouen cap altre <script> comú, així que el pont viu aquí per
+// no haver de tocar 26 HTML només per un <script src>).
+if (!window.AulaTechBridge) {
+    window.AulaTechBridge = (function (w) {
+        const clamp01 = (v) => { v = Number(v); return Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0; };
+        const int = (v) => { v = Math.round(Number(v)); return Number.isFinite(v) && v > 0 ? v : 0; };
+        const sent = new Set();
+        return {
+            t0: Date.now(),
+            startClock() { this.t0 = Date.now(); sent.clear(); },
+            send(gameId, f) {
+                f = f || {};
+                const data = {
+                    p_juego_id: String(gameId || 'casino-ritmic'),
+                    p_bloque: 'general', p_tema: null,
+                    p_completado: !!f.completat, p_precision: clamp01(f.precisio),
+                    p_errores: int(f.errors), p_racha_max: int(f.rachaMax),
+                    p_tiempo_ms: int(f.tempsMs === undefined ? Date.now() - this.t0 : f.tempsMs),
+                    p_perfecto: !!f.perfecte,
+                };
+                try { w.parent.postMessage({ source: 'aulatech', action: 'GAME_END', v: 1, data }, '*'); }
+                catch (e) { /* standalone */ }
+                return data;
+            },
+            sendOnce(gameId, f) {
+                const k = String(gameId);
+                if (sent.has(k)) return null;
+                sent.add(k);
+                return this.send(k, f);
+            },
+        };
+    })(window);
+}
+
 window.Casino = (() => {
     // --- State & Constants ---
     const STATE = {
@@ -103,6 +138,9 @@ window.Casino = (() => {
     // --- Rewards Module ---
     const Rewards = {
         saveProgress(gameKey, value = true) {
+            if (value) {
+                window.AulaTechBridge.sendOnce(String(gameKey).replace(/^reward_/, ''), { completat: true });
+            }
             const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
             rewards[gameKey] = value;
             sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
@@ -209,4 +247,34 @@ window.Casino = (() => {
         ASSETS,
         get state() { return STATE; }
     };
+})();
+
+/* ── Sortida directa quan el joc s'obre en pestanya pròpia ───────────────────
+   Dins de l'app el joc viu en un iframe i el pare (Viewer) recull el missatge.
+   Però el Gimnàs obre els jocs amb target="_blank": allà `parent` és un mateix,
+   el postMessage s'envia a si mateix i no arriba enlloc.
+   Com que tot es serveix des del mateix origen, la sessió de l'alumne ja és al
+   localStorage. Fem servir fetch contra l'API REST i NO el client del CDN:
+   així no hi ha llibreria externa que carregui tard ni cursa amb la sessió.
+   La clau és la publicable (ja viatja al bundle de l'app); qui protegeix les
+   dades és l'RLS i que submit_game_result() decideix el pagament al servidor. */
+(function () {
+  if (window.parent !== window) return;   // dins de l'app: ja ho recull el pare
+  if (window.__atDirecte) return;         // ja escoltat: mai dues vegades
+  window.__atDirecte = true;
+  var SB = 'https://dxpdciplsxjmtfhnbqao.supabase.co';
+  var AK = 'sb_publishable_nOg_fx9ai3hbMOD4-ZI-Sg_V9i9VZhW';
+  window.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.source !== 'aulatech' || d.action !== 'GAME_END' || !d.data) return;
+    var raw = localStorage.getItem('sb-dxpdciplsxjmtfhnbqao-auth-token');
+    if (!raw) return;                     // ningú connectat: no hi ha res a reportar
+    var tok; try { tok = JSON.parse(raw).access_token; } catch (_) { return; }
+    if (!tok) return;
+    fetch(SB + '/rest/v1/rpc/submit_game_result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: AK, Authorization: 'Bearer ' + tok },
+      body: JSON.stringify(d.data),
+    }).catch(function () { /* sense xarxa: es perd la partida, però el joc no es trenca */ });
+  });
 })();

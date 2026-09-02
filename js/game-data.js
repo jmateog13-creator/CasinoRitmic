@@ -47,7 +47,7 @@ window.CasinoGames = {
     'card-enceuat': { key: 'reward_enceuat', icon: '📝', name: "La Ploma de Shakespeare", url: 'enceuat.html' },
     'card-algebra': { key: 'reward_algebra', icon: '➕', name: "L'Àbac de Xenakis", url: 'algebraritmica.html' },
     'card-escalada': { key: 'reward_escalada', icon: '🧗', name: "La Corda de Strauss", url: 'escalada.html' },
-    'card-highstriker': { key: 'reward_highstriker', icon: '🔨', name: "El Martell de Mahler", url: 'highstriker.html' },
+    'card-highstriker': { key: 'reward_highstriker', icon: '🔨', name: "El Martell de Wagner", url: 'highstriker.html' },
     'card-piscina': { key: 'reward_piscina', icon: '🌊', name: "La Partitura de Debussy", url: 'tirapiscina.html' },
     'card-scrabble': { key: 'reward_scrabble', icon: '📜', name: "La Lletra de Schubert", url: 'scrabble.html' },
     'card-cronodirecte': { key: 'reward_cronometre', icon: '⏱️', name: "El Pèndol de Maelzel", url: 'cronometre.html' },

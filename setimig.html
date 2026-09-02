@@ -288,6 +288,7 @@
 
     <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
 
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // --- AUDIO ---
         const bgMusic = document.getElementById('bg-music');
@@ -493,9 +494,7 @@
 
                     if (this.wins >= 5) {
                         // Save Reward
-                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                        rewards['reward_setimig'] = true;
-                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                        Casino.Rewards.saveProgress('reward_setimig');
 
                         setTimeout(() => {
                             document.getElementById('epic-modal').style.display = 'flex';

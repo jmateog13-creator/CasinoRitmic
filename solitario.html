@@ -383,6 +383,7 @@
     </div>
 
     <audio id="bg-music" src="music/background_music_solitario.mp3" loop></audio>
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // Background Music
         document.body.addEventListener('click', () => {
@@ -683,9 +684,7 @@
                         document.getElementById('btn-lvl2').textContent = "NIVELL 2 (COMPLETAT ✅)";
                     } else if (this.currentLevel === 3) {
                         // Save Reward
-                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                        rewards['reward_solitario'] = true;
-                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                        Casino.Rewards.saveProgress('reward_solitario');
 
                         setTimeout(() => {
                             document.getElementById('win-modal').style.display = 'flex';

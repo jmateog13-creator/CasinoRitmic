@@ -323,6 +323,7 @@
 
     <audio id="bg-music" src="music/High Stakes Love-2.mp3" loop></audio>
 
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // Audio
         const bgMusic = document.getElementById('bg-music');
@@ -503,9 +504,7 @@
             } else {
                 // Win Game
                 // Save Reward
-                const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                rewards['reward_topos'] = true;
-                sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                Casino.Rewards.saveProgress('reward_topos');
 
                 setTimeout(() => document.getElementById('win-modal').style.display = 'flex', 500);
             }

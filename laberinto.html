@@ -283,6 +283,7 @@
         </div>
 
         <audio id="bg-music" src="music/background_music_laberinto.mp3" loop></audio>
+        <script src="js/casino-common.js?v=2"></script>
         <script>
             // Background Music
             document.body.addEventListener('click', () => {
@@ -539,9 +540,7 @@
 
                 if (score >= 5) {
                     // Save Reward
-                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                    rewards['reward_laberinto'] = true;
-                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    Casino.Rewards.saveProgress('reward_laberinto');
                     setTimeout(() => {
                         document.getElementById('win-modal').style.display = 'flex';
                     }, 1000);

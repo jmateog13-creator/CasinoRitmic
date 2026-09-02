@@ -344,6 +344,7 @@
 
     <audio id="bg-music" src="music/background_music_speed.mp3" loop></audio>
 
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // Audio
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -517,9 +518,7 @@
             if (score >= 5) {
                 clearInterval(gameLoop);
                 // Save Reward
-                const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                rewards['reward_speed'] = true;
-                sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                Casino.Rewards.saveProgress('reward_speed');
 
                 setTimeout(() => {
                     document.getElementById('win-modal').style.display = 'flex';

@@ -705,6 +705,7 @@
 
     </div>
 
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // --- DATA & CONFIG ---
         const CARD_TYPES = [
@@ -1231,9 +1232,7 @@
                     document.getElementById('modal').style.display = 'flex';
 
                     // Save Reward
-                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                    rewards['reward_texas'] = true;
-                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    Casino.Rewards.saveProgress('reward_texas');
 
                     // Redirect
                     setTimeout(() => {

@@ -322,6 +322,7 @@
     </div>
 
     <audio id="bg-music" src="music/background_music_sudoku.mp3" loop></audio>
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // Background Music
         document.body.addEventListener('click', () => {
@@ -497,9 +498,7 @@
                         btn2.textContent = "NIVELL 2 (DESBLOQUEJAT)";
                         document.getElementById('btn-lvl1').textContent = "NIVELL 1 (COMPLETAT ✅)";
                     } else if (currentLevel === 2) {
-                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                        rewards['reward_sudoku'] = true;
-                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                        Casino.Rewards.saveProgress('reward_sudoku');
                         document.getElementById('win-modal').style.display = 'flex';
                     }
                 } else {

@@ -419,6 +419,7 @@
     </div>
 
     <audio id="bg-music" src="music/background_music_subasta.mp3" loop></audio>
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // Background Music
         document.body.addEventListener('click', () => {
@@ -612,9 +613,7 @@
             setTimeout(() => {
                 if (wins >= 3) {
                     // Save Reward
-                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                    rewards['reward_subasta'] = true;
-                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    Casino.Rewards.saveProgress('reward_subasta');
                     document.getElementById('win-modal').style.display = 'flex';
                 } else {
                     document.getElementById('result-modal').style.display = 'flex';

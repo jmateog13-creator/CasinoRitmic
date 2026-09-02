@@ -270,6 +270,7 @@
 
     <audio id="bg-music" src="music/background_music_solitario.mp3" loop></audio>
 
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // --- AUDIO ---
         const bgMusic = document.getElementById('bg-music');
@@ -568,9 +569,7 @@
                 const complete = this.foundations.every(f => f.length > 0 && f[f.length - 1].rank === 4);
                 if (complete) {
                     // Save Reward
-                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                    rewards['reward_klondike'] = true;
-                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    Casino.Rewards.saveProgress('reward_klondike');
                     playSound('win');
                     document.getElementById('epic-modal').style.display = 'flex';
                 }

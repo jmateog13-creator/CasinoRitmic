@@ -382,6 +382,7 @@
 
     <audio id="bg-music" src="music/background_music_rodafortuna.mp3" loop></audio>
 
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // Audio Context
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -659,9 +660,7 @@
 
         function winGame() {
             // Save Reward
-            const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-            rewards['reward_roda'] = true;
-            sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+            Casino.Rewards.saveProgress('reward_roda');
 
             document.getElementById('win-modal').style.display = 'flex';
             playSound('fanfare');

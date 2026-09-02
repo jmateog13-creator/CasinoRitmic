@@ -283,6 +283,7 @@
 
     <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
 
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // --- AUDIO ---
         const bgMusic = document.getElementById('bg-music');
@@ -515,9 +516,7 @@
             endGame(win) {
                 this.gameOver = true;
                 if (win) {
-                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                    rewards['reward_vals'] = true;
-                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    Casino.Rewards.saveProgress('reward_vals');
                     document.getElementById('epic-modal').style.display = 'flex';
                 } else {
                     document.getElementById('lose-modal').style.display = 'flex';

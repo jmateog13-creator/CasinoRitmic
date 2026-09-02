@@ -312,6 +312,7 @@
 
     <audio id="bg-music" src="music/Roll the Dice.mp3" loop></audio>
 
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // --- AUDIO ---
         const bgMusic = document.getElementById('bg-music');
@@ -574,9 +575,7 @@
                     this.wins++;
                     document.getElementById('wins-display').textContent = this.wins;
                     if (this.wins >= 3) {
-                        const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                        rewards['reward_whist'] = true;
-                        sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                        Casino.Rewards.saveProgress('reward_whist');
                         playSound('fanfare');
                         document.getElementById('epic-modal').style.display = 'flex';
                     } else {

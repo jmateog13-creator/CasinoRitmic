@@ -437,6 +437,7 @@
 
     <audio id="bg-music" src="music/background_music_keno.mp3" loop></audio>
 
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // --- ASSETS ---
         const NOTES = [
@@ -605,9 +606,7 @@
             checkGameStatus() {
                 if (this.closedCount >= 4) { // Win condition 4
                     // Save Reward
-                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                    rewards['reward_keno'] = true;
-                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    Casino.Rewards.saveProgress('reward_keno');
 
                     setTimeout(() => {
                         document.getElementById('win-modal').style.display = 'flex';

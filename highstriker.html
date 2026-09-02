@@ -158,8 +158,8 @@
             }
 
             init() {
-                Casino.UI.showModal('strik-instr', 'EL MARTELL DE MAHLER', 
-                    'Posa a prova els teus coneixements musicals per carregar el martell de Gustav Mahler.<br><br>' +
+                Casino.UI.showModal('strik-instr', 'EL MARTELL DE WAGNER',
+                    'Posa a prova els teus coneixements musicals per carregar el martell de Richard Wagner.<br><br>' +
                     '<b>Repte:</b> Respon 10 preguntes correctament per tocar la campana i guanyar el martell del destí.', 'DEMOSTRAR FORÇA');
                 
                 this.load();
@@ -221,7 +221,7 @@
                 Casino.Audio.playTone(1500, 'sine', 1); // Bell sound
                 Casino.Audio.playWin();
                 Casino.Rewards.saveProgress('reward_highstriker');
-                Casino.UI.showVictory("Has dominat el martell del destí! La relíquia de Mahler és teva.", () => location.href = 'menu.html');
+                Casino.UI.showVictory("Has dominat el martell del destí! La relíquia de Wagner és teva.", () => location.href = 'menu.html');
             }
         }
 

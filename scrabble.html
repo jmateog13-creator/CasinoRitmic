@@ -313,6 +313,7 @@
 
     <audio id="bg-music" src="music/background_music_gancho.mp3" loop></audio>
 
+    <script src="js/casino-common.js?v=2"></script>
     <script>
         // --- DATA ---
         const DICTIONARY = [
@@ -519,9 +520,7 @@
 
             endGame() {
                 if (this.pScore >= 6) {
-                    const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
-                    rewards['reward_scrabble'] = true;
-                    sessionStorage.setItem('casinoRewards', JSON.stringify(rewards));
+                    Casino.Rewards.saveProgress('reward_scrabble');
                     document.getElementById('win-modal').style.display = 'flex';
                 } else {
                     document.getElementById('lose-modal').style.display = 'flex';
