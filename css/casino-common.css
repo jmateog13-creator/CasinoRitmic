@@ -33,11 +33,16 @@ body {
     padding: 0;
     background-color: #111;
     font-family: 'Playfair Display', serif;
-    overflow: hidden;
-    height: 100vh;
+    /* A l'aula, un portàtil de 1366x768 deixa ~620 px útils. Amb 100vh i
+       overflow:hidden, tot el que no cabia es retallava EN SILENCI: l'alumne
+       veia el tapet i prou, i havia de fer Ctrl+- per jugar. Ara la pàgina
+       fa scroll si cal, que és lleig però jugable. */
+    overflow: auto;
+    height: auto;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     color: white;
     user-select: none;
 }
@@ -45,7 +50,9 @@ body {
 /* Table Background and Texture Overlay */
 .casino-table {
     width: var(--table-width);
-    height: var(--table-height);
+    height: auto;
+    min-height: var(--table-height);
+    margin: 2vh 0;
     background: radial-gradient(circle at center, var(--felt-green), var(--felt-dark));
     border: 20px solid var(--wood-border);
     border-radius: 50px;
@@ -55,7 +62,7 @@ body {
     flex-direction: column;
     padding: 20px;
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .casino-table::before {

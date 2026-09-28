@@ -139,7 +139,10 @@ window.Casino = (() => {
     const Rewards = {
         saveProgress(gameKey, value = true) {
             if (value) {
-                window.AulaTechBridge.sendOnce(String(gameKey).replace(/^reward_/, ''), { completat: true });
+                // Prefix `casino-`: cada taula és un joc propi al manifest (1★) i
+                // així no xoca amb ids d'altres jocs (derby, pesca… són també
+                // parades de la Fira Musical).
+                window.AulaTechBridge?.sendOnce('casino-' + String(gameKey).replace(/^reward_/, ''), { completat: true });
             }
             const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
             rewards[gameKey] = value;
