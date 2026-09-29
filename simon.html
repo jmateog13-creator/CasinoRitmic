@@ -109,6 +109,7 @@
         </div>
     </div>
 
+    <script src="/1.Gamificacion/_tools/at-claqueta.js"></script>
     <script src="js/casino-common.js?v=2"></script>
     <script>
         Casino.Audio.init('music/background_music_simon.mp3');
@@ -157,7 +158,13 @@
 
             async playSequence() {
                 this.isPlayingSequence = true;
-                await new Promise(r => setTimeout(r, 1000));
+                // Compàs zero a 120 (negra = 0.5s): sense pols de referència
+                // les durades de les figures no es poden comparar amb res.
+                if (window.ATClaqueta) {
+                    await window.ATClaqueta.compta({ bpm: 120, pulsos: 4, ctx: Casino.state.audioCtx });
+                } else {
+                    await new Promise(r => setTimeout(r, 1000));
+                }
                 for (let i = 0; i < this.sequence.length; i++) {
                     await this.activatePad(this.sequence[i]);
                     await new Promise(r => setTimeout(r, 150)); // Silenci d'articulació entre figures
