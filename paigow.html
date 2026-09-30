@@ -233,7 +233,7 @@
     <div id="table">
         <!-- Banker -->
         <div id="banker-area">
-            <div class="zone-label">BANCA (MÀ ALTA + MÀ BAIXA)</div>
+            <div class="zone-label">RIVAL (MÀ ALTA + MÀ BAIXA)</div>
             <div class="hand-area" id="banker-hand">
                 <!-- Tiles hidden -->
             </div>
@@ -275,7 +275,7 @@
                 <li><strong>MÀ BAIXA (Davant):</strong> Ha de sumar <strong>1 TEMPS</strong>.</li>
             </ul>
             <p>3. Arrossega les fitxes a les zones corresponents.</p>
-            <p>4. Guanya a la Banca per aconseguir l'Arpa Reial!</p>
+            <p>4. Guanya al rival per aconseguir l'Arpa Reial!</p>
             <button class="action-btn" onclick="game.start()">REPARTIR</button>
         </div>
     </div>
@@ -294,7 +294,7 @@
 
     <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         // --- AUDIO ---
         const bgMusic = document.getElementById('bg-music');
@@ -559,7 +559,7 @@
                         setTimeout(() => document.getElementById('epic-modal').style.display = 'flex', 1000);
                     }
                 } else if (highWin || lowWin) {
-                    msg = "EMPAT (PUSH)";
+                    msg = "EMPAT";
                     color = "#aaa";
                     playSound('wind');
                 } else {

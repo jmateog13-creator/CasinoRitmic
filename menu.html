@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menú - Casino Rítmic</title>
-    <link rel="stylesheet" href="css/casino-common.css?v=2">
+    <link rel="stylesheet" href="css/casino-common.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         .game-grid {
@@ -115,12 +115,14 @@
             <button class="modal-btn" onclick="openSaveModal()">💾 GUARDAR / CARREGAR</button>
         </div>
 
+        <div id="circuit-bar" style="text-align:center; color:var(--gold); font-size:1.1rem; margin-bottom:6px;"></div>
+
         <div class="game-grid" id="game-grid">
             <!-- Dynamic Grid -->
         </div>
     </div>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script src="js/game-data.js"></script>
     <script>
         Casino.Audio.init('music/background_music_main.mp3');
@@ -128,6 +130,14 @@
 
         const grid = document.getElementById('game-grid');
         const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
+
+        // Circuit: l'XP real només arriba quan guanyes N taules diferents.
+        const circ = Casino.Circuit.read();
+        const fets = circ.taules.length;
+        document.getElementById('circuit-bar').innerHTML =
+            `CIRCUIT: ${'●'.repeat(fets)}${'○'.repeat(Casino.Circuit.size - fets)} &nbsp;(${fets}/${Casino.Circuit.size} taules)` +
+            (circ.tancats ? ` &nbsp;·&nbsp; Circuits tancats: ${circ.tancats}` : '') +
+            `<div style="font-size:0.85rem; color:#ccc;">Guanya ${Casino.Circuit.size} taules diferents per tancar un circuit. Els punts de la sala es queden aquí: no valen res fora.</div>`;
 
         // Render Games
         Object.entries(CasinoGames).forEach(([id, game]) => {

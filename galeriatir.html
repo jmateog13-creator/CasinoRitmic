@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Galeria de Tir Rítmic</title>
-    <link rel="stylesheet" href="css/casino-common.css?v=2">
+    <link rel="stylesheet" href="css/casino-common.css?v=3">
     <style>
         .game-layout {
             display: flex;
@@ -85,7 +85,7 @@
         </div>
     </div>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         Casino.Audio.init('music/background_music_galeriatir.mp3');
         Casino.UI.injectBasicUI('Galeria de Tir Rítmic');
@@ -147,7 +147,7 @@
 
             init() {
                 Casino.UI.showModal('tir-instr', 'L\'ARC D\'ARCANGELO CORELLI',
-                    'Posa a prova la teva punteria disparant a les figures rítmiques sol·licitades.<br><br>' +
+                    'Posa a prova la teva punteria disparant a les figures rítmiques sol·licitades.<br>Encert: +100 · Figura equivocada: -150.<br><br>' +
                     '<b>Repte:</b> Aconsegueix 1500 punts per guanyar l\'arc de violí original de Corelli!', 'CARREGAR ARMA',
                     () => this.nextRound()); // No spawns until the modal is closed
 
@@ -184,7 +184,8 @@
                             this.score += 100;
                             Casino.Audio.playTone(800, 'sine', 0.1);
                         } else {
-                            this.score = Math.max(0, this.score - 50);
+                            // -150 i no -50: disparar a tot (~52% d'encerts) ha de perdre punts, no guanyar-ne.
+                            this.score = Math.max(0, this.score - 150);
                             Casino.Audio.playTone(100, 'sawtooth', 0.3);
                         }
                         this.targets.splice(i, 1);

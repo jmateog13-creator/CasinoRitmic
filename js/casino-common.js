@@ -136,13 +136,37 @@ window.Casino = (() => {
     };
 
     // --- Rewards Module ---
+    // L'XP real es cobra per CIRCUIT, no per taula: cal guanyar CIRCUIT_SIZE
+    // taules DIFERENTS (cadascuna es guanya per destresa, mai per punts acumulats
+    // ni per un gir). Els punts de la sala no hi pinten res. Repetir taula no suma.
+    const CIRCUIT_SIZE = 3;
+    const Circuit = {
+        size: CIRCUIT_SIZE,
+        read() {
+            try { return JSON.parse(sessionStorage.getItem('casinoCircuit')) || { taules: [], tancats: 0 }; }
+            catch (e) { return { taules: [], tancats: 0 }; }
+        },
+        write(c) { sessionStorage.setItem('casinoCircuit', JSON.stringify(c)); },
+    };
+
     const Rewards = {
         saveProgress(gameKey, value = true) {
             if (value) {
-                // Prefix `casino-`: cada taula és un joc propi al manifest (1★) i
-                // així no xoca amb ids d'altres jocs (derby, pesca… són també
-                // parades de la Fira Musical).
-                window.AulaTechBridge?.sendOnce('casino-' + String(gameKey).replace(/^reward_/, ''), { completat: true });
+                const c = Circuit.read();
+                if (!c.t0) c.t0 = Date.now();
+                if (!c.taules.includes(gameKey)) c.taules.push(gameKey);
+                if (c.taules.length >= CIRCUIT_SIZE) {
+                    // Un sol id per a tot el casino (és el que el manifest ja coneix).
+                    // El servidor paga la primera vegada; els circuits següents es
+                    // registren amb xp 0 perquè el profe vegi que hi torna.
+                    window.AulaTechBridge?.sendOnce('casino-ritmic', {
+                        completat: true, tempsMs: Date.now() - c.t0,
+                    });
+                    c.tancats = (c.tancats || 0) + 1;
+                    c.taules = [];
+                    c.t0 = 0;
+                }
+                Circuit.write(c);
             }
             const rewards = JSON.parse(sessionStorage.getItem('casinoRewards') || '{}');
             rewards[gameKey] = value;
@@ -246,6 +270,7 @@ window.Casino = (() => {
     return {
         Audio,
         Rewards,
+        Circuit,
         UI,
         ASSETS,
         get state() { return STATE; }

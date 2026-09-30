@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qui Vol Ser Milionari Rítmic</title>
+    <title>L'Escala del Ritme</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Copperplate&display=swap');
 
@@ -294,7 +294,7 @@
 
     <div id="game-area">
         <div id="logo-area">
-            <h1>QUI VOL SER MILIONARI?</h1>
+            <h1>L'ESCALA DEL RITME</h1>
             <h2 style="font-size:1.5rem; color:white;">EDICIÓ RÍTMICA</h2>
         </div>
 
@@ -324,7 +324,7 @@
             <h2 style="color: var(--gold);">COM JUGAR</h2>
             <p>1. Respon 15 preguntes sobre ritme i música.</p>
             <p>2. Utilitza els comodins si et quedes encallat.</p>
-            <p>3. Arriba al milió per guanyar la Relíquia!</p>
+            <p>3. Puja els 15 esglaons (1.000.000 punts) per guanyar la Relíquia!</p>
             <button class="instr-btn" onclick="game.start()">JUGAR</button>
         </div>
     </div>
@@ -362,7 +362,7 @@
 
     <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         // --- AUDIO ---
         const bgMusic = document.getElementById('bg-music');
@@ -436,9 +436,9 @@
         ];
 
         const PRIZES = [
-            "100€", "200€", "300€", "500€", "1.000€",
-            "2.000€", "4.000€", "8.000€", "16.000€", "32.000€",
-            "64.000€", "125.000€", "250.000€", "500.000€", "1.000.000€"
+            "100 punts", "200 punts", "300 punts", "500 punts", "1.000 punts",
+            "2.000 punts", "4.000 punts", "8.000 punts", "16.000 punts", "32.000 punts",
+            "64.000 punts", "125.000 punts", "250.000 punts", "500.000 punts", "1.000.000 punts"
         ];
 
         class Game {

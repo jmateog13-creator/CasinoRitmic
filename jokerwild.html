@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Joker Poker Rítmic</title>
-    <link rel="stylesheet" href="css/casino-common.css?v=2">
+    <link rel="stylesheet" href="css/casino-common.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         .game-layout {
@@ -99,14 +99,14 @@
     <div class="casino-table">
         <div class="game-layout">
             <div class="pay-table">
-                <div>NATURAL 4.0 <span style="color:var(--gold)">x10</span></div>
-                <div>JOKER 4.0 <span style="color:var(--gold)">x5</span></div>
+                <div>JOKER BEN CALCULAT <span style="color:var(--gold)">+25 punts</span></div>
+                <div>ERROR <span style="color:var(--gold)">-1 victòria</span></div>
             </div>
 
             <div class="cards-hand" id="hand"></div>
 
             <div class="game-hud">
-                <div>SALDO: <span id="credits">100</span></div>
+                <div>PUNTS: <span id="credits">0</span></div>
                 <div>VICTÒRIES: <span id="wins">0</span>/5</div>
             </div>
 
@@ -117,12 +117,12 @@
     <!-- Joker Calculation Modal -->
     <div class="joker-modal" id="j-modal">
         <h2 style="color:var(--gold); margin-bottom:20px;">JOKER WILD!</h2>
-        <div id="j-equation" style="font-size:1.5rem; margin-bottom:20px;">X + 2.0 = 4.0</div>
+        <div id="j-equation" style="font-size:1.5rem; margin-bottom:20px;">🎴🎴🎴🎴 + 🤡 = 4 temps</div>
         <p>Quin valor ha de tenir el Joker per completar el compàs?</p>
         <div class="joker-opts" id="j-opts"></div>
     </div>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         Casino.Audio.init('music/background_music_jokerwild.mp3');
         Casino.UI.injectBasicUI('Joker Poker Rítmic');
@@ -137,7 +137,7 @@
 
         class PokerGame {
             constructor() {
-                this.credits = 100;
+                this.credits = 0;
                 this.wins = 0;
                 this.hand = [];
                 this.init();
@@ -145,8 +145,8 @@
 
             init() {
                 Casino.UI.showModal('jok-instr', 'EL DIARI DE CLARA SCHUMANN', 
-                    'Aconsegueix una mà que sumi exactament 4 temps. Si et surt el Joker, hauràs de calcular quin valor li falta a la teva mà.<br><br>' +
-                    '<b>Repte:</b> Guanya 5 partides per obtenir el diari secret de Clara Schumann.', 'INSERIR CRÈDITS');
+                    'Cada mà té 4 figures i un Joker. Les figures no porten número: suma-les tu i calcula quant ha de valer el Joker perquè el compàs sumi exactament 4 temps.<br><br>' +
+                    '<b>Repte:</b> encerta 5 Jokers per obtenir el diari secret de Clara Schumann. Cada error et resta una victòria.', 'A JUGAR');
                 this.updateUI();
             }
 
@@ -156,38 +156,27 @@
             }
 
             play() {
-                if(this.credits < 5) return;
-                this.credits -= 5; this.updateUI();
                 document.getElementById('btn-deal').style.display = 'none';
 
-                this.hand = [];
-                let s = 0;
-                for(let i=0; i<4; i++) {
-                    const c = TYPES[Math.floor(Math.random()*5)];
-                    this.hand.push(c);
-                    s += c.v;
-                }
+                // Sempre una mà que necessita el Joker (suma < 4): cap mà es guanya
+                // o es perd per sort, totes es resolen calculant.
+                let s;
+                do {
+                    this.hand = [];
+                    s = 0;
+                    for(let i=0; i<4; i++) {
+                        const c = TYPES[Math.floor(Math.random()*5)];
+                        this.hand.push(c);
+                        s += c.v;
+                    }
+                } while (s >= 4);
                 this.hand.push({ id:'joker', isJoker:true });
                 this.hand.sort(() => Math.random()-0.5);
 
                 this.render();
                 Casino.Audio.playTone(600, 'square', 0.1);
 
-                setTimeout(() => {
-                    if(s > 4) {
-                        alert("Has superat el límit del compàs! Perds.");
-                        this.end();
-                    } else if(s === 4) {
-                        // Compàs natural: 4.0 exacte sense necessitar el Joker
-                        this.credits += 50; this.wins++;
-                        Casino.Audio.playTone(900, 'sine', 0.3);
-                        alert("COMPÀS NATURAL 4.0! Premi doble.");
-                        this.updateUI();
-                        this.end();
-                    } else {
-                        this.askJoker(s);
-                    }
-                }, 1000);
+                setTimeout(() => this.askJoker(s), 1000);
             }
 
             render() {
@@ -196,7 +185,7 @@
                     const el = document.createElement('div');
                     el.className = 'poker-card' + (c.isJoker ? ' joker' : '');
                     if(c.isJoker) el.innerHTML = '<div class="emoji">🤡</div><div class="val">JOKER</div>';
-                    else el.innerHTML = `<img src="${c.img}"><div class="val">${c.v}</div>`;
+                    else el.innerHTML = `<img src="${c.img}" alt="${c.id}">`;
                     h.appendChild(el);
                 });
             }
@@ -204,7 +193,10 @@
             askJoker(sum) {
                 const modal = document.getElementById('j-modal');
                 const needed = 4 - sum;
-                document.getElementById('j-equation').textContent = `${sum} + X = 4.0`;
+                // El modal tapa la mà: hi repetim les figures, però mai la suma (calcular-la és el repte).
+                document.getElementById('j-equation').innerHTML = this.hand.filter(c => !c.isJoker)
+                    .map(c => `<img src="${c.img}" alt="${c.id}" style="width:56px;height:56px;object-fit:contain;background:#fff;border-radius:6px;margin:0 4px;vertical-align:middle;">`)
+                    .join(' + ') + ' + 🤡 = 4 temps';
                 
                 const opts = document.getElementById('j-opts');
                 opts.innerHTML = '';
@@ -230,7 +222,8 @@
                     alert("CORRECTE! Joker aplicat.");
                 } else {
                     Casino.Audio.playTone(100, 'sawtooth', 0.4);
-                    alert(`ERROR! El valor necessari era ${target}.`);
+                    this.wins = Math.max(0, this.wins - 1);
+                    alert(`ERROR! El Joker havia de valer ${target} temps. Perds una victòria.`);
                 }
                 this.updateUI();
                 this.end();

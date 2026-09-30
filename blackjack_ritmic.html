@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blackjack Rítmic</title>
-    <link rel="stylesheet" href="css/casino-common.css?v=2">
+    <link rel="stylesheet" href="css/casino-common.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         .game-area {
@@ -111,19 +111,18 @@
     <div class="casino-table">
         <div class="game-area">
             <div class="stats-hud">
-                <div>CRÈDITS: <span id="wallet" style="color:var(--gold); font-weight:bold;">1000</span> 🪙</div>
-                <div>APOSTA: <span id="bet-display" style="color:var(--gold); font-weight:bold;">0</span> 🪙</div>
-                <div>INTENT: <span id="attempts-display">1</span></div>
+                <div>PUNTS: <span id="wallet" style="color:var(--gold); font-weight:bold;">0</span> / 1000</div>
+                <div>MÀ: <span id="attempts-display">1</span></div>
             </div>
 
-            <!-- Dealer Hand -->
+            <!-- Rival Hand -->
             <div class="hand-container">
-                <div class="score-display">BANCA: <span id="dealer-score">?</span></div>
+                <div class="score-display">RIVAL: <span id="dealer-score">?</span></div>
                 <div id="dealer-hand" class="cards-row"></div>
             </div>
 
             <!-- Message Area -->
-            <div id="message-area" style="text-align:center; font-size:1.5rem; height:2rem; font-weight:bold;"></div>
+            <div id="message-area" style="text-align:center; font-size:1.5rem; min-height:2rem; font-weight:bold;"></div>
 
             <!-- Player Hand -->
             <div class="hand-container">
@@ -133,31 +132,32 @@
 
             <!-- Controls -->
             <div class="controls-panel" id="betting-controls">
-                <div class="bet-input-wrap">
-                    APOSTA: <input type="number" id="bet-input" value="100" min="10" step="10">
-                </div>
-                <button class="modal-btn" onclick="game.placeBet()">REPARTIR</button>
+                <button class="modal-btn" onclick="game.deal()">REPARTIR</button>
             </div>
 
             <div class="controls-panel hidden" id="game-controls">
                 <button class="modal-btn" onclick="game.hit()">MÉS RITME (+)</button>
                 <button class="modal-btn" onclick="game.stand()">M'HO QUEDO</button>
-                <button class="modal-btn" id="btn-reveal" onclick="game.revealScore()" style="background:var(--felt-dark); color:white;">REVELAR (500 🪙)</button>
+            </div>
+
+            <div class="controls-panel hidden" id="declare-controls">
+                <div style="width:100%; text-align:center; font-size:1.2rem; margin-bottom:8px;">Quants temps sumen les teves cartes?</div>
+                <div id="declare-options" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;"></div>
             </div>
 
             <div class="controls-panel hidden" id="restart-controls">
-                <button class="modal-btn" onclick="game.startBettingPhase()">NOVA JUGADA</button>
+                <button class="modal-btn" onclick="game.startBettingPhase()">NOVA MÀ</button>
             </div>
         </div>
     </div>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         Casino.Audio.init('music/background_music_blackjack.mp3');
         Casino.UI.injectBasicUI('Blackjack Rítmic');
 
         const CARD_TYPES = [
-            { name: "Redona", value: 4.0, img: "images/rodona.jpg" },
+            { name: "Rodona", value: 4.0, img: "images/rodona.jpg" },
             { name: "Blanca", value: 2.0, img: "images/blanca.jpg" },
             { name: "Negra", value: 1.0, img: "images/negra.jpg" },
             { name: "Corxera", value: 0.5, img: "images/corxera.jpg" },
@@ -166,30 +166,31 @@
 
         const TARGET_SCORE = 10.0;
         const DEALER_STAND = 7.5;
+        const GOAL = 1000;
+        const COUNT_OK = 50, HAND_WIN = 100, COUNT_KO = 50;
 
+        // Sense apostes: els punts surten de COMPTAR bé la teva mà (les cartes no
+        // porten número). Guanyar al rival només suma si, a més, l'has comptada bé.
         class BlackjackGame {
             constructor() {
-                this.wallet = 1000;
-                this.bet = 0;
+                this.points = 0;
                 this.playerHand = [];
                 this.dealerHand = [];
                 this.gameOver = false;
-                this.scoreRevealed = false;
                 this.attempts = 1;
 
                 this.ui = {
                     wallet: document.getElementById('wallet'),
-                    betDisplay: document.getElementById('bet-display'),
                     dealerHand: document.getElementById('dealer-hand'),
                     playerHand: document.getElementById('player-hand'),
                     dealerScore: document.getElementById('dealer-score'),
                     playerScore: document.getElementById('player-score'),
-                    btnReveal: document.getElementById('btn-reveal'),
                     message: document.getElementById('message-area'),
                     bettingControls: document.getElementById('betting-controls'),
                     gameControls: document.getElementById('game-controls'),
+                    declareControls: document.getElementById('declare-controls'),
+                    declareOptions: document.getElementById('declare-options'),
                     restartControls: document.getElementById('restart-controls'),
-                    betInput: document.getElementById('bet-input'),
                     attemptsDisplay: document.getElementById('attempts-display')
                 };
 
@@ -197,15 +198,15 @@
             }
 
             showInstructions() {
-                Casino.UI.showModal('blackjack-instr', 'BLACKJACK RÍTMIC', 
-                    'Aconsegueix 10 punts exactes o apropa-t\'hi tant com puguis sense passar-te.<br><br>' +
+                Casino.UI.showModal('blackjack-instr', 'BLACKJACK RÍTMIC',
+                    'Demana cartes fins a acostar-te a <b>10 temps</b> sense passar-te. Les cartes no porten número: has de sumar les figures tu.<br><br>' +
                     '<b>Rodona</b>: 4 | <b>Blanca</b>: 2 | <b>Negra</b>: 1 | <b>Corxera</b>: 0.5 | <b>Semicorxera</b>: 0.25<br><br>' +
-                    'Guanya 10.000 monedes per desbloquejar la relíquia!', 'ENDAVANT');
+                    `Quan et plantis, digues quant suma la teva mà. Compte bo: +${COUNT_OK} punts. Si a més guanyes al rival: +${HAND_WIN} més. ` +
+                    `Compte dolent: -${COUNT_KO}.<br><br>Arriba a ${GOAL} punts per guanyar la taula.`, 'ENDAVANT');
             }
 
             startBettingPhase() {
                 this.gameOver = false;
-                this.scoreRevealed = false;
                 this.playerHand = [];
                 this.dealerHand = [];
                 this.ui.playerHand.innerHTML = '';
@@ -216,30 +217,18 @@
                 this.ui.message.className = '';
                 this.ui.bettingControls.classList.remove('hidden');
                 this.ui.gameControls.classList.add('hidden');
+                this.ui.declareControls.classList.add('hidden');
                 this.ui.restartControls.classList.add('hidden');
-                this.ui.btnReveal.disabled = false;
-                this.ui.btnReveal.textContent = "REVELAR (500 🪙)";
                 this.updateUI();
             }
 
-            placeBet() {
-                const bet = parseInt(this.ui.betInput.value);
-                if (bet > this.wallet) return alert("S'han acabat els bitllets!");
-                if (bet <= 0) return alert("Aposta una mica, no?");
-
-                this.bet = bet;
-                this.wallet -= bet;
+            deal() {
                 this.ui.bettingControls.classList.add('hidden');
                 this.ui.gameControls.classList.remove('hidden');
-                this.ui.betDisplay.textContent = this.bet;
-                this.updateUI();
-                this.startRound();
-            }
-
-            startRound() {
+                this.dealCard(this.playerHand, this.ui.playerHand);
                 this.dealCard(this.playerHand, this.ui.playerHand);
                 this.dealCard(this.dealerHand, this.ui.dealerHand);
-                this.updateScores(false);
+                this.ui.dealerScore.textContent = this.getScore(this.dealerHand).toFixed(2);
             }
 
             dealCard(hand, container) {
@@ -247,7 +236,7 @@
                 hand.push(card);
                 const cardEl = document.createElement('div');
                 cardEl.className = 'card';
-                cardEl.innerHTML = `<img src="${card.img}"><div class="value-badge">${card.value}</div>`;
+                cardEl.innerHTML = `<img src="${card.img}" alt="${card.name}">`;
                 container.appendChild(cardEl);
                 Casino.Audio.playClick();
             }
@@ -256,55 +245,61 @@
                 return hand.reduce((sum, c) => sum + c.value, 0);
             }
 
-            updateScores(revealPlayer = false) {
-                const pScore = this.getScore(this.playerHand);
-                const dScore = this.getScore(this.dealerHand);
-                this.ui.playerScore.textContent = (revealPlayer || this.scoreRevealed) ? pScore.toFixed(2) : "???";
-                this.ui.dealerScore.textContent = dScore.toFixed(2);
-                return { pScore, dScore };
-            }
-
             updateUI() {
-                this.ui.wallet.textContent = this.wallet;
+                this.ui.wallet.textContent = this.points;
                 this.ui.attemptsDisplay.textContent = this.attempts;
-                
-                if (this.wallet >= 10000) {
-                    Casino.Rewards.saveProgress('reward_blackjack');
-                    Casino.UI.showVictory("Has acumulat una fortuna rítmica! L'As de Beethoven és teu.", () => location.href = 'menu.html');
-                }
-            }
-
-            revealScore() {
-                if (this.wallet < 500) return alert("Ets pobre per saber-ho!");
-                this.wallet -= 500;
-                this.scoreRevealed = true;
-                this.ui.btnReveal.disabled = true;
-                this.ui.btnReveal.textContent = "COGNICIÓ ACTIVA";
-                this.updateScores(true);
-                this.updateUI();
             }
 
             hit() {
                 if (this.gameOver) return;
                 this.dealCard(this.playerHand, this.ui.playerHand);
-                const { pScore } = this.updateScores();
-                if (pScore > TARGET_SCORE) this.endRound("T'HAS PASSAT! (BUST)", 'lose');
-                else if (pScore === TARGET_SCORE) this.stand();
+                // Cap avís automàtic de "t'has passat": saber-ho és part del repte.
             }
 
             stand() {
                 if (this.gameOver) return;
                 this.ui.gameControls.classList.add('hidden');
-                this.updateScores(true);
+                this.askCount();
+            }
+
+            askCount() {
+                const real = this.getScore(this.playerHand);
+                const opts = new Set([real]);
+                for (const d of [0.25, -0.25, 0.5, -0.5, 1, -1, 2]) {
+                    if (opts.size >= 4) break;
+                    if (real + d > 0 && Math.random() < 0.7) opts.add(real + d);
+                }
+                for (const d of [0.5, 1, 1.5, 2]) { if (opts.size < 4) opts.add(real + d); }
+                this.ui.declareOptions.innerHTML = '';
+                [...opts].sort((a, b) => a - b).forEach(v => {
+                    const b = document.createElement('button');
+                    b.className = 'modal-btn';
+                    b.textContent = String(v).replace('.', ',') + ' temps';
+                    b.onclick = () => this.declare(v);
+                    this.ui.declareOptions.appendChild(b);
+                });
+                this.ui.declareControls.classList.remove('hidden');
+            }
+
+            declare(v) {
+                this.ui.declareControls.classList.add('hidden');
+                const pScore = this.getScore(this.playerHand);
+                this.ui.playerScore.textContent = pScore.toFixed(2);
+                if (Math.abs(v - pScore) > 0.001) {
+                    this.points = Math.max(0, this.points - COUNT_KO);
+                    return this.endRound(`COMPTE EQUIVOCAT: sumaven ${pScore} temps. -${COUNT_KO}`, 'lose');
+                }
+                this.points += COUNT_OK;
+                if (pScore > TARGET_SCORE) return this.endRound(`BEN COMPTAT (+${COUNT_OK}), però t'has passat de 10.`, 'draw');
                 this.dealerTurn();
             }
 
             dealerTurn() {
                 const step = () => {
                     const dScore = this.getScore(this.dealerHand);
+                    this.ui.dealerScore.textContent = dScore.toFixed(2);
                     if (dScore < DEALER_STAND) {
                         this.dealCard(this.dealerHand, this.ui.dealerHand);
-                        this.updateScores(true);
                         setTimeout(step, 800);
                     } else {
                         this.finalize();
@@ -316,11 +311,11 @@
             finalize() {
                 const pScore = this.getScore(this.playerHand);
                 const dScore = this.getScore(this.dealerHand);
-
-                if (dScore > TARGET_SCORE) this.endRound("LA BANCA ES PASSA! GUANYES!", 'win');
-                else if (pScore > dScore) this.endRound("MILLOR RITME! GUANYES!", 'win');
-                else if (pScore < dScore) this.endRound("LA BANCA GUANYA...", 'lose');
-                else this.endRound("EMPAT TÈCNIC", 'draw');
+                const winMsg = `+${COUNT_OK} pel compte i +${HAND_WIN} per la mà!`;
+                if (dScore > TARGET_SCORE) { this.points += HAND_WIN; this.endRound("EL RIVAL ES PASSA! " + winMsg, 'win'); }
+                else if (pScore > dScore) { this.points += HAND_WIN; this.endRound("MILLOR RITME! " + winMsg, 'win'); }
+                else if (pScore < dScore) this.endRound(`EL RIVAL GUANYA LA MÀ. Però has comptat bé: +${COUNT_OK}`, 'draw');
+                else this.endRound(`EMPAT. Has comptat bé: +${COUNT_OK}`, 'draw');
             }
 
             endRound(msg, result) {
@@ -329,19 +324,14 @@
                 this.ui.message.className = result;
                 this.ui.gameControls.classList.add('hidden');
                 this.ui.restartControls.classList.remove('hidden');
-
-                if (result === 'win') {
-                    this.wallet += this.bet * 2;
-                    Casino.Audio.playWin();
-                } else if (result === 'draw') {
-                    this.wallet += this.bet;
-                } else {
-                    Casino.Audio.playLose();
-                }
-                
+                if (result === 'win') Casino.Audio.playWin();
+                else if (result === 'lose') Casino.Audio.playLose();
                 this.attempts++;
                 this.updateUI();
-                if (this.wallet <= 0) Casino.UI.showModal('gameover', 'SENSE MONEDES', 'La casa sempre guanya. Torna-ho a intentar!', 'REINICIAR', () => location.reload());
+                if (this.points >= GOAL) {
+                    Casino.Rewards.saveProgress('reward_blackjack');
+                    Casino.UI.showVictory("Has comptat cada mà com un mestre! L'As de Beethoven és teu.", () => location.href = 'menu.html');
+                }
             }
         }
 

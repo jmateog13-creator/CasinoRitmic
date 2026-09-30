@@ -235,7 +235,7 @@
     <div id="table">
         <!-- Dealer Area -->
         <div class="hand-area" id="dealer-hand">
-            <div class="score-display">BANCA: <span id="dealer-score">0</span></div>
+            <div class="score-display">RIVAL: <span id="dealer-score">0</span></div>
         </div>
 
         <!-- Controls -->
@@ -243,11 +243,15 @@
             <button class="action-btn" id="btn-hit" onclick="game.hit()">DEMANAR</button>
             <button class="action-btn" id="btn-stand" onclick="game.stand()">PLANTAR-SE</button>
             <button class="action-btn" id="btn-next" onclick="game.nextRound()" style="display:none;">SEGÜENT</button>
+            <div id="declare" style="display:none; text-align:center;">
+                <div style="margin-bottom:8px;">Quants temps sumen les teves cartes?</div>
+                <div id="declare-opts" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;"></div>
+            </div>
         </div>
 
         <!-- Player Area -->
         <div class="hand-area" id="player-hand">
-            <div class="score-display">JUGADOR: <span id="player-score">0</span></div>
+            <div class="score-display">JUGADOR: <span id="player-score">?</span></div>
         </div>
     </div>
 
@@ -260,7 +264,8 @@
             <p>1. L'objectiu és sumar <strong>7.5 TEMPS</strong> sense passar-se.</p>
             <p>2. Les figures tenen el seu valor musical (Rodona=4, Blanca=2, Negra=1, Corxera=0.5).</p>
             <p>3. Els silencis valen el mateix que la seva figura.</p>
-            <p>4. La Banca es planta amb 7.0 o més.</p>
+            <p>4. El rival es planta amb 7.0 o més.</p>
+            <p>5. La teva suma no surt a la pantalla: quan et plantis, digues quant fa. Si l'encertes, la mà es juga; si no, perds una victòria.</p>
             <button class="instr-btn" onclick="game.start()">JUGAR</button>
         </div>
     </div>
@@ -288,7 +293,7 @@
 
     <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         // --- AUDIO ---
         const bgMusic = document.getElementById('bg-music');
@@ -391,6 +396,7 @@
                 document.getElementById('btn-hit').disabled = false;
                 document.getElementById('btn-stand').disabled = false;
                 document.getElementById('btn-next').style.display = 'none';
+                document.getElementById('declare').style.display = 'none';
                 document.getElementById('result-modal').style.display = 'none';
 
                 // Initial Deal: 2 cards each
@@ -405,7 +411,6 @@
                 }
 
                 this.render();
-                this.checkBust();
             }
 
             draw() {
@@ -418,11 +423,41 @@
                 this.playerHand.push(this.draw());
                 playSound('deal');
                 this.render();
-                this.checkBust();
+                // Sense avís automàtic de "t'has passat": saber-ho és el repte.
             }
 
             stand() {
                 if (this.gameOver || this.dealerPlaying) return;
+                document.getElementById('btn-hit').style.display = 'none';
+                document.getElementById('btn-stand').style.display = 'none';
+                const real = this.calculateScore(this.playerHand);
+                const opts = new Set([real]);
+                for (const d of [0.5, -0.5, 1, -1, 1.5, 2]) {
+                    if (opts.size >= 4) break;
+                    if (real + d > 0 && Math.random() < 0.7) opts.add(real + d);
+                }
+                for (const d of [0.5, 1, 1.5, 2]) { if (opts.size < 4) opts.add(real + d); }
+                const box = document.getElementById('declare-opts');
+                box.innerHTML = '';
+                [...opts].sort((a, b) => a - b).forEach(v => {
+                    const b = document.createElement('button');
+                    b.className = 'action-btn';
+                    b.textContent = String(v).replace('.', ',');
+                    b.onclick = () => this.declare(v);
+                    box.appendChild(b);
+                });
+                document.getElementById('declare').style.display = 'block';
+            }
+
+            declare(v) {
+                document.getElementById('declare').style.display = 'none';
+                const real = this.calculateScore(this.playerHand);
+                if (Math.abs(v - real) > 0.001) {
+                    this.wins = Math.max(0, this.wins - 1);
+                    document.getElementById('wins').textContent = this.wins;
+                    return this.endGame(false, `COMPTE EQUIVOCAT: sumaven ${String(real).replace('.', ',')} temps. Perds una victòria.`);
+                }
+                if (real > 7.5) return this.endGame(false, `Ben comptat (${String(real).replace('.', ',')}), però t'has passat de 7,5.`);
                 this.dealerTurn();
             }
 
@@ -450,25 +485,18 @@
                 return hand.reduce((sum, c) => sum + c.val, 0);
             }
 
-            checkBust() {
-                const score = this.calculateScore(this.playerHand);
-                if (score > 7.5) {
-                    this.endGame(false, "T'HAS PASSAT! (BUST)");
-                }
-            }
-
             resolveGame() {
                 const pScore = this.calculateScore(this.playerHand);
                 const dScore = this.calculateScore(this.dealerHand);
 
                 if (dScore > 7.5) {
-                    this.endGame(true, "LA BANCA S'HA PASSAT!");
+                    this.endGame(true, "EL RIVAL S'HA PASSAT!");
                 } else if (pScore > dScore) {
                     this.endGame(true, "HAS GUANYAT!");
                 } else if (pScore === dScore) {
-                    this.endGame(false, "EMPAT (LA BANCA GUANYA)");
+                    this.endGame(false, "EMPAT: el rival s'emporta la mà.");
                 } else {
-                    this.endGame(false, "LA BANCA GUANYA!");
+                    this.endGame(false, "EL RIVAL GUANYA LA MÀ.");
                 }
             }
 
@@ -534,7 +562,7 @@
                     el.innerHTML = `<img src="${c.img}">`;
                     pContainer.appendChild(el);
                 });
-                document.getElementById('player-score').textContent = this.calculateScore(this.playerHand);
+                document.getElementById('player-score').textContent = this.gameOver ? this.calculateScore(this.playerHand) : '?';
 
                 // Render Dealer
                 this.dealerHand.forEach((c, i) => {

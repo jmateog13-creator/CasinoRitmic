@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gin Rumy Rítmic</title>
-    <link rel="stylesheet" href="css/casino-common.css?v=2">
+    <link rel="stylesheet" href="css/casino-common.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         .game-layout {
@@ -92,7 +92,7 @@
         </div>
     </div>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         Casino.Audio.init('music/background_music_ginrumy.mp3');
         Casino.UI.injectBasicUI('Gin Rumy Rítmic');
@@ -177,9 +177,22 @@
                 return el;
             }
 
+            // Maç buit: es rebarreja el descart (menys la carta de dalt). Abans deck.pop()
+            // tornava undefined i la ronda petava cap al torn 15.
+            stockPop() {
+                if (!this.deck.length) {
+                    const top = this.discardPile.pop();
+                    this.deck = this.discardPile.sort(() => Math.random() - 0.5);
+                    this.discardPile = top ? [top] : [];
+                }
+                return this.deck.pop();
+            }
+
             draw(source) {
                 if(this.phase !== 'draw') return;
-                const card = source === 'stock' ? this.deck.pop() : this.discardPile.pop();
+                if(source === 'discard' && !this.discardPile.length) return;
+                const card = source === 'stock' ? this.stockPop() : this.discardPile.pop();
+                if(!card) return;
                 this.pHand.push(card);
                 Casino.Audio.playTone(600, 'sine', 0.1);
                 this.phase = 'discard';
@@ -199,7 +212,8 @@
             }
 
             ai() {
-                const c = this.deck.pop(); // AI always draws from stock for simplicity
+                const c = this.stockPop(); // AI always draws from stock for simplicity
+                if(!c) return this.render();
                 this.cHand.push(c);
                 
                 // Find best card to discard (keep sum near 4)

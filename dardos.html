@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dards Rítmics</title>
-    <link rel="stylesheet" href="css/casino-common.css?v=2">
+    <link rel="stylesheet" href="css/casino-common.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         .game-layout {
@@ -80,18 +80,21 @@
         </div>
     </div>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         Casino.Audio.init('music/background_music_dardos.mp3');
         Casino.UI.injectBasicUI('Dards Rítmics');
 
         const SECTIONS = [
-            { val: 4, label: 'RODONA', color: '#8b0000' },
-            { val: 2, label: 'BLANCA', color: '#eecfa1' },
-            { val: 1, label: 'NEGRA', color: '#000000' },
-            { val: 0.5, label: 'CORXERA', color: '#8b0000' },
-            { val: 0.25, label: 'SEMICORXERA', color: '#eecfa1' }
+            { val: 4, label: 'RODONA', color: '#8b0000', img: 'images/rodona.jpg' },
+            { val: 2, label: 'BLANCA', color: '#eecfa1', img: 'images/blanca.jpg' },
+            { val: 1, label: 'NEGRA', color: '#1a1a1a', img: 'images/negra.jpg' },
+            { val: 0.5, label: 'CORXERA', color: '#1f4e8c', img: 'images/corxera.jpg' },
+            { val: 0.25, label: 'SEMICORXERA', color: '#6b2d8c', img: 'images/semicorxera.jpg' }
         ];
+        // Abans la diana només tenia colors (i dos parells repetits): no podies saber
+        // a quina figura apuntaves. Ara cada sector porta la seva figura.
+        SECTIONS.forEach(sec => { sec.im = new Image(); sec.im.src = sec.img; });
 
         class DartGame {
             constructor() {
@@ -110,8 +113,8 @@
 
             init() {
                 Casino.UI.showModal('dart-instr', 'L\'ANELL DEL NIBELUNG', 
-                    'Aconsegueix la suma exacta de temps llançant dards a la diana giratòria.<br><br>' +
-                    '<b>Alerta:</b> Si et passes de l\'objectiu (Bust), perdràs els punts de la ronda!', 'ENTRAR AL PUB');
+                    'Aconsegueix la suma <b>exacta</b> de temps llançant dards a la diana giratòria. Cada sector porta una figura.<br><br>' +
+                    '<b>Només puntua la suma exacta.</b> Si et quedes curt o et passes, la ronda no suma.', 'ENTRAR AL PUB');
                 this.canvas.onclick = (e) => this.throwDart(e);
                 this.loop();
             }
@@ -169,7 +172,8 @@
 
             endRound() {
                 this.players.forEach(p => {
-                    if(p.sum <= this.target) p.score += Math.round(p.sum * 100);
+                    // Només la suma exacta puntua: llançar a l'atzar gairebé mai hi arriba.
+                    if(Math.abs(p.sum - this.target) < 0.001) p.score += Math.round(p.sum * 100);
                     p.sum = 0; p.darts = 3;
                 });
                 this.target = [2, 3, 4][Math.floor(Math.random()*3)];
@@ -199,6 +203,11 @@
                     this.ctx.arc(0, 0, 240, i*Math.PI*2/5, (i+1)*Math.PI*2/5);
                     this.ctx.fillStyle = SECTIONS[i].color;
                     this.ctx.fill();
+                    const mid = (i + 0.5) * Math.PI * 2 / 5;
+                    const ix = Math.cos(mid) * 150, iy = Math.sin(mid) * 150;
+                    this.ctx.fillStyle = '#fff';
+                    this.ctx.fillRect(ix - 30, iy - 30, 60, 60);
+                    if (SECTIONS[i].im.complete) this.ctx.drawImage(SECTIONS[i].im, ix - 28, iy - 28, 56, 56);
                 }
                 this.ctx.restore();
                 requestAnimationFrame(() => this.loop());

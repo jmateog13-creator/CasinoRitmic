@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>La Cascada d'Or</title>
-    <link rel="stylesheet" href="css/casino-common.css?v=2">
+    <link rel="stylesheet" href="css/casino-common.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         .game-layout {
@@ -77,7 +77,7 @@
 
 <body>
     <div class="casino-table">
-        <div class="stats-hud">MONEDES CAIGUDES: <span id="score">0</span> / 25</div>
+        <div class="stats-hud">PUNTS: <span id="score">0</span> / 25</div>
 
         <div class="game-layout">
             <div class="push-panel">
@@ -96,7 +96,7 @@
         </div>
     </div>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         Casino.Audio.init('music/background_music_cascada.mp3');
         Casino.UI.injectBasicUI('La Cascada d\'Or');
@@ -142,8 +142,8 @@
 
             init() {
                 Casino.UI.showModal('cascada-instr', 'EL BOLERO DE RAVEL', 
-                    'Respon correctament les preguntes musicals per empènyer les monedes. Calcula el moment just!<br><br>' +
-                    '<b>Objectiu:</b> 25 monedes caigudes.', 'INSERIR MONEDA');
+                    'Respon correctament les preguntes musicals per empènyer els discs daurats. Cada disc que cau és un punt.<br><br>' +
+                    '<b>Objectiu:</b> 25 punts.', 'A JUGAR');
                 
                 for(let i=0; i<30; i++) this.coins.push(new Coin(Math.random()*700+50, Math.random()*400+300, 30+Math.random()*10));
                 this.ask();

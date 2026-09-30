@@ -281,7 +281,7 @@
 
         <img id="note-icon" src="images/negra.jpg" alt="Puls">
         <div id="bpm-display">60 BPM</div>
-        <div id="status">PREPARAT PER APOSTAR?</div>
+        <div id="status">PREPARAT PER MARCAR EL POLS?</div>
 
         <canvas id="ecgCanvas" width="800" height="200"></canvas>
 
@@ -298,14 +298,14 @@
             <p>Has de superar <strong>7 RONDES</strong> amb diferents velocitats (BPM).</p>
             <p>El metrònom sonarà 4 vegades. Després, TU ets el metrònom.</p>
             <p>Mantigues el pols durant 8 pulsacions.</p>
-            <button class="btn" onclick="startGame()">FER APOSTA</button>
+            <button class="btn" onclick="startGame()">A JUGAR</button>
         </div>
     </div>
 
     <!-- Win Modal -->
     <div id="win-modal" class="modal">
         <div class="modal-content">
-            <h2 style="color: var(--gold);">JACKPOT RÍTMIC!</h2>
+            <h2 style="color: var(--gold);">POLS D'ACER!</h2>
             <div class="relic-icon">🎻</div>
             <p style="font-size: 1.5rem; color: var(--gold);">"L'ARC DE PAU CASALS"</p>
             <p>Has demostrat un pols d'acer, digne dels millors músics.</p>
@@ -316,14 +316,14 @@
     <!-- Lose Modal -->
     <div id="lose-modal" class="modal">
         <div class="modal-content">
-            <h2 style="color: var(--neon-red);">BANCARROTA!</h2>
+            <h2 style="color: var(--neon-red);">HAS PERDUT EL POLS!</h2>
             <p>Has perdut el ritme.</p>
             <button class="btn" onclick="location.reload()">REINTENTAR</button>
         </div>
     </div>
 
     <audio id="bg-music" src="music/background_music_polsintern.mp3" loop></audio>
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         // Background Music
         document.body.addEventListener('click', () => {

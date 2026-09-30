@@ -1,14 +1,17 @@
 /**
  * @file game-data.js
  * @description Metadata for all 68+ games in CasinoRitmic.
+ *
+ * Fora del menú (set 2026, no esborrades del disc): texas i whist — les guanya
+ * l'atzar de les cartes, no la destresa rítmica; no tenen arreglo sense redissenyar-les.
  */
 
 window.CasinoGames = {
     'card-blackjack': { key: 'reward_blackjack', icon: '🃏', name: "L'As de Beethoven", url: 'blackjack_ritmic.html' },
-    'card-ruleta': { key: 'reward_ruleta', icon: '🎡', name: "La Roda de Rossini", url: 'ruleta.html' },
+    'card-ruleta': { key: 'reward_ruleta', icon: '🎡', name: "L'Orella de Rossini", url: 'ruleta.html' },
     'card-simon': { key: 'reward_simon', icon: '🎹', name: "La Memòria de Bach", url: 'simon.html' },
     'card-memory': { key: 'reward_memory', icon: '🧠', name: "El Cervell de Chopin", url: 'memory.html' },
-    'card-texas': { key: 'reward_texas', icon: '🤠', name: "El Barret de Copland", url: 'texas.html' },
+    // 'card-texas': { key: 'reward_texas', icon: '🤠', name: "El Barret de Copland", url: 'texas.html' },
     'card-daus': { key: 'reward_daus', icon: '🎲', name: "Els Daus de Haydn", url: 'daus.html' },
     'card-bolera': { key: 'reward_bolera', icon: '🎳', name: "La Bola de Boulez", url: 'bolera.html' },
     'card-laberinto': { key: 'reward_laberinto', icon: '🧩', name: "El Fil d'Ariadna", url: 'laberinto.html' },
@@ -41,7 +44,7 @@ window.CasinoGames = {
     'card-embut': { key: 'reward_embut', icon: '⏳', name: "El Temps de Zimmer", url: 'embut.html' },
     'card-millonario': { key: 'reward_millonario', icon: '💰', name: "El Xec de Williams", url: 'millonario.html' },
     'card-conquian': { key: 'reward_conquian', icon: '🪄', name: "La Batuta de Berlioz", url: 'conquian.html' },
-    'card-whist': { key: 'reward_whist', icon: '📜', name: "La Partitura d'Orfeu", url: 'whist.html' },
+    // 'card-whist': { key: 'reward_whist', icon: '📜', name: "La Partitura d'Orfeu", url: 'whist.html' },
     'card-rutajerarquica': { key: 'reward_rutajerarquica', icon: '🗺️', name: "La Brúixola de Holst", url: 'rutajerarquica.html' },
     'card-cronometre': { key: 'reward_cronometreinvers', icon: '⏱️', name: "El Rellotge de Haydn", url: 'cronometreinvers.html' },
     'card-enceuat': { key: 'reward_enceuat', icon: '📝', name: "La Ploma de Shakespeare", url: 'enceuat.html' },

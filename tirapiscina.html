@@ -354,7 +354,7 @@
 
     <audio id="bg-music" src="music/background_music_main.mp3" loop></audio>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         // --- AUDIO ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -428,13 +428,16 @@
                 this.cursorDir = 1;
                 this.skillInterval = null;
                 this.isSkillPhase = false;
+                /* 30-09-2026: abans el professor es reia de l'alumne quan fallava
+                   ("Ni per a tocar el triangle serveixes!"). Amb adolescents,
+                   el to rondinaire es queda, però empeny: mai rebaixa. */
                 this.taunts = [
-                    "Això és ritme? Sembla soroll!",
-                    "Has estudiat o has anat de festa?",
-                    "Mozart ploraria si et veiés...",
-                    "Ni per a tocar el triangle serveixes!",
-                    "Vols que et regali un metrònom?",
-                    "Fins i tot un gat té més sentit del ritme!"
+                    "Ep! Escolta el pols abans de llançar.",
+                    "Gairebé! Compta els temps amb el peu.",
+                    "Fins i tot Mozart assajava. Una altra!",
+                    "El ritme es veu venir: mira'l bé.",
+                    "Vols que et presti el meu metrònom?",
+                    "Respira, compta i torna-hi!"
                 ];
             }
 
@@ -476,7 +479,9 @@
                 if (idx === correct) {
                     this.startSkillPhase();
                 } else {
-                    // Instant Retry with Taunt
+                    // Resposta dolenta = una piscina menys: endevinar no pot guanyar la taula.
+                    this.score = Math.max(0, this.score - 1);
+                    document.getElementById('score').textContent = this.score;
                     this.showTaunt();
                     setTimeout(() => this.nextRound(), 1500);
                 }

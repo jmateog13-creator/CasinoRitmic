@@ -323,7 +323,7 @@
 
     <audio id="bg-music" src="music/High Stakes Love-2.mp3" loop></audio>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         // Audio
         const bgMusic = document.getElementById('bg-music');
@@ -475,9 +475,11 @@
                     winLevel();
                 }
             } else {
+                // Figura equivocada = un encert menys: picar-ho tot no pot guanyar la taula.
                 score -= 50;
+                hits = Math.max(0, hits - 1);
                 playSound('miss');
-                showEffect(el, "-50", "red");
+                showEffect(el, "-1 encert", "red");
             }
             updateUI();
         }

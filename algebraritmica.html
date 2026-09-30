@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Àlgebra Rítmica</title>
-    <link rel="stylesheet" href="css/casino-common.css?v=2">
+    <link rel="stylesheet" href="css/casino-common.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         #equation-board {
@@ -103,7 +103,7 @@
         </div>
     </div>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         Casino.Audio.init('music/background_music_main.mp3');
         Casino.UI.injectBasicUI('Àlgebra Rítmica');
@@ -126,7 +126,7 @@
             init() {
                 Casino.UI.showModal('alg-instr', 'ÀLGEBRA DE BACH', 
                     'Resol l\'equació rítmica trobant la figura que falta per completar la igualtat.<br><br>' +
-                    'Resol 5 problemes per guanyar la relíquia matemàtica!', 'INICIAR CÀLCUL');
+                    'Resol 5 problemes per guanyar la relíquia matemàtica! Cada error en resta un.', 'INICIAR CÀLCUL');
                 this.nextProblem();
             }
 
@@ -179,6 +179,9 @@
                         this.nextProblem();
                     }
                 } else {
+                    // Error = un problema resolt menys: clicar a l'atzar no pot guanyar la taula.
+                    this.wins = Math.max(0, this.wins - 1);
+                    document.getElementById('wins').textContent = this.wins;
                     Casino.Audio.playLose();
                     document.body.classList.add('shake');
                     setTimeout(() => document.body.classList.remove('shake'), 500);

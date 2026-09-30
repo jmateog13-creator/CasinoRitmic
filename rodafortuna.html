@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Roda del Risc</title>
+    <title>La Roda del Compàs</title>
     <style>
         :root {
             --neon-purple: #bc13fe;
@@ -307,8 +307,9 @@
                 <span class="instr-close"
                     onclick="document.getElementById('instructions-modal').style.display='none'">×</span>
                 <h2 style="color: var(--gold);">COM JUGAR</h2>
-                <p style="font-size:1.2rem;">Gira la roda i resol el repte musical que et toqui.</p>
-                <p>Acumula premis i evita la fallida!</p>
+                <p style="font-size:1.2rem;">Gira la roda: et proposa una figura. Tu decideixes si la poses al compàs o la deixes passar.</p>
+                <p>El compte de temps no surt: llegeix les figures i suma-les tu. Omple el compàs amb <b>exactament 4 temps</b> tres vegades.</p>
+                <p>Si poses una figura que no hi cap, perds una vida. ⭐ Comodí = 1 temps.</p>
                 <button class="instr-btn"
                     onclick="document.getElementById('instructions-modal').style.display='none'">JUGAR</button>
             </div>
@@ -321,7 +322,7 @@
     </div>
 
     <div id="game-container">
-        <h1>LA RODA DEL RISC</h1>
+        <h1>LA RODA DEL COMPÀS</h1>
 
         <div id="stats">
             <div class="stat-box">VIDES: <span id="lives">3</span></div>
@@ -335,14 +336,13 @@
 
         <div id="measure-container">
             <div id="measure-fill"></div>
-            <div id="measure-text">0 / 4 TEMPS</div>
+            <div id="measure-text">? / 4 TEMPS</div>
         </div>
 
         <div id="controls">
             <button id="btn-spin" class="btn-action btn-spin" onclick="spinWheel()">GIRAR RODA!</button>
-            <button id="btn-bank" class="btn-action btn-bank" onclick="bankPoints()" disabled>PLANTAR-SE</button>
-            <button id="btn-help" class="btn-action" style="background:#ff9900; color:#000;"
-                onclick="askHelp()">AJUDA</button>
+            <button id="btn-place" class="btn-action btn-spin" onclick="placePending()" disabled>POSAR-LA</button>
+            <button id="btn-bank" class="btn-action btn-bank" onclick="skipPending()" disabled>DEIXAR-LA PASSAR</button>
         </div>
     </div>
 
@@ -367,22 +367,9 @@
         </div>
     </div>
 
-    <!-- Help Modal -->
-    <div id="help-modal" class="modal">
-        <div class="modal-content">
-            <h2>PREGUNTA MUSICAL</h2>
-            <p>Quin valor té una Blanca amb puntet?</p>
-            <div style="display:flex; gap:10px; justify-content:center;">
-                <button class="btn-action" onclick="checkHelp(false)">2 temps</button>
-                <button class="btn-action" onclick="checkHelp(true)">3 temps</button>
-                <button class="btn-action" onclick="checkHelp(false)">4 temps</button>
-            </div>
-        </div>
-    </div>
-
     <audio id="bg-music" src="music/background_music_rodafortuna.mp3" loop></audio>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         // Audio Context
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -424,7 +411,7 @@
         const SEGMENTS = [
             { type: 'note', val: 4, label: 'RODONA', color: '#ff0000', img: 'images/rodona.jpg' },
             { type: 'note', val: 1, label: 'NEGRA', color: '#00ff00', img: 'images/negra.jpg' },
-            { type: 'bankrupt', val: 0, label: 'BANCARROTA', color: '#000000', text: '💀' },
+            { type: 'note', val: 1, label: 'SILENCI DE NEGRA', color: '#222222', img: 'images/silencinegra.jpg' },
             { type: 'note', val: 2, label: 'BLANCA', color: '#0000ff', img: 'images/blanca.jpg' },
             { type: 'note', val: 0.5, label: 'CORXERA', color: '#ffff00', img: 'images/corxera.jpg' },
             { type: 'note', val: 1, label: 'NEGRA', color: '#00ff00', img: 'images/negra.jpg' },
@@ -444,7 +431,8 @@
             'images/rodona.jpg': 'images/rodona.jpg',
             'images/blanca.jpg': 'images/blanca.jpg',
             'images/negra.jpg': 'images/negra.jpg',
-            'images/corxera.jpg': 'images/corxera.jpg'
+            'images/corxera.jpg': 'images/corxera.jpg',
+            'images/silencinegra.jpg': 'images/silencinegra.jpg'
         };
         let imagesLoaded = 0;
         for (let src in imgSources) {
@@ -515,14 +503,13 @@
             ctx.font = 'bold 20px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('RISC', centerX, centerY);
+            ctx.fillText('4/4', centerX, centerY);
         }
 
         function spinWheel() {
             if (isSpinning) return;
             isSpinning = true;
             document.getElementById('btn-spin').disabled = true;
-            document.getElementById('btn-bank').disabled = true;
             playSound('spin');
 
             // Random spin duration and angle
@@ -579,85 +566,77 @@
             handleResult(result);
         }
 
+        // L'atzar només PROPOSA la figura; posar-la o no és decisió (i càlcul) de l'alumne.
+        let pending = null;
+        let placed = [];
         function handleResult(result) {
-            console.log("Result:", result);
-
-            if (result.type === 'bankrupt') {
-                playSound('bankrupt');
-                alert("💀 BANCARROTA! Ho perds tot!");
+            pending = result;
+            playSound('ding');
+            const fig = result.img
+                ? `<img src="${result.img}" alt="${result.label}" style="height:34px;vertical-align:middle;background:#fff;border-radius:4px;">`
+                : result.text;
+            document.getElementById('btn-place').innerHTML = `POSAR ${fig} AL COMPÀS`;
+            document.getElementById('btn-spin').disabled = true;
+            document.getElementById('btn-place').disabled = false;
+            document.getElementById('btn-bank').disabled = false;
+        }
+        function afterDecision() {
+            pending = null;
+            document.getElementById('btn-place').textContent = 'POSAR-LA';
+            document.getElementById('btn-place').disabled = true;
+            document.getElementById('btn-bank').disabled = true;
+            document.getElementById('btn-spin').disabled = lives <= 0;
+        }
+        function skipPending() {
+            if (!pending) return;
+            playSound('clonc');
+            afterDecision();
+        }
+        function placePending() {
+            if (!pending) return;
+            const result = pending;
+            afterDecision();
+            if (currentMeasure + result.val > 4) {
+                playSound('lose');
+                alert(`💥 NO HI CABIA! El compàs ja tenia ${currentMeasure} temps i ${result.label} en val ${result.val}.`);
                 loseLife();
-            } else {
-                // Note or Wild
-                const val = result.val;
-
-                // Check Bust
-                if (currentMeasure + val > 4) {
-                    playSound('lose');
-                    alert(`💥 T'HAS PASSAT! Ha sortit ${result.label} (${val}). Tens ${currentMeasure}.`);
-                    loseLife();
-                } else {
-                    // Add
-                    currentMeasure += val;
-                    updateMeasureUI();
-                    playSound('ding');
-
-                    if (currentMeasure === 4) {
-                        // Perfect!
-                        playSound('win');
-                        alert("✨ COMPÀS PERFECTE! (4/4)");
-                        perfectMeasures++;
-                        document.getElementById('perfects').textContent = perfectMeasures;
-                        resetMeasure();
-
-                        if (perfectMeasures >= 3) {
-                            winGame();
-                        }
-                    } else {
-                        // Continue or Bank?
-                        document.getElementById('btn-spin').disabled = false;
-                        document.getElementById('btn-bank').disabled = false;
-                    }
-                }
+                return;
+            }
+            currentMeasure += result.val;
+            placed.push(result);
+            updateMeasureUI();
+            if (currentMeasure === 4) {
+                playSound('win');
+                alert("✨ COMPÀS PERFECTE! (4/4)");
+                perfectMeasures++;
+                document.getElementById('perfects').textContent = perfectMeasures;
+                resetMeasure();
+                if (perfectMeasures >= 3) winGame();
             }
         }
-
         function loseLife() {
             lives--;
             document.getElementById('lives').textContent = lives;
             resetMeasure();
-
             if (lives <= 0) {
                 document.getElementById('lose-modal').style.display = 'flex';
-            } else {
-                document.getElementById('btn-spin').disabled = false;
-                document.getElementById('btn-bank').disabled = true;
+                document.getElementById('btn-spin').disabled = true;
             }
         }
-
         function resetMeasure() {
             currentMeasure = 0;
+            placed = [];
             updateMeasureUI();
-            document.getElementById('btn-spin').disabled = false;
-            document.getElementById('btn-bank').disabled = true;
         }
-
         function updateMeasureUI() {
-            const pct = (currentMeasure / 4) * 100;
-            document.getElementById('measure-fill').style.width = pct + '%';
-            document.getElementById('measure-text').textContent = `${currentMeasure} / 4 TEMPS`;
+            // Es veuen les figures posades, mai el número: la suma la fa l'alumne.
+            document.getElementById('measure-fill').style.width = '0%';
+            document.getElementById('measure-text').innerHTML = placed.length
+                ? placed.map(f => f.img
+                    ? `<img src="${f.img}" alt="${f.label}" style="height:40px;vertical-align:middle;background:#fff;border-radius:4px;margin:0 2px;">`
+                    : `<span style="font-size:1.8rem;vertical-align:middle;">${f.text}</span>`).join('') + ' = ? / 4'
+                : '? / 4 TEMPS';
         }
-
-        function bankPoints() {
-            // "PLANTAR-SE (Bank): Guardar els punts aconseguits (però no aconsegueixes la "Victòria Perfecta" del compàs complet)."
-            // So you save your life, but you don't get a Perfect Measure point.
-            // Basically you skip the risk but make no progress towards the main goal (3 Perfects).
-            // It's a safety mechanism to avoid losing a life if you are at 3.5 and afraid of spinning.
-            // You just reset the measure without penalty.
-            playSound('clonc');
-            alert("Te plantes. No guanyes el compàs, però conserves la vida.");
-            resetMeasure();
-        }
-
         function winGame() {
             // Save Reward
             Casino.Rewards.saveProgress('reward_roda');
@@ -713,38 +692,6 @@
 
             osc.start();
             osc.stop(audioCtx.currentTime + duration);
-        }
-
-        // Help Mechanic
-        let helpUsed = false;
-
-        function askHelp() {
-            if (helpUsed) return;
-            document.getElementById('help-modal').style.display = 'flex';
-        }
-
-        function checkHelp(isCorrect) {
-            document.getElementById('help-modal').style.display = 'none';
-            if (isCorrect) {
-                // Replace Bankrupt with Safe
-                SEGMENTS.forEach(s => {
-                    if (s.type === 'bankrupt') {
-                        s.type = 'safe';
-                        s.label = 'SEGUR';
-                        s.color = '#00ffff';
-                        s.text = '🛡️';
-                        s.val = 0; // Adds 0 but safe
-                    }
-                });
-                drawWheel();
-                helpUsed = true;
-                document.getElementById('btn-help').disabled = true;
-                alert("Correcte! La Bancarrota s'ha convertit en una zona segura.");
-            } else {
-                alert("Incorrecte! La roda es queda igual.");
-                helpUsed = true;
-                document.getElementById('btn-help').disabled = true;
-            }
         }
 
         // Init

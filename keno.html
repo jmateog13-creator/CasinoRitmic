@@ -199,7 +199,7 @@
             width: 50px;
         }
 
-        #draw-btn {
+        #draw-btn, #discard-btn {
             background: linear-gradient(to bottom, var(--neon-blue), #008888);
             border: none;
             color: black;
@@ -212,11 +212,13 @@
             transition: transform 0.1s;
         }
 
+        #discard-btn { font-size: 1rem; padding: 10px 20px; background: linear-gradient(to bottom, #ff66cc, #aa3388); box-shadow: 0 0 10px #ff66cc; }
+
         #draw-btn:active {
             transform: scale(0.95);
         }
 
-        #draw-btn:disabled {
+        #draw-btn:disabled, #discard-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             filter: grayscale(1);
@@ -400,6 +402,7 @@
             </div>
 
             <button id="draw-btn" onclick="game.drawBall()">TREURE BOLA</button>
+            <button id="discard-btn" onclick="game.discardBall()" disabled>DESCARTAR BOLA</button>
         </div>
     </div>
 
@@ -408,7 +411,8 @@
         <div class="modal-content">
             <h1 style="color: var(--neon-pink); font-size: 3rem;">KENO RÍTMIC</h1>
             <p>Omple els compassos fins a 4 temps exactes.</p>
-            <p>Si et passes de 4, el compàs es trenca!</p>
+            <p>El compte no surt a la pantalla: llegeix les figures i suma-les tu.</p>
+            <p>Si et passes de 4, el compàs es trenca! Si una bola no hi cap enlloc, descarta-la: així només perds si et descomptes.</p>
             <p>Objectiu: Tancar 4 compassos.</p>
             <button class="action-btn" onclick="game.start()">JUGAR RÀPID</button>
         </div>
@@ -437,7 +441,7 @@
 
     <audio id="bg-music" src="music/background_music_keno.mp3" loop></audio>
 
-    <script src="js/casino-common.js?v=2"></script>
+    <script src="js/casino-common.js?v=3"></script>
     <script>
         // --- ASSETS ---
         const NOTES = [
@@ -543,12 +547,14 @@
                 html += '</div>';
 
                 // Progress
-                const pct = (m.val / 4) * 100;
+                // Obert = el compte no es veu (la suma la fa l'alumne). Tancat o trencat = es revela.
+                const open = m.status === 'open';
+                const pct = open ? 0 : (m.val / 4) * 100;
                 html += `
                     <div class="progress-bar">
                         <div class="progress-fill" style="width:${Math.min(pct, 100)}%"></div>
                     </div>
-                    <div class="measure-val">${m.val}/4</div>
+                    <div class="measure-val">${open ? '?' : m.val}/4</div>
                 `;
 
                 div.innerHTML = html;
@@ -564,6 +570,18 @@
                 this.ballDisplay.innerHTML = `<img src="${note.img}" style="width:50px; filter:invert(0);">`;
                 this.drawBtn.disabled = true;
                 this.drawBtn.textContent = "POSA LA BOLA";
+                document.getElementById('discard-btn').disabled = false;
+            }
+
+            discardBall() {
+                // Descartar és il·limitat: una bola que no cap mai et força a trencar un compàs.
+                // L'única manera de perdre és descomptar-se (el compte no surt a la pantalla).
+                if (!this.currentBall) return;
+                this.currentBall = null;
+                this.ballDisplay.textContent = "?";
+                this.drawBtn.disabled = false;
+                this.drawBtn.textContent = "TREURE BOLA";
+                document.getElementById('discard-btn').disabled = true;
             }
 
             placeBall(id) {
@@ -599,6 +617,7 @@
                 this.ballDisplay.textContent = "?";
                 this.drawBtn.disabled = false;
                 this.drawBtn.textContent = "TREURE BOLA";
+                document.getElementById('discard-btn').disabled = true;
 
                 this.checkGameStatus();
             }
