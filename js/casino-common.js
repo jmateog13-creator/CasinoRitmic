@@ -108,13 +108,17 @@ window.Casino = (() => {
             osc.stop(now + duration);
         },
 
-        playWin() {
+        // Encerts/errades del circuit (precisió): el so d'encert/error de cada taula és
+        // el senyal comú que totes comparteixen.
+        playWin(compta = true) {
+            if (compta) Circuit.tally('ok');
             this.playTone(523.25, 'sine', 0.2); // C5
             setTimeout(() => this.playTone(659.25, 'sine', 0.2), 150); // E5
             setTimeout(() => this.playTone(783.99, 'sine', 0.4), 300); // G5
         },
 
         playLose() {
+            Circuit.tally('ko');
             this.playTone(150, 'sawtooth', 0.5, 0.2);
         },
 
@@ -147,6 +151,7 @@ window.Casino = (() => {
             catch (e) { return { taules: [], tancats: 0 }; }
         },
         write(c) { sessionStorage.setItem('casinoCircuit', JSON.stringify(c)); },
+        tally(k) { const c = this.read(); c[k] = (c[k] || 0) + 1; this.write(c); },
     };
 
     const Rewards = {
@@ -154,14 +159,20 @@ window.Casino = (() => {
             if (value) {
                 const c = Circuit.read();
                 if (!c.t0) c.t0 = Date.now();
+                c.ok = (c.ok || 0) + 1;   // guanyar la taula és un encert més
                 if (!c.taules.includes(gameKey)) c.taules.push(gameKey);
                 if (c.taules.length >= CIRCUIT_SIZE) {
                     // Un sol id per a tot el casino (és el que el manifest ja coneix).
                     // El servidor paga la primera vegada; els circuits següents es
                     // registren amb xp 0 perquè el profe vegi que hi torna.
+                    // ponytail: precisió = sons d'encert / (encert + error) de les taules del
+                    // circuit; les taules sense so d'error (cronòmetre, milionari...) la inflen.
+                    // Si cal exacta, que cada taula passi els seus comptadors a saveProgress.
                     window.AulaTechBridge?.sendOnce('casino-ritmic', {
                         completat: true, tempsMs: Date.now() - c.t0,
+                        errors: c.ko || 0, precisio: c.ok / (c.ok + (c.ko || 0)),
                     });
+                    c.ok = 0; c.ko = 0;
                     c.tancats = (c.tancats || 0) + 1;
                     c.taules = [];
                     c.t0 = 0;
@@ -263,7 +274,7 @@ window.Casino = (() => {
                     if (callback) callback();
                     else window.location.href = 'menu.html';
                 });
-            Audio.playWin();
+            Audio.playWin(false);   // la victòria ja l'ha comptada saveProgress
         }
     };
 
