@@ -153,6 +153,9 @@ window.Casino = (() => {
         write(c) { sessionStorage.setItem('casinoCircuit', JSON.stringify(c)); },
         tally(k) { const c = this.read(); c[k] = (c[k] || 0) + 1; this.write(c); },
     };
+    // El rellotge del circuit comença en ENTRAR al casino (qualsevol pàgina), no en guanyar
+    // la primera taula: abans el temps de la primera taula no comptava (tempsMs curt).
+    try { const c0 = Circuit.read(); if (!c0.t0) { c0.t0 = Date.now(); Circuit.write(c0); } } catch (e) {}
 
     const Rewards = {
         saveProgress(gameKey, value = true) {
